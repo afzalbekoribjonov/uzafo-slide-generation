@@ -9,11 +9,11 @@ class Settings(BaseSettings):
     mongodb_uri: str = Field(alias='MONGODB_URI')
     mongodb_db: str = Field(default='slide_bot', alias='MONGODB_DB')
     admins: list[int] = Field(default_factory=list, validation_alias=AliasChoices('ADMINS', 'ADMIN_IDS'))
-    support_contact: str = Field(default='@admin_username', alias='SUPPORT_CONTACT')
+    support_contact: str = Field(default='@uzafo', alias='SUPPORT_CONTACT')
     generation_worker_poll_seconds: int = Field(default=3, alias='GENERATION_WORKER_POLL_SECONDS')
     generation_start_cooldown_seconds: int = Field(default=65, alias='GENERATION_START_COOLDOWN_SECONDS')
     gemini_api_key: str | None = Field(default=None, alias='GEMINI_API_KEY')
-    gemini_model: str = Field(default='gemini-2.5-flash', alias='GEMINI_MODEL')
+    gemini_model: str = Field(default='gemini-2.5-flash-lite', alias='GEMINI_MODEL')
     gemini_max_retries: int = Field(default=3, alias='GEMINI_MAX_RETRIES')
     gemini_initial_backoff_seconds: int = Field(default=10, alias='GEMINI_INITIAL_BACKOFF_SECONDS')
 
