@@ -140,22 +140,42 @@ class GeminiPresentationPlanner:
         )
 
         try:
-            plan = self._run_json_call(
-                client=client,
-                prompt=self._build_plan_prompt(
-                    topic=topic,
-                    section_count=section_count,
-                    language_code=language_code,
-                    dossier=dossier,
-                ),
-                response_schema=PRESENTATION_PLAN_RESPONSE_SCHEMA,
-                model=PresentationPlan,
-                temperature=0.1,
-                stage_name='planning',
-                use_server_schema=True,
-                language_code=language_code,
+            plan_prompt = self._build_plan_prompt(
                 topic=topic,
+                section_count=section_count,
+                language_code=language_code,
+                dossier=dossier,
             )
+            try:
+                plan = self._run_json_call(
+                    client=client,
+                    prompt=plan_prompt,
+                    response_schema=PRESENTATION_PLAN_RESPONSE_SCHEMA,
+                    model=PresentationPlan,
+                    temperature=0.1,
+                    stage_name='planning',
+                    use_server_schema=True,
+                    language_code=language_code,
+                    topic=topic,
+                )
+            except Exception as exc:
+                if not self._is_schema_complexity_error(exc):
+                    raise
+                logger.warning(
+                    'Gemini planning schema was too complex for serving. Retrying planning without server schema. Error: %s',
+                    exc,
+                )
+                plan = self._run_json_call(
+                    client=client,
+                    prompt=plan_prompt,
+                    response_schema=PRESENTATION_PLAN_RESPONSE_SCHEMA,
+                    model=PresentationPlan,
+                    temperature=0.1,
+                    stage_name='planning',
+                    use_server_schema=False,
+                    language_code=language_code,
+                    topic=topic,
+                )
             self._validate_plan_counts(plan=plan, expected_section_count=section_count)
             self._validate_plan_relevance(plan=plan, topic=topic)
             self._validate_plan_quality(plan=plan)
@@ -356,6 +376,17 @@ class GeminiPresentationPlanner:
         message = str(exc).upper()
         transient_markers = ('429', '503', 'RESOURCE_EXHAUSTED', 'UNAVAILABLE', 'TIMEOUT', 'DEADLINE')
         return any(marker in message for marker in transient_markers)
+
+    @staticmethod
+    def _is_schema_complexity_error(exc: Exception) -> bool:
+        message = str(exc).lower()
+        markers = (
+            'too many states for serving',
+            'invalid json payload received',
+            'response_schema',
+            'generation_config.response_schema',
+        )
+        return any(marker in message for marker in markers)
 
     @staticmethod
     def _validate_plan_counts(*, plan: PresentationPlan, expected_section_count: int) -> None:
@@ -597,10 +628,10 @@ Rules:
 - focus must be specific and factual, not generic.
 - facts must be concrete statements, not filler.
 - Use content_type="process" only for chronology, sequence, or development.
-- Use content_type="table" only when the dossier clearly contains comparisons, categories, dates, or structured records.
+- Use content_type="table" only when the dossier clearly contains comparisons, categories, dated records, or other structured contrasts.
 - Use 0 to 2 table sections. Never force a table.
-- If content_type is "table", include section.table.columns and section.table.rows.
-- Table cells must be short plain strings, never nested JSON.
+- For table sections, put the table data inside facts as compact row-like strings, for example: "Period: 14th century; Center: Samarkand; Feature: trade growth".
+- Do not output nested table JSON objects. The system will build the visual table later.
 - summary_points must be factual conclusions about the topic.
 
 Bad vs good examples:

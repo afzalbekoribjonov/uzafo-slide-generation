@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
-SectionContentType = Literal['facts', 'process', 'table']
+SectionContentType = Literal["facts", "process", "table"]
 
 
 class FactTable(BaseModel):
@@ -104,88 +104,29 @@ class PresentationPlan(BaseModel):
         return self
 
 
+# Gemini response_schema serving can reject deeply nested or overly constrained schemas.
+# Keep this schema intentionally compact. Table content is inferred later from section facts
+# when content_type == "table", so the serving schema does not include nested table rows.
 PRESENTATION_PLAN_RESPONSE_SCHEMA = {
     'type': 'object',
-    'description': 'Topic-grounded factual material for building a PowerPoint deck. The model must provide facts about the topic itself, not describe how the deck is organized.',
     'properties': {
-        'presentation_title': {
-            'type': 'string',
-            'description': 'Short, topic-centered title. It must name the subject directly and avoid generic words like overview, presentation, deck, or automatically generated.'
-        },
-        'title_subtitle': {
-            'type': 'string',
-            'description': 'One concise subtitle that states the scope of the topic in factual terms. It must not mention slides, deck structure, or the act of presenting.'
-        },
-        'agenda_items': {
-            'type': 'array',
-            'minItems': 4,
-            'maxItems': 8,
-            'description': 'Core topic sections or historical periods that will be covered. Each item must be directly about the subject matter.',
-            'items': {'type': 'string'},
-        },
+        'presentation_title': {'type': 'string'},
+        'title_subtitle': {'type': 'string'},
+        'agenda_items': {'type': 'array', 'items': {'type': 'string'}},
         'sections': {
             'type': 'array',
-            'minItems': 3,
-            'maxItems': 12,
-            'description': 'Topic sections containing factual material. These are not instructions about slides; they are the actual facts to teach.',
             'items': {
                 'type': 'object',
                 'properties': {
-                    'content_type': {
-                        'type': 'string',
-                        'enum': ['facts', 'process', 'table'],
-                        'description': 'Use facts for general factual sections, process for chronology or step-by-step developments, and table for comparisons or dated summaries.'
-                    },
-                    'title': {
-                        'type': 'string',
-                        'description': 'Section title directly related to the topic, such as a period, dynasty, figure, reform, or concept.'
-                    },
-                    'focus': {
-                        'type': 'string',
-                        'description': 'One sentence explaining the factual lens of the section. This must be about the topic itself, not about presenting it.'
-                    },
-                    'facts': {
-                        'type': 'array',
-                        'minItems': 2,
-                        'maxItems': 6,
-                        'description': 'Concrete facts, dated developments, causes, results, characteristics, or examples tied to the section title.',
-                        'items': {'type': 'string'},
-                    },
-                    'table': {
-                        'type': 'object',
-                        'description': 'Optional factual table used only when comparison or structured chronology is useful.',
-                        'properties': {
-                            'columns': {
-                                'type': 'array',
-                                'minItems': 2,
-                                'maxItems': 5,
-                                'items': {'type': 'string'},
-                            },
-                            'rows': {
-                                'type': 'array',
-                                'minItems': 2,
-                                'maxItems': 6,
-                                'items': {
-                                    'type': 'array',
-                                    'minItems': 2,
-                                    'maxItems': 5,
-                                    'items': {'type': 'string'},
-                                },
-                            },
-                        },
-                        'required': ['columns', 'rows'],
-                    },
+                    'content_type': {'type': 'string', 'enum': ['facts', 'process', 'table']},
+                    'title': {'type': 'string'},
+                    'focus': {'type': 'string'},
+                    'facts': {'type': 'array', 'items': {'type': 'string'}},
                 },
                 'required': ['content_type', 'title', 'focus', 'facts'],
             },
         },
-        'summary_points': {
-            'type': 'array',
-            'minItems': 3,
-            'maxItems': 5,
-            'description': 'Final factual conclusions or takeaways about the topic. These must not thank the audience or mention AI or a presentation.',
-            'items': {'type': 'string'},
-        },
+        'summary_points': {'type': 'array', 'items': {'type': 'string'}},
     },
     'required': ['presentation_title', 'title_subtitle', 'agenda_items', 'sections', 'summary_points'],
 }
