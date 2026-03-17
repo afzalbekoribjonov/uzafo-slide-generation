@@ -9,7 +9,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.schemas.presentation_plan import FactTable, PresentationPlan, TopicSection
+from app.schemas.presentation_plan import FactTable, PRESENTATION_PLAN_RESPONSE_SCHEMA, PresentationPlan, TopicSection
 
 logger = logging.getLogger(__name__)
 
@@ -144,17 +144,15 @@ class GeminiPresentationPlanner:
                 client=client,
                 prompt=self._build_plan_prompt(
                     topic=topic,
-                    presenter_name=presenter_name,
-                    slide_count=slide_count,
                     section_count=section_count,
                     language_code=language_code,
                     dossier=dossier,
                 ),
-                response_schema=None,
+                response_schema=PRESENTATION_PLAN_RESPONSE_SCHEMA,
                 model=PresentationPlan,
-                temperature=0.2,
+                temperature=0.1,
                 stage_name='planning',
-                use_server_schema=False,
+                use_server_schema=True,
                 language_code=language_code,
                 topic=topic,
             )
@@ -393,17 +391,32 @@ class GeminiPresentationPlanner:
     def _validate_plan_quality(*, plan: PresentationPlan) -> None:
         generic_starts = (
             'bu bo‘lim', 'ushbu bo‘lim', 'the section', 'this section', 'mavzu muhim', 'topic is important',
-            'mazmun umumiy', 'taqdimot', 'mavzuni yoritadi',
+            'mazmun umumiy', 'taqdimot', 'mavzuni yoritadi', 'this topic', 'the topic', 'tema vazhna',
         )
+        banned_fragments = (
+            'muhim jihat', 'important aspect', 'важный аспект', 'keng qamrovli', 'very important',
+            'this presentation', 'what this deck covers', 'overview of', 'rahmat', 'thank you', 'спасибо',
+        )
+        repeated_units: Counter[str] = Counter()
         too_generic = 0
         for section in plan.sections:
-            if section.focus.lower().startswith(generic_starts):
+            focus = section.focus.lower().strip()
+            repeated_units[focus] += 1
+            if focus.startswith(generic_starts) or any(fragment in focus for fragment in banned_fragments):
+                too_generic += 2
+            if len(set(re.findall(r"[a-zA-ZÀ-ÿА-Яа-я0-9ʻ’']+", focus))) < 5:
                 too_generic += 1
             for fact in section.facts:
-                lowered = fact.lower()
-                if lowered.startswith(generic_starts) or len(lowered.split()) < 5:
+                lowered = fact.lower().strip()
+                repeated_units[lowered] += 1
+                if lowered.startswith(generic_starts) or any(fragment in lowered for fragment in banned_fragments):
+                    too_generic += 2
+                if len(lowered.split()) < 5:
                     too_generic += 1
-        if too_generic >= 4:
+                if len(set(re.findall(r"[a-zA-ZÀ-ÿА-Яа-я0-9ʻ’']+", lowered))) < 4:
+                    too_generic += 1
+        too_generic += sum(1 for _, count in repeated_units.items() if count > 1)
+        if too_generic >= 5:
             raise GeminiPlannerError('Gemini juda ko‘p umumiy/generic matn qaytardi.')
 
     @staticmethod
@@ -516,26 +529,24 @@ class GeminiPresentationPlanner:
     ) -> str:
         language_name = self._language_name(language_code)
         domain_rules = self._domain_rules(topic)
-        return f"""You are a meticulous {self._domain_role(topic)} writing ONLY in {language_name}. Your task is to collect factual notes about the topic itself. Do not mention slides, presentation structure, audience, or the act of presenting. Return only valid JSON matching the requested keys.
+        return f"""Write ONLY in {language_name}. Return only valid JSON.
 
+Role: {self._domain_role(topic)}
 Topic: {topic}
-Presenter name for attribution only: {presenter_name}
-Total requested slides: {slide_count}
-Required factual sections: {section_count}
+Needed section_notes: {section_count}
 
-Research rules:
-- Every output string must be in {language_name}.
-- Every sentence must teach the topic itself.
-- scope_summary must be a single concise sentence and no longer than 170 characters.
-- Use concrete names, places, dates, developments, causes, consequences, and distinguishing features when relevant.
-- Avoid filler, introductions about the deck, motivational language, and generic presentation phrases.
-- Build exactly the requested number of section_notes.
-- Each section must contain 4 to 7 concrete facts.
-- Each fact must be one complete sentence, concise but meaningful, ideally suited for a single slide bullet.
-- final_takeaways must be factual conclusions, not thanks or closing ceremony language.
-- If uncertain, stay with well-established facts and avoid invented detail.
+Goal:
+Collect factual notes about the topic itself. Do not mention slides, audience, presenter, or deck structure.
 
-Domain-specific guidance:
+Rules:
+- Build exactly {section_count} section_notes.
+- scope_summary: one concise factual sentence, max 170 characters.
+- Each section must have 4 to 7 concrete facts.
+- Facts must contain topic content such as names, dates, places, causes, outcomes, examples, or characteristics when relevant.
+- Avoid generic lines like "this topic is important" or "this section explains".
+- If uncertain, use only safe, well-known facts and keep wording specific.
+
+Domain guidance:
 {domain_rules}
 """
 
@@ -544,40 +555,59 @@ Domain-specific guidance:
         self,
         *,
         topic: str,
-        presenter_name: str,
-        slide_count: int,
         section_count: int,
         language_code: str,
         dossier: ResearchDossier,
     ) -> str:
         language_name = self._language_name(language_code)
         dossier_json = json.dumps(dossier.model_dump(mode='json'), ensure_ascii=False, indent=2)
-        return f"""You are a careful content editor working ONLY in {language_name}. Transform the research dossier into a factual teaching plan. You are NOT a presentation writer. Do not talk about slides, the audience, or what the deck will do. Return only valid JSON as a plain object with these keys: presentation_title, title_subtitle, agenda_items, sections, summary_points.
+        example_bad_focus = {
+            'uz': 'Bu bo‘lim mavzuning muhim jihatlarini yoritadi.',
+            'ru': 'Этот раздел раскрывает важные аспекты темы.',
+            'en': 'This section explains important aspects of the topic.',
+        }[language_code if language_code in {'uz', 'ru', 'en'} else 'uz']
+        example_good_focus = {
+            'uz': 'Temuriylar davrida Samarqand ilm, savdo va me’morchilik markaziga aylandi.',
+            'ru': 'В эпоху Тимуридов Самарканд стал центром науки, торговли и архитектуры.',
+            'en': 'Under the Timurids, Samarkand became a center of scholarship, trade, and architecture.',
+        }[language_code if language_code in {'uz', 'ru', 'en'} else 'uz']
+        example_bad_fact = {
+            'uz': 'Mavzu juda muhim va keng qamrovli hisoblanadi.',
+            'ru': 'Тема является очень важной и широкой.',
+            'en': 'The topic is very important and broad.',
+        }[language_code if language_code in {'uz', 'ru', 'en'} else 'uz']
+        example_good_fact = {
+            'uz': '1404-yilda Samarqandda Bibixonim masjidi qurilishi yakuniga yetdi.',
+            'ru': 'В 1404 году в Самарканде было завершено строительство мечети Биби-Ханым.',
+            'en': 'In 1404, construction of the Bibi-Khanym Mosque in Samarkand reached completion.',
+        }[language_code if language_code in {'uz', 'ru', 'en'} else 'uz']
+        return f"""Write ONLY in {language_name}. Return only valid JSON.
+
+Task:
+Convert the research dossier into a factual presentation plan about the topic itself.
+Do not mention slides, audience, presenter, deck, overview, or thank-you language.
 
 Topic: {topic}
-Presenter name for cover only: {presenter_name}
-Total requested slides: {slide_count}
-Required factual body sections: {section_count}
+Needed sections: {section_count}
 
-Strict rules:
-- Every output string must be in {language_name}.
-- Use only topic-grounded content.
-- title_subtitle must be one sentence and no longer than 170 characters.
-- agenda_items must be 4 to 8 short topic sections or periods.
-- sections must equal the required body section count exactly.
-- Every section object must contain: content_type, title, focus, facts.
-- Vary the body layouts naturally across the deck when the content supports it. Prefer a mix of facts, process, and at least one table or comparison section when the topic genuinely contains structured or comparable information.
-- Use content_type="process" only when chronology or sequence is clear.
-- Use content_type="table" only when there is real comparative or structured data.
-- Prefer 1 or 2 table sections total, never force more than 2.
-- If a table is used, the table data must be carried inside section.table with keys columns and rows.
-- Table columns must be concise, topic-specific labels in the chosen language.
-- Table cell values must be short and compact, ideally 2 to 7 words.
-- Table rows must be arrays of plain strings only. Never serialize a dictionary or object as a string inside a cell.
-- Do not repeat the full section title in every table row.
-- If structured table data is not clearly available, use content_type="facts" instead of forcing a table.
-- Summary points must be one complete sentence each, concise and readable on a slide card.
-- Never use phrases like "this presentation", "overview", "thank you", or "what this deck covers".
+Rules:
+- sections must contain exactly {section_count} items.
+- Use only content supported by the dossier.
+- agenda_items must be short topic sections or periods, not meta labels.
+- focus must be specific and factual, not generic.
+- facts must be concrete statements, not filler.
+- Use content_type="process" only for chronology, sequence, or development.
+- Use content_type="table" only when the dossier clearly contains comparisons, categories, dates, or structured records.
+- Use 0 to 2 table sections. Never force a table.
+- If content_type is "table", include section.table.columns and section.table.rows.
+- Table cells must be short plain strings, never nested JSON.
+- summary_points must be factual conclusions about the topic.
+
+Bad vs good examples:
+- Bad focus: {example_bad_focus}
+- Good focus: {example_good_focus}
+- Bad fact: {example_bad_fact}
+- Good fact: {example_good_fact}
 
 Research dossier:
 {dossier_json}

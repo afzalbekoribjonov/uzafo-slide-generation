@@ -174,9 +174,11 @@ PRESENTATION_PLAN_RESPONSE_SCHEMA = {
                             },
                         },
                         'required': ['columns', 'rows'],
+                        'additionalProperties': False,
                     },
                 },
                 'required': ['content_type', 'title', 'focus', 'facts'],
+                'additionalProperties': False,
             },
         },
         'summary_points': {
@@ -188,4 +190,5 @@ PRESENTATION_PLAN_RESPONSE_SCHEMA = {
         },
     },
     'required': ['presentation_title', 'title_subtitle', 'agenda_items', 'sections', 'summary_points'],
+    'additionalProperties': False,
 }
