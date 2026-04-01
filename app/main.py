@@ -19,6 +19,7 @@ from app.handlers.user.create import router as create_router
 from app.handlers.user.menu import router as menu_router
 from app.handlers.user.start import router as start_router
 from app.handlers.user.subscription import router as subscription_router
+from app.middlewares.database_resilience import DatabaseResilienceMiddleware
 from app.middlewares.subscription_guard import SubscriptionGuardMiddleware
 from app.middlewares.user_access import UserAccessMiddleware
 from app.repositories.channels import ChannelsRepository
@@ -29,10 +30,12 @@ from app.services.admin import AdminService
 from app.services.gemini_planner import GeminiPresentationPlanner
 from app.services.generation_queue import GenerationQueueService
 from app.services.generations import GenerationAccessService
+from app.services.data_migration import LegacyMongoToCurrentDbMigrationService
 from app.services.pptx_generation import PptxGenerationService
 from app.services.referrals import ReferralService
 from app.services.subscriptions import SubscriptionService
 from app.services.users import UserService
+from pymongo.errors import PyMongoError
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +45,10 @@ async def build_runtime(settings: Settings) -> dict:
     dp = Dispatcher(storage=MemoryStorage())
 
     mongo = Mongo(settings.mongodb_uri, settings.mongodb_db)
-    await setup_indexes(mongo.db)
+    try:
+        await setup_indexes(mongo.db)
+    except PyMongoError as exc:
+        logger.warning('MongoDB indexes could not be created during startup. Bot will keep running: %s', exc)
 
     users_repo = UsersRepository(mongo.db.users)
     referrals_repo = ReferralsRepository(mongo.db.referrals)
@@ -72,9 +78,15 @@ async def build_runtime(settings: Settings) -> dict:
     me = await bot.get_me()
     admin_service = AdminService(
         users_repo=users_repo,
+        channels_repo=channels_repo,
         generations_repo=generations_repo,
         generation_access_service=generation_access_service,
         bot_username=me.username or 'your_bot',
+    )
+    data_migration_service = LegacyMongoToCurrentDbMigrationService(
+        current_db=mongo.db,
+        legacy_mongodb_uri=settings.legacy_mongodb_uri,
+        legacy_mongodb_db=settings.legacy_mongodb_db,
     )
 
     dp['users_repo'] = users_repo
@@ -87,12 +99,16 @@ async def build_runtime(settings: Settings) -> dict:
     dp['generation_queue_service'] = generation_queue_service
     dp['subscription_service'] = subscription_service
     dp['admin_service'] = admin_service
+    dp['data_migration_service'] = data_migration_service
     dp['admin_ids'] = admin_ids
     dp['bot_username'] = me.username or 'your_bot'
     dp['support_contact'] = settings.support_contact
 
+    db_resilience = DatabaseResilienceMiddleware()
     user_access = UserAccessMiddleware()
     subscription_guard = SubscriptionGuardMiddleware()
+    dp.message.outer_middleware(db_resilience)
+    dp.callback_query.outer_middleware(db_resilience)
     dp.message.middleware(user_access)
     dp.callback_query.middleware(user_access)
     dp.message.middleware(subscription_guard)

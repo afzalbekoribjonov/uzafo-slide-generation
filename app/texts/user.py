@@ -321,3 +321,16 @@ def bot_access_blocked_text() -> str:
 
 def bot_access_blocked_alert_text() -> str:
     return 'Siz uchun botdan foydalanish vaqtincha cheklangan.'
+
+
+def technical_maintenance_text() -> str:
+    return (
+        "<b>⚠️ Texnik ishlar</b>\n\n"
+        "Texnik ishlar sababli hozirda xizmat ko‘rsatish imkoni yo‘q. "
+        "Birozdan keyin harakat qilib ko‘ring.\n\n"
+        "Noqulayliklar uchun uzr."
+    )
+
+
+def technical_maintenance_alert_text() -> str:
+    return "Texnik ishlar sababli hozircha xizmat ko‘rsatib bo‘lmaydi."

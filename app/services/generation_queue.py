@@ -66,9 +66,17 @@ class GenerationQueueService:
         return job, ahead_count, None
 
     async def run_worker(self, bot: Bot) -> None:
-        requeued = await self.generations_repo.requeue_processing_jobs()
-        if requeued:
-            logger.warning('Requeued %s processing jobs after restart.', requeued)
+        while True:
+            try:
+                requeued = await self.generations_repo.requeue_processing_jobs()
+                if requeued:
+                    logger.warning('Requeued %s processing jobs after restart.', requeued)
+                break
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                logger.exception('Generation worker could not initialize queue state. Retrying...')
+                await asyncio.sleep(self.poll_interval_seconds)
 
         while True:
             try:

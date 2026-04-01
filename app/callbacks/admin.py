@@ -17,5 +17,11 @@ class AdminBroadcastCallback(CallbackData, prefix='admb'):
     value: str = '0'
 
 
+class AdminChannelCallback(CallbackData, prefix='admc'):
+    action: str
+    chat_id: int
+    value: str = '0'
+
+
 class PublicPostCallback(CallbackData, prefix='pub'):
     action: str

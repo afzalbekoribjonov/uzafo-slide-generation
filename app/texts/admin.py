@@ -183,6 +183,62 @@ def admin_credit_prompt_text(user: dict, operation: str) -> str:
 
 
 
+def admin_channels_text(channels: list[dict]) -> str:
+    lines = [
+        "<b>📢 Majburiy kanallar</b>",
+        '',
+        "Quyida foydalanuvchilar uchun majburiy obuna sifatida ishlayotgan kanallar ro‘yxati keltirilgan.",
+        '',
+    ]
+    if not channels:
+        lines.append("Hozircha majburiy kanallar qo‘shilmagan.")
+        return '\n'.join(lines)
+
+    for index, channel in enumerate(channels, start=1):
+        title = escape(channel.get('title') or channel.get('username') or str(channel.get('chat_id')))
+        status = 'faol' if channel.get('is_active') else 'faolsiz'
+        lines.append(
+            f"{index}. <b>{title}</b> — <code>{channel.get('chat_id')}</code> — <b>{status}</b>"
+        )
+    return '\n'.join(lines)
+
+
+def admin_channel_add_prompt_text() -> str:
+    return (
+        "<b>➕ Yangi majburiy kanal qo‘shish</b>\n\n"
+        "Kanalni quyidagi ko‘rinishlardan birida yuboring:\n"
+        "• <code>@kanal_username</code>\n"
+        "• <code>https://t.me/kanal_username</code>\n"
+        "• <code>-1001234567890</code>\n\n"
+        "Eslatma: bot ushbu kanalga kamida a’zo bo‘lishi, ideal holatda admin bo‘lishi kerak."
+    )
+
+
+def admin_channel_private_link_prompt_text(channel_payload: dict) -> str:
+    title = escape(channel_payload.get('title') or str(channel_payload.get('chat_id')))
+    return (
+        "<b>🔗 Invite link kerak</b>\n\n"
+        f"Kanal: <b>{title}</b>\n"
+        "Bu kanal public username ga ega emas. Iltimos, kanal uchun invite link yuboring.\n\n"
+        "Masalan: <code>https://t.me/+example</code>"
+    )
+
+
+def admin_channel_card_text(channel: dict) -> str:
+    title = escape(channel.get('title') or 'Noma’lum kanal')
+    username = channel.get('username') or '—'
+    invite_link = channel.get('invite_link') or '—'
+    status = 'faol' if channel.get('is_active') else 'faolsiz'
+    return (
+        "<b>📢 Kanal kartasi</b>\n\n"
+        f"• Nomi: <b>{title}</b>\n"
+        f"• Chat ID: <code>{channel.get('chat_id')}</code>\n"
+        f"• Username: <b>{escape(str(username))}</b>\n"
+        f"• Invite link: <code>{escape(str(invite_link))}</code>\n"
+        f"• Holati: <b>{status}</b>"
+    )
+
+
 def admin_broadcast_menu_text() -> str:
     return (
         "<b>📣 Ommaviy xabarlar</b>\n\n"

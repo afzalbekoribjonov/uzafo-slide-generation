@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     bot_token: str = Field(alias='BOT_TOKEN')
     mongodb_uri: str = Field(alias='MONGODB_URI')
     mongodb_db: str = Field(default='slide_bot', alias='MONGODB_DB')
+    legacy_mongodb_uri: str | None = Field(default=None, alias='LEGACY_MONGODB_URI')
+    legacy_mongodb_db: str | None = Field(default=None, alias='LEGACY_MONGODB_DB')
     admins: list[int] = Field(default_factory=list, validation_alias=AliasChoices('ADMINS', 'ADMIN_IDS'))
     support_contact: str = Field(default='@uzafo', alias='SUPPORT_CONTACT')
     generation_worker_poll_seconds: int = Field(default=3, alias='GENERATION_WORKER_POLL_SECONDS')
@@ -75,6 +77,14 @@ class Settings(BaseSettings):
         if not value.startswith('/'):
             value = f'/{value}'
         return value
+
+    @field_validator('legacy_mongodb_uri', 'legacy_mongodb_db', mode='before')
+    @classmethod
+    def normalize_optional_strings(cls, value):
+        if value is None:
+            return None
+        value = str(value).strip()
+        return value or None
 
     @property
     def webhook_url(self) -> str:

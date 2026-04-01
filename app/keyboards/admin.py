@@ -3,7 +3,7 @@ from __future__ import annotations
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from app.callbacks.admin import AdminBroadcastCallback, AdminMenuCallback, AdminUserCallback
+from app.callbacks.admin import AdminBroadcastCallback, AdminChannelCallback, AdminMenuCallback, AdminUserCallback
 from app.services.admin import AdminService
 from app.callbacks.menu import MenuCallback
 
@@ -14,10 +14,11 @@ def admin_main_keyboard() -> InlineKeyboardMarkup:
     builder.button(text='📈 Statistika', callback_data=AdminMenuCallback(action='stats'))
     builder.button(text='🏆 Reyting', callback_data=AdminMenuCallback(action='rating'))
     builder.button(text='🔎 Foydalanuvchi qidirish', callback_data=AdminMenuCallback(action='users'))
+    builder.button(text='📢 Majburiy kanallar', callback_data=AdminMenuCallback(action='channels'))
     builder.button(text='📣 Ommaviy xabar', callback_data=AdminMenuCallback(action='broadcast'))
     builder.button(text='📤 Eksport', callback_data=AdminMenuCallback(action='exports'))
     builder.button(text='◀️ User menyusi', callback_data=MenuCallback(action='main'))
-    builder.adjust(2, 1, 1, 1, 1)
+    builder.adjust(2, 2, 1, 1, 1)
     return builder.as_markup()
 
 
@@ -117,4 +118,34 @@ def admin_export_format_keyboard(filter_key: str) -> InlineKeyboardMarkup:
     builder.button(text='📘 XLSX', callback_data=AdminMenuCallback(action='export_format', value=f'{filter_key}__xlsx'))
     builder.button(text='◀️ Auditoriyalar', callback_data=AdminMenuCallback(action='exports'))
     builder.adjust(2, 1)
+    return builder.as_markup()
+
+
+def admin_channels_keyboard(channels: list[dict]) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    for channel in channels[:20]:
+        title = channel.get('title') or channel.get('username') or str(channel.get('chat_id'))
+        status_icon = '🟢' if channel.get('is_active') else '⚪️'
+        builder.button(
+            text=f'{status_icon} {title[:28]}',
+            callback_data=AdminChannelCallback(action='open', chat_id=int(channel['chat_id'])),
+        )
+    builder.button(text='➕ Kanal qo‘shish', callback_data=AdminChannelCallback(action='add', chat_id=0))
+    builder.button(text='◀️ Admin menyu', callback_data=AdminMenuCallback(action='main'))
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def admin_channel_card_keyboard(channel: dict) -> InlineKeyboardMarkup:
+    chat_id = int(channel['chat_id'])
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='⏸ Faolsiz qilish' if channel.get('is_active') else '▶️ Faollashtirish',
+        callback_data=AdminChannelCallback(action='toggle', chat_id=chat_id),
+    )
+    builder.button(text='🗑 O‘chirish', callback_data=AdminChannelCallback(action='delete', chat_id=chat_id))
+    builder.button(text='🔄 Yangilash', callback_data=AdminChannelCallback(action='open', chat_id=chat_id))
+    builder.button(text='➕ Kanal qo‘shish', callback_data=AdminChannelCallback(action='add', chat_id=0))
+    builder.button(text='◀️ Kanallar ro‘yxati', callback_data=AdminMenuCallback(action='channels'))
+    builder.adjust(2, 1, 1, 1)
     return builder.as_markup()

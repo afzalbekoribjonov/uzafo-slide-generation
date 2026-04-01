@@ -5,7 +5,12 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 class Mongo:
     def __init__(self, uri: str, db_name: str) -> None:
-        self._client = AsyncIOMotorClient(uri)
+        self._client = AsyncIOMotorClient(
+            uri,
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=5000,
+            socketTimeoutMS=5000,
+        )
         self.db: AsyncIOMotorDatabase = self._client[db_name]
 
     async def close(self) -> None:

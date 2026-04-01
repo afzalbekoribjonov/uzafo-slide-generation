@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+from html import escape
+
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, FSInputFile, Message
 
-from app.callbacks.admin import AdminBroadcastCallback, AdminMenuCallback, AdminUserCallback
+from app.callbacks.admin import AdminBroadcastCallback, AdminChannelCallback, AdminMenuCallback, AdminUserCallback
 from app.filters.admin import AdminFilter
 from app.keyboards.admin import (
     admin_broadcast_audience_keyboard,
     admin_broadcast_preview_keyboard,
     admin_broadcast_skip_buttons_keyboard,
+    admin_channel_card_keyboard,
+    admin_channels_keyboard,
     admin_export_format_keyboard,
     admin_export_keyboard,
     admin_main_keyboard,
@@ -19,13 +23,22 @@ from app.keyboards.admin import (
     admin_user_card_keyboard,
 )
 from app.services.admin import AdminService
-from app.states.admin import AdminBroadcastStates, AdminUserSearchStates
+from app.services.data_migration import (
+    LegacyMongoToCurrentDbMigrationService,
+    MigrationBlockedError,
+    MigrationConfigError,
+)
+from app.states.admin import AdminBroadcastStates, AdminChannelStates, AdminUserSearchStates
 from app.texts.admin import (
     admin_broadcast_buttons_prompt_text,
     admin_broadcast_content_prompt_text,
     admin_broadcast_menu_text,
     admin_broadcast_preview_text,
     admin_broadcast_result_text,
+    admin_channel_add_prompt_text,
+    admin_channel_card_text,
+    admin_channel_private_link_prompt_text,
+    admin_channels_text,
     admin_credit_prompt_text,
     admin_export_ready_text,
     admin_export_text,
@@ -41,6 +54,33 @@ from app.texts.admin import (
 router = Router(name='admin-panel')
 router.message.filter(AdminFilter())
 router.callback_query.filter(AdminFilter())
+
+
+def _migration_summary_text(summary: dict) -> str:
+    users = summary.get('users', {})
+    referrals = summary.get('referrals', {})
+    channels = summary.get('mandatory_channels', {})
+    generations = summary.get('generations', {})
+    legacy_db_name = escape(str(summary.get('legacy_db_name') or 'legacy'))
+    return (
+        "<b>✅ Legacy data migratsiyasi yakunlandi</b>\n\n"
+        f"• Legacy DB: <code>{legacy_db_name}</code>\n\n"
+        "<u>Users</u>\n"
+        f"• Insert: <b>{users.get('inserted', 0)}</b>\n"
+        f"• Merge: <b>{users.get('merged', 0)}</b>\n"
+        f"• Skip: <b>{users.get('skipped', 0)}</b>\n\n"
+        "<u>Referrals</u>\n"
+        f"• Insert: <b>{referrals.get('inserted', 0)}</b>\n"
+        f"• Update: <b>{referrals.get('updated', 0)}</b>\n"
+        f"• Skip: <b>{referrals.get('skipped', 0)}</b>\n\n"
+        "<u>Mandatory Channels</u>\n"
+        f"• Insert: <b>{channels.get('inserted', 0)}</b>\n"
+        f"• Update: <b>{channels.get('updated', 0)}</b>\n"
+        f"• Skip: <b>{channels.get('skipped', 0)}</b>\n\n"
+        "<u>Generations</u>\n"
+        f"• Import: <b>{generations.get('inserted', 0)}</b>\n"
+        f"• Skip: <b>{generations.get('skipped', 0)}</b>"
+    )
 
 
 async def _show_admin_home(target: Message | CallbackQuery, admin_name: str, *, edit: bool = True) -> None:
@@ -97,10 +137,75 @@ async def _open_user_card(target: CallbackQuery | Message, admin_service: AdminS
     await target.answer(text=text, reply_markup=reply_markup)
 
 
+async def _show_channels(target: Message | CallbackQuery, admin_service: AdminService, *, edit: bool = True) -> None:
+    channels = await admin_service.list_mandatory_channels()
+    text = admin_channels_text(channels)
+    reply_markup = admin_channels_keyboard(channels)
+
+    if isinstance(target, CallbackQuery) and target.message and edit:
+        await target.message.edit_text(text=text, reply_markup=reply_markup)
+        await target.answer()
+        return
+
+    if isinstance(target, CallbackQuery):
+        await target.message.answer(text=text, reply_markup=reply_markup)
+        await target.answer()
+        return
+
+    await target.answer(text=text, reply_markup=reply_markup)
+
+
+async def _open_channel_card(target: CallbackQuery | Message, admin_service: AdminService, chat_id: int) -> None:
+    channel = await admin_service.get_mandatory_channel(chat_id)
+    if not channel:
+        if isinstance(target, CallbackQuery):
+            await target.answer('Kanal topilmadi.', show_alert=True)
+        else:
+            await target.answer('Kanal topilmadi.')
+        return
+
+    text = admin_channel_card_text(channel)
+    reply_markup = admin_channel_card_keyboard(channel)
+
+    if isinstance(target, CallbackQuery) and target.message:
+        await target.message.edit_text(text=text, reply_markup=reply_markup)
+        await target.answer()
+        return
+
+    await target.answer(text=text, reply_markup=reply_markup)
+
+
 @router.message(Command('admin'))
 async def admin_command_handler(message: Message, state: FSMContext) -> None:
     await state.clear()
     await _show_admin_home(message, message.from_user.full_name, edit=False)
+
+
+@router.message(Command('data_mongodb_to_current_db'))
+async def admin_data_mongodb_to_current_db_handler(
+    message: Message,
+    state: FSMContext,
+    data_migration_service: LegacyMongoToCurrentDbMigrationService,
+) -> None:
+    await state.clear()
+    await message.answer('⏳ Legacy MongoDB ma’lumotlari current DB ga ko‘chirilmoqda. Bu biroz vaqt olishi mumkin.')
+    try:
+        summary = await data_migration_service.run(admin_id=message.from_user.id)
+    except MigrationBlockedError as exc:
+        await message.answer(admin_simple_result_text(str(exc)))
+        return
+    except MigrationConfigError as exc:
+        await message.answer(admin_simple_result_text(str(exc)))
+        return
+    except Exception as exc:
+        await message.answer(
+            admin_simple_result_text(
+                f"Migratsiya yakunlanmadi: {escape(str(exc) or 'noma’lum xatolik')}"
+            )
+        )
+        return
+
+    await message.answer(_migration_summary_text(summary))
 
 
 @router.callback_query(AdminMenuCallback.filter(F.action == 'main'))
@@ -142,6 +247,68 @@ async def admin_users_handler(callback: CallbackQuery, state: FSMContext) -> Non
     await callback.answer()
 
 
+@router.callback_query(AdminMenuCallback.filter(F.action == 'channels'))
+async def admin_channels_handler(callback: CallbackQuery, state: FSMContext, admin_service: AdminService) -> None:
+    await state.clear()
+    await _show_channels(callback, admin_service)
+
+
+@router.callback_query(AdminChannelCallback.filter(F.action == 'add'))
+async def admin_channel_add_handler(callback: CallbackQuery, state: FSMContext) -> None:
+    await state.clear()
+    await state.set_state(AdminChannelStates.waiting_channel_reference)
+    await callback.message.edit_text(
+        text=admin_channel_add_prompt_text(),
+        reply_markup=admin_secondary_keyboard(),
+    )
+    await callback.answer()
+
+
+@router.message(AdminChannelStates.waiting_channel_reference)
+async def admin_channel_reference_handler(message: Message, state: FSMContext, admin_service: AdminService) -> None:
+    raw_reference = (message.text or '').strip()
+    try:
+        channel_payload = await admin_service.resolve_channel_reference(bot=message.bot, raw_reference=raw_reference)
+    except ValueError as exc:
+        await message.answer(str(exc))
+        return
+
+    if channel_payload.get('invite_link'):
+        await admin_service.save_mandatory_channel(channel_payload)
+        await state.clear()
+        await message.answer(admin_simple_result_text('Kanal muvaffaqiyatli saqlandi.'))
+        await _show_channels(message, admin_service, edit=False)
+        return
+
+    await state.set_state(AdminChannelStates.waiting_channel_invite_link)
+    await state.update_data(pending_channel_payload=channel_payload)
+    await message.answer(
+        text=admin_channel_private_link_prompt_text(channel_payload),
+        reply_markup=admin_secondary_keyboard(),
+    )
+
+
+@router.message(AdminChannelStates.waiting_channel_invite_link)
+async def admin_channel_invite_link_handler(message: Message, state: FSMContext, admin_service: AdminService) -> None:
+    data = await state.get_data()
+    channel_payload = data.get('pending_channel_payload')
+    if not channel_payload:
+        await state.clear()
+        await message.answer('Kanal ma’lumoti topilmadi. Qaytadan urinib ko‘ring.')
+        return
+
+    try:
+        channel_payload['invite_link'] = admin_service.normalize_invite_link(message.text or '')
+    except ValueError as exc:
+        await message.answer(str(exc))
+        return
+
+    await admin_service.save_mandatory_channel(channel_payload)
+    await state.clear()
+    await message.answer(admin_simple_result_text('Private kanal muvaffaqiyatli saqlandi.'))
+    await _show_channels(message, admin_service, edit=False)
+
+
 @router.message(AdminUserSearchStates.waiting_query)
 async def admin_user_search_message_handler(message: Message, state: FSMContext, admin_service: AdminService) -> None:
     query = (message.text or '').strip()
@@ -161,6 +328,33 @@ async def admin_user_search_message_handler(message: Message, state: FSMContext,
 async def admin_open_user_handler(callback: CallbackQuery, callback_data: AdminUserCallback, admin_service: AdminService, state: FSMContext) -> None:
     await state.clear()
     await _open_user_card(callback, admin_service, callback_data.user_id)
+
+
+@router.callback_query(AdminChannelCallback.filter(F.action == 'open'))
+async def admin_channel_open_handler(callback: CallbackQuery, callback_data: AdminChannelCallback, admin_service: AdminService) -> None:
+    await _open_channel_card(callback, admin_service, callback_data.chat_id)
+
+
+@router.callback_query(AdminChannelCallback.filter(F.action == 'toggle'))
+async def admin_channel_toggle_handler(callback: CallbackQuery, callback_data: AdminChannelCallback, admin_service: AdminService) -> None:
+    channel = await admin_service.get_mandatory_channel(callback_data.chat_id)
+    if not channel:
+        await callback.answer('Kanal topilmadi.', show_alert=True)
+        return
+
+    await admin_service.set_channel_active(callback_data.chat_id, not bool(channel.get('is_active')))
+    await _open_channel_card(callback, admin_service, callback_data.chat_id)
+
+
+@router.callback_query(AdminChannelCallback.filter(F.action == 'delete'))
+async def admin_channel_delete_handler(callback: CallbackQuery, callback_data: AdminChannelCallback, admin_service: AdminService) -> None:
+    deleted = await admin_service.delete_channel(callback_data.chat_id)
+    if not deleted:
+        await callback.answer('Kanal topilmadi.', show_alert=True)
+        return
+
+    await callback.answer('Kanal o‘chirildi.', show_alert=True)
+    await _show_channels(callback, admin_service)
 
 
 @router.callback_query(AdminUserCallback.filter(F.action.in_({'toggle_unlimited', 'toggle_generation_block', 'toggle_bot_block'})))

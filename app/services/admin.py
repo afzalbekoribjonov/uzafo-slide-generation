@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import csv
+import re
 import tempfile
 from datetime import timedelta
 from pathlib import Path
@@ -15,6 +16,7 @@ from openpyxl.styles import Font
 from pymongo import DESCENDING
 
 from app.callbacks.admin import PublicPostCallback
+from app.repositories.channels import ChannelsRepository
 from app.repositories.generations import GenerationsRepository
 from app.repositories.users import UsersRepository, utcnow
 from app.services.generations import GenerationAccessService
@@ -45,11 +47,13 @@ class AdminService:
         self,
         *,
         users_repo: UsersRepository,
+        channels_repo: ChannelsRepository,
         generations_repo: GenerationsRepository,
         generation_access_service: GenerationAccessService,
         bot_username: str,
     ) -> None:
         self.users_repo = users_repo
+        self.channels_repo = channels_repo
         self.generations_repo = generations_repo
         self.generation_access_service = generation_access_service
         self.bot_username = bot_username
@@ -387,3 +391,89 @@ class AdminService:
             Path(path).unlink(missing_ok=True)
         except Exception:
             pass
+
+    async def list_mandatory_channels(self) -> list[dict[str, Any]]:
+        return await self.channels_repo.list_all()
+
+    async def get_mandatory_channel(self, chat_id: int) -> dict[str, Any] | None:
+        return await self.channels_repo.get_by_chat_id(chat_id)
+
+    async def set_channel_active(self, chat_id: int, value: bool) -> dict[str, Any] | None:
+        return await self.channels_repo.set_active(chat_id, value)
+
+    async def delete_channel(self, chat_id: int) -> bool:
+        return await self.channels_repo.delete_by_chat_id(chat_id)
+
+    async def save_mandatory_channel(self, channel_payload: dict[str, Any]) -> dict[str, Any]:
+        return await self.channels_repo.upsert_channel(
+            chat_id=int(channel_payload['chat_id']),
+            title=str(channel_payload['title']),
+            username=channel_payload.get('username'),
+            invite_link=channel_payload.get('invite_link'),
+            is_active=bool(channel_payload.get('is_active', True)),
+        )
+
+    async def resolve_channel_reference(self, *, bot: Bot, raw_reference: str) -> dict[str, Any]:
+        reference = self._normalize_channel_reference(raw_reference)
+        if not reference:
+            raise ValueError('Kanal manzili noto‘g‘ri. @username, t.me havola yoki chat_id yuboring.')
+
+        try:
+            chat = await bot.get_chat(reference)
+        except Exception as exc:
+            raise ValueError('Kanal topilmadi yoki bot uni ko‘ra olmayapti.') from exc
+
+        if getattr(chat, 'type', None) not in {'channel', 'supergroup'}:
+            raise ValueError('Faqat kanal yoki supergroup turidagi chat qo‘llab-quvvatlanadi.')
+
+        me = await bot.get_me()
+        try:
+            await bot.get_chat_member(chat_id=chat.id, user_id=me.id)
+        except Exception as exc:
+            raise ValueError(
+                'Bot ushbu kanalga qo‘shilmagan yoki obunani tekshirish uchun yetarli huquqqa ega emas.'
+            ) from exc
+
+        username = getattr(chat, 'username', None)
+        username = username.lstrip('@') if username else None
+        invite_link = f'https://t.me/{username}' if username else None
+        return {
+            'chat_id': int(chat.id),
+            'title': getattr(chat, 'title', None) or username or str(chat.id),
+            'username': username,
+            'invite_link': invite_link,
+            'is_active': True,
+        }
+
+    @staticmethod
+    def normalize_invite_link(value: str) -> str:
+        link = str(value or '').strip()
+        if not link:
+            raise ValueError('Invite link bo‘sh bo‘lmasligi kerak.')
+        if link.startswith('http://'):
+            link = 'https://' + link.removeprefix('http://')
+        if link.startswith('t.me/'):
+            link = 'https://' + link
+        if not re.match(r'^https://t\.me/[^\s]+$', link):
+            raise ValueError('Invite link https://t.me/... ko‘rinishida bo‘lishi kerak.')
+        return link
+
+    @staticmethod
+    def _normalize_channel_reference(value: str) -> str | int | None:
+        raw = str(value or '').strip()
+        if not raw:
+            return None
+        if raw.startswith('https://t.me/'):
+            raw = raw.removeprefix('https://t.me/')
+        elif raw.startswith('http://t.me/'):
+            raw = raw.removeprefix('http://t.me/')
+        elif raw.startswith('t.me/'):
+            raw = raw.removeprefix('t.me/')
+        raw = raw.strip().rstrip('/')
+        if raw.startswith('@'):
+            return raw
+        if raw.lstrip('-').isdigit():
+            return int(raw)
+        if re.fullmatch(r'[A-Za-z0-9_]{4,}', raw):
+            return f'@{raw}'
+        return None

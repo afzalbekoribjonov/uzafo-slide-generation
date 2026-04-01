@@ -9,3 +9,8 @@ class AdminUserSearchStates(StatesGroup):
 class AdminBroadcastStates(StatesGroup):
     waiting_content = State()
     waiting_buttons = State()
+
+
+class AdminChannelStates(StatesGroup):
+    waiting_channel_reference = State()
+    waiting_channel_invite_link = State()
