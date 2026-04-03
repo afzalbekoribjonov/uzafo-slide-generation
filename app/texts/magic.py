@@ -122,7 +122,21 @@ def magic_start_ready_text(context: dict[str, Any]) -> str:
         f"• Joriy balans: <b>{balance} so‘m</b>\n"
         f"• 1 ta premium taqdimot narxi: <b>{price} so‘m</b>\n\n"
         "Quyidagi tugmani bosish orqali mavzu, til va kerakli ma’lumotlarni kiriting.\n"
+        "Agar hozircha davom etmoqchi bo‘lmasangiz, <b>bekor qilish</b> tugmasini bosing.\n"
         "<b>Muhim:</b> mablag‘ faqat tayyor PPTX sizga muvaffaqiyatli yuborilgandan keyin yechiladi."
+    )
+
+
+def magic_start_cancelled_text() -> str:
+    return (
+        "<b>◀️ Yaratish jarayoni bekor qilindi</b>\n\n"
+        "Magic Slayd yaratish oynasi yopildi. Istasangiz, keyinroq qayta boshlashingiz mumkin."
+    )
+
+
+def magic_start_prompt_text() -> str:
+    return (
+        "Pastdagi tugma orqali yaratishni boshlang yoki <b>bekor qilish</b> tugmasi bilan chiqing."
     )
 
 

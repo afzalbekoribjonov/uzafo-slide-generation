@@ -14,6 +14,9 @@ from app.callbacks.admin import AdminMenuCallback
 from app.callbacks.magic import MagicAdminCallback, MagicCardCallback, MagicMenuCallback, MagicTopupCallback
 from app.callbacks.menu import MenuCallback
 
+MAGIC_START_BUTTON_TEXT = 'Slayd yaratishni boshlash'
+MAGIC_START_CANCEL_TEXT = '❌ Yaratishni bekor qilish'
+
 
 def magic_home_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
@@ -68,13 +71,14 @@ def magic_start_keyboard(webapp_url: str) -> ReplyKeyboardMarkup:
         keyboard=[
             [
                 KeyboardButton(
-                    text='Slayd yaratishni boshlash',
+                    text=MAGIC_START_BUTTON_TEXT,
                     web_app=WebAppInfo(url=webapp_url),
                 )
-            ]
+            ],
+            [KeyboardButton(text=MAGIC_START_CANCEL_TEXT)],
         ],
         resize_keyboard=True,
-        one_time_keyboard=True,
+        one_time_keyboard=False,
         input_field_placeholder='Pastdagi tugma orqali formani oching',
     )
 

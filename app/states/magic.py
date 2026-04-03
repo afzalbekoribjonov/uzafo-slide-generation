@@ -5,6 +5,10 @@ class MagicTopUpStates(StatesGroup):
     waiting_receipt = State()
 
 
+class MagicOrderStates(StatesGroup):
+    waiting_webapp = State()
+
+
 class AdminMagicStates(StatesGroup):
     waiting_price = State()
     waiting_card_details = State()

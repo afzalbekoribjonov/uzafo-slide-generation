@@ -7,6 +7,7 @@ from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 from app.callbacks.magic import MagicMenuCallback
 from app.callbacks.menu import MenuCallback
 from app.keyboards.magic import (
+    MAGIC_START_CANCEL_TEXT,
     admin_magic_topup_review_keyboard,
     magic_account_keyboard,
     magic_home_keyboard,
@@ -18,6 +19,7 @@ from app.keyboards.magic import (
 from app.repositories.users import UsersRepository
 from app.services.magic_slides import MagicSlideService
 from app.states.magic import MagicTopUpStates
+from app.states.magic import MagicOrderStates
 from app.texts.magic import (
     magic_account_text,
     magic_hook_text,
@@ -26,7 +28,9 @@ from app.texts.magic import (
     magic_order_queued_text,
     magic_receipt_prompt_text,
     magic_receipt_received_text,
+    magic_start_cancelled_text,
     magic_start_insufficient_text,
+    magic_start_prompt_text,
     magic_start_ready_text,
     magic_topup_approved_text,
     magic_topup_rejected_text,
@@ -38,12 +42,56 @@ from app.texts.magic import (
 router = Router(name='user-magic')
 
 
+async def _delete_magic_prompt_message(
+    *,
+    bot,
+    state: FSMContext,
+) -> bool:
+    data = await state.get_data()
+    prompt_chat_id = data.get('magic_webapp_prompt_chat_id')
+    prompt_message_id = data.get('magic_webapp_prompt_message_id')
+    had_prompt = bool(prompt_chat_id and prompt_message_id)
+    if had_prompt:
+        try:
+            await bot.delete_message(chat_id=int(prompt_chat_id), message_id=int(prompt_message_id))
+        except Exception:
+            pass
+    await state.update_data(magic_webapp_prompt_chat_id=None, magic_webapp_prompt_message_id=None)
+    return had_prompt
+
+
+async def _dismiss_magic_start_flow(
+    *,
+    bot,
+    state: FSMContext,
+    chat_id: int,
+    notify: bool = False,
+) -> bool:
+    had_prompt = await _delete_magic_prompt_message(bot=bot, state=state)
+    current_state = await state.get_state()
+    if current_state == MagicOrderStates.waiting_webapp.state:
+        await state.clear()
+    if had_prompt and notify:
+        await bot.send_message(
+            chat_id=chat_id,
+            text=magic_start_cancelled_text(),
+            reply_markup=ReplyKeyboardRemove(),
+        )
+    return had_prompt
+
+
 @router.callback_query(MenuCallback.filter(F.action == 'magic'))
 async def magic_menu_entry_handler(
     callback: CallbackQuery,
     state: FSMContext,
     magic_slide_service: MagicSlideService,
 ) -> None:
+    await _dismiss_magic_start_flow(
+        bot=callback.bot,
+        state=state,
+        chat_id=callback.from_user.id,
+        notify=True,
+    )
     await state.clear()
     context = await magic_slide_service.get_user_context(callback.from_user.id)
     await callback.message.edit_text(
@@ -59,6 +107,12 @@ async def magic_home_handler(
     state: FSMContext,
     magic_slide_service: MagicSlideService,
 ) -> None:
+    await _dismiss_magic_start_flow(
+        bot=callback.bot,
+        state=state,
+        chat_id=callback.from_user.id,
+        notify=True,
+    )
     await state.clear()
     context = await magic_slide_service.get_user_context(callback.from_user.id)
     await callback.message.edit_text(
@@ -71,8 +125,15 @@ async def magic_home_handler(
 @router.callback_query(MagicMenuCallback.filter(F.action == 'account'))
 async def magic_account_handler(
     callback: CallbackQuery,
+    state: FSMContext,
     magic_slide_service: MagicSlideService,
 ) -> None:
+    await _dismiss_magic_start_flow(
+        bot=callback.bot,
+        state=state,
+        chat_id=callback.from_user.id,
+        notify=True,
+    )
     context = await magic_slide_service.get_user_context(callback.from_user.id)
     await callback.message.edit_text(
         text=magic_account_text(context),
@@ -87,6 +148,12 @@ async def magic_topup_handler(
     state: FSMContext,
     magic_slide_service: MagicSlideService,
 ) -> None:
+    await _dismiss_magic_start_flow(
+        bot=callback.bot,
+        state=state,
+        chat_id=callback.from_user.id,
+        notify=True,
+    )
     await state.clear()
     context = await magic_slide_service.get_user_context(callback.from_user.id)
     if not context['cards']:
@@ -189,6 +256,12 @@ async def magic_start_handler(
     state: FSMContext,
     magic_slide_service: MagicSlideService,
 ) -> None:
+    await _dismiss_magic_start_flow(
+        bot=callback.bot,
+        state=state,
+        chat_id=callback.from_user.id,
+        notify=False,
+    )
     context = await magic_slide_service.get_user_context(callback.from_user.id)
 
     if context['maintenance_enabled']:
@@ -215,24 +288,46 @@ async def magic_start_handler(
         await callback.answer()
         return
 
-    existing_prompt = await state.get_data()
-    prompt_chat_id = existing_prompt.get('magic_webapp_prompt_chat_id')
-    prompt_message_id = existing_prompt.get('magic_webapp_prompt_message_id')
-    if prompt_chat_id and prompt_message_id:
-        try:
-            await callback.bot.delete_message(chat_id=int(prompt_chat_id), message_id=int(prompt_message_id))
-        except Exception:
-            pass
-
     prompt_message = await callback.message.answer(
-        text=magic_start_ready_text(context),
+        text=f"{magic_start_ready_text(context)}\n\n{magic_start_prompt_text()}",
         reply_markup=magic_start_keyboard(context['webapp_url']),
     )
+    await state.set_state(MagicOrderStates.waiting_webapp)
     await state.update_data(
         magic_webapp_prompt_chat_id=prompt_message.chat.id,
         magic_webapp_prompt_message_id=prompt_message.message_id,
     )
     await callback.answer()
+
+
+@router.message(MagicOrderStates.waiting_webapp, F.text == MAGIC_START_CANCEL_TEXT)
+async def magic_start_cancel_handler(
+    message: Message,
+    state: FSMContext,
+    magic_slide_service: MagicSlideService,
+) -> None:
+    await _dismiss_magic_start_flow(
+        bot=message.bot,
+        state=state,
+        chat_id=message.chat.id,
+        notify=False,
+    )
+    context = await magic_slide_service.get_user_context(message.from_user.id)
+    await message.answer(
+        magic_start_cancelled_text(),
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    await message.answer(
+        magic_hook_text(context),
+        reply_markup=magic_home_keyboard(),
+    )
+
+
+@router.message(MagicOrderStates.waiting_webapp, F.text)
+async def magic_start_waiting_handler(message: Message) -> None:
+    await message.answer(
+        "Pastdagi tugma orqali yaratishni boshlang yoki bekor qilish tugmasini bosing."
+    )
 
 
 @router.message(F.web_app_data)
@@ -242,28 +337,21 @@ async def magic_webapp_data_handler(
     users_repo: UsersRepository,
     magic_slide_service: MagicSlideService,
 ) -> None:
-    data = await state.get_data()
-    prompt_chat_id = data.get('magic_webapp_prompt_chat_id')
-    prompt_message_id = data.get('magic_webapp_prompt_message_id')
-    if prompt_chat_id and prompt_message_id:
-        try:
-            await message.bot.delete_message(chat_id=int(prompt_chat_id), message_id=int(prompt_message_id))
-        except Exception:
-            pass
+    await _delete_magic_prompt_message(bot=message.bot, state=state)
 
     user = await users_repo.get_by_telegram_id(message.from_user.id)
     if not user:
-        await state.update_data(magic_webapp_prompt_chat_id=None, magic_webapp_prompt_message_id=None)
+        await state.clear()
         await message.answer('Foydalanuvchi topilmadi. /start orqali qayta kirib ko‘ring.', reply_markup=ReplyKeyboardRemove())
         return
 
     context = await magic_slide_service.get_user_context(message.from_user.id)
     if context['maintenance_enabled']:
-        await state.update_data(magic_webapp_prompt_chat_id=None, magic_webapp_prompt_message_id=None)
+        await state.clear()
         await message.answer(magic_maintenance_text(), reply_markup=ReplyKeyboardRemove())
         return
     if not context['can_afford']:
-        await state.update_data(magic_webapp_prompt_chat_id=None, magic_webapp_prompt_message_id=None)
+        await state.clear()
         await message.answer(magic_start_insufficient_text(context), reply_markup=ReplyKeyboardRemove())
         return
 
@@ -273,12 +361,12 @@ async def magic_webapp_data_handler(
             raw_payload=message.web_app_data.data,
         )
     except ValueError as exc:
-        await state.update_data(magic_webapp_prompt_chat_id=None, magic_webapp_prompt_message_id=None)
+        await state.clear()
         await message.answer(str(exc), reply_markup=ReplyKeyboardRemove())
         return
 
     if existing:
-        await state.update_data(magic_webapp_prompt_chat_id=None, magic_webapp_prompt_message_id=None)
+        await state.clear()
         await message.answer(
             magic_order_existing_text(
                 template_name=str(existing.get('template_name') or ''),
@@ -288,7 +376,7 @@ async def magic_webapp_data_handler(
         )
         return
 
-    await state.update_data(magic_webapp_prompt_chat_id=None, magic_webapp_prompt_message_id=None)
+    await state.clear()
     status_message = await message.answer(
         magic_order_queued_text(
             template_name=str(order.get('template_name') or 'Magic Slide'),

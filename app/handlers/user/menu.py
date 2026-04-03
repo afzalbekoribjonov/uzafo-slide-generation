@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 
 from app.callbacks.admin import PublicPostCallback
 from app.callbacks.menu import MenuCallback, StatusCallback
@@ -31,6 +31,18 @@ router = Router(name='user-menu')
 
 @router.callback_query(MenuCallback.filter(F.action == 'main'))
 async def menu_main_handler(callback: CallbackQuery, users_repo: UsersRepository, state: FSMContext) -> None:
+    data = await state.get_data()
+    prompt_chat_id = data.get('magic_webapp_prompt_chat_id')
+    prompt_message_id = data.get('magic_webapp_prompt_message_id')
+    if prompt_chat_id and prompt_message_id:
+        try:
+            await callback.bot.delete_message(chat_id=int(prompt_chat_id), message_id=int(prompt_message_id))
+        except Exception:
+            pass
+        await callback.message.answer(
+            'Magic Slayd yaratish oynasi yopildi.',
+            reply_markup=ReplyKeyboardRemove(),
+        )
     await state.clear()
     user = await users_repo.get_by_telegram_id(callback.from_user.id)
     await callback.message.edit_text(
