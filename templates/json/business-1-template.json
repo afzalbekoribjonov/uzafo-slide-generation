@@ -1,0 +1,554 @@
+{
+  "template_id": "business_1_annual_report",
+  "template_name": "Business Annual Report",
+  "category": "business",
+  "version": "2.0.0",
+  "source_file": "business-1-tokenized.pptx",
+  "model": "gemini-2.5-flash",
+  "template_profile": {
+    "style": "modern_business_annual_report",
+    "tone": "formal, executive, concise, commercially plausible, presentation-ready",
+    "visual_character": "full annual report flow with cover, contents, narrative summaries, comparison slides, card grids, quote pause, dashboard note, timeline, catalog, KPI slides and two-period interpretation",
+    "total_slides": 18,
+    "recommended_output_slides": 18,
+    "skip_template_only_slides": [],
+    "keep_thanks_slide": false,
+    "render_engine": "token_replace_v1"
+  },
+  "global_rules": {
+    "language_policy": "All generated content must be in the user-selected language only.",
+    "business_quality": [
+      "Prefer realistic annual-report, management-review, investor-update or board-ready language.",
+      "Treat the source PPTX wording as layout scaffolding only and never copy helper text or sample labels.",
+      "Keep the full deck tied to one coherent company, period and business context.",
+      "Avoid generic filler, motivational fluff, astronomy placeholders and unrelated examples.",
+      "Use commercially plausible metrics, initiatives, segments, risks and priorities."
+    ],
+    "writing_rules": [
+      "Respect slot limits exactly.",
+      "Keep headings short and meaningful.",
+      "Keep body text concise enough for premium report slides.",
+      "Do not invent extra cards, rows, bullets or labels.",
+      "Use slide-ready business phrasing rather than essay-style prose."
+    ],
+    "reporting_rules": [
+      "Percentages must sum to 100 when a distribution slide requires it.",
+      "KPI values should be plausible and internally coherent.",
+      "Do not fabricate audit opinions, legal assurances or regulated disclosures unless provided by the user."
+    ]
+  },
+  "slides": [
+    {
+      "index": 1,
+      "id": "cover",
+      "role": "cover_title",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "main report title",
+        "subtitle": "short business subtitle"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 8, "max_chars": 58, "fit": "shrink" },
+        "subtitle": { "max_words": 14, "max_chars": 92, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 2,
+      "id": "table_of_contents",
+      "role": "toc_six_sections",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "toc_title": "contents title",
+        "section_1_title": "section title",
+        "section_2_title": "section title",
+        "section_3_title": "section title",
+        "section_4_title": "section title",
+        "section_5_title": "section title",
+        "section_6_title": "section title"
+      },
+      "slot_constraints": {
+        "toc_title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "section_1_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_2_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_3_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_4_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_5_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_6_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 3,
+      "id": "opening_summary",
+      "role": "opening_summary",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "summary title",
+        "body": "short executive summary"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "body": { "max_words": 34, "max_chars": 220, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 4,
+      "id": "market_context",
+      "role": "two_paragraph_context",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "context title",
+        "paragraph_1": "first paragraph",
+        "paragraph_2": "second paragraph"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 34, "fit": "shrink" },
+        "paragraph_1": { "max_words": 28, "max_chars": 180, "fit": "shrink" },
+        "paragraph_2": { "max_words": 28, "max_chars": 180, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 5,
+      "id": "key_highlights",
+      "role": "list_highlights",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "slide title",
+        "intro_text": "short intro line",
+        "bullet_1": "highlight point",
+        "bullet_2": "highlight point",
+        "bullet_3": "highlight point",
+        "bullet_4": "highlight point"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 34, "fit": "shrink" },
+        "intro_text": { "max_words": 10, "max_chars": 66, "fit": "shrink" },
+        "bullet_1": { "max_words": 7, "max_chars": 46, "fit": "shrink" },
+        "bullet_2": { "max_words": 7, "max_chars": 46, "fit": "shrink" },
+        "bullet_3": { "max_words": 7, "max_chars": 46, "fit": "shrink" },
+        "bullet_4": { "max_words": 9, "max_chars": 68, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 6,
+      "id": "comparison_drivers",
+      "role": "two_column_compare",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "comparison title",
+        "left_heading": "left topic",
+        "left_text": "left explanation",
+        "right_heading": "right topic",
+        "right_text": "right explanation"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "left_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "right_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "left_text": { "max_words": 22, "max_chars": 132, "fit": "shrink" },
+        "right_text": { "max_words": 22, "max_chars": 132, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 7,
+      "id": "strategic_themes",
+      "role": "three_card_summary",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "slide title",
+        "theme_1_heading": "theme heading",
+        "theme_1_text": "theme explanation",
+        "theme_2_heading": "theme heading",
+        "theme_2_text": "theme explanation",
+        "theme_3_heading": "theme heading",
+        "theme_3_text": "theme explanation"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "theme_1_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "theme_2_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "theme_3_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "theme_1_text": { "max_words": 14, "max_chars": 86, "fit": "shrink" },
+        "theme_2_text": { "max_words": 14, "max_chars": 86, "fit": "shrink" },
+        "theme_3_text": { "max_words": 14, "max_chars": 86, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 8,
+      "id": "operating_pillars",
+      "role": "four_quadrant_ideas",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "slide title",
+        "pillar_1_heading": "pillar heading",
+        "pillar_1_text": "pillar text",
+        "pillar_2_heading": "pillar heading",
+        "pillar_2_text": "pillar text",
+        "pillar_3_heading": "pillar heading",
+        "pillar_3_text": "pillar text",
+        "pillar_4_heading": "pillar heading",
+        "pillar_4_text": "pillar text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 36, "fit": "shrink" },
+        "pillar_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "pillar_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "pillar_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "pillar_4_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "pillar_1_text": { "max_words": 9, "max_chars": 58, "fit": "shrink" },
+        "pillar_2_text": { "max_words": 9, "max_chars": 58, "fit": "shrink" },
+        "pillar_3_text": { "max_words": 9, "max_chars": 58, "fit": "shrink" },
+        "pillar_4_text": { "max_words": 9, "max_chars": 58, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 9,
+      "id": "review_grid",
+      "role": "six_insight_grid",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "review title",
+        "item_1_heading": "heading",
+        "item_1_text": "text",
+        "item_2_heading": "heading",
+        "item_2_text": "text",
+        "item_3_heading": "heading",
+        "item_3_text": "text",
+        "item_4_heading": "heading",
+        "item_4_text": "text",
+        "item_5_heading": "heading",
+        "item_5_text": "text",
+        "item_6_heading": "heading",
+        "item_6_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "item_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "item_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "item_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "item_4_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "item_5_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "item_6_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "item_1_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "item_2_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "item_3_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "item_4_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "item_5_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "item_6_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 10,
+      "id": "quote_highlight",
+      "role": "quote_highlight",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "quote": "quote",
+        "author": "attribution"
+      },
+      "slot_constraints": {
+        "quote": { "max_words": 22, "max_chars": 170, "fit": "shrink" },
+        "author": { "max_words": 4, "max_chars": 34, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 11,
+      "id": "dashboard_overview",
+      "role": "mockup_callout",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "mockup title",
+        "body": "dashboard description"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "body": { "max_words": 20, "max_chars": 132, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 12,
+      "id": "yearly_timeline",
+      "role": "eight_step_timeline",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "timeline title",
+        "step_1_heading": "step label",
+        "step_1_text": "step note",
+        "step_2_heading": "step label",
+        "step_2_text": "step note",
+        "step_3_heading": "step label",
+        "step_3_text": "step note",
+        "step_4_heading": "step label",
+        "step_4_text": "step note",
+        "step_5_heading": "step label",
+        "step_5_text": "step note",
+        "step_6_heading": "step label",
+        "step_6_text": "step note",
+        "step_7_heading": "step label",
+        "step_7_text": "step note",
+        "step_8_heading": "step label",
+        "step_8_text": "step note"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 38, "fit": "shrink" },
+        "step_1_heading": { "max_words": 2, "max_chars": 12, "fit": "shrink" },
+        "step_2_heading": { "max_words": 2, "max_chars": 12, "fit": "shrink" },
+        "step_3_heading": { "max_words": 2, "max_chars": 12, "fit": "shrink" },
+        "step_4_heading": { "max_words": 2, "max_chars": 12, "fit": "shrink" },
+        "step_5_heading": { "max_words": 2, "max_chars": 12, "fit": "shrink" },
+        "step_6_heading": { "max_words": 2, "max_chars": 12, "fit": "shrink" },
+        "step_7_heading": { "max_words": 2, "max_chars": 12, "fit": "shrink" },
+        "step_8_heading": { "max_words": 2, "max_chars": 12, "fit": "shrink" },
+        "step_1_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "step_2_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "step_3_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "step_4_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "step_5_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "step_6_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "step_7_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "step_8_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 13,
+      "id": "value_chain",
+      "role": "four_block_infographic",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "infographic title",
+        "block_1_heading": "heading",
+        "block_1_text": "text",
+        "block_2_heading": "heading",
+        "block_2_text": "text",
+        "block_3_heading": "heading",
+        "block_3_text": "text",
+        "block_4_heading": "heading",
+        "block_4_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 36, "fit": "shrink" },
+        "block_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "block_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "block_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "block_4_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "block_1_text": { "max_words": 9, "max_chars": 58, "fit": "shrink" },
+        "block_2_text": { "max_words": 9, "max_chars": 58, "fit": "shrink" },
+        "block_3_text": { "max_words": 9, "max_chars": 58, "fit": "shrink" },
+        "block_4_text": { "max_words": 9, "max_chars": 58, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 14,
+      "id": "reporting_catalog",
+      "role": "financial_reporting_catalog",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "catalog title",
+        "catalog_kicker": "short center label",
+        "item_1_heading": "heading",
+        "item_1_text": "text",
+        "item_2_heading": "heading",
+        "item_2_text": "text",
+        "item_3_heading": "heading",
+        "item_3_text": "text",
+        "item_4_heading": "heading",
+        "item_4_text": "text",
+        "item_5_heading": "heading",
+        "item_5_text": "text",
+        "item_6_heading": "heading",
+        "item_6_text": "text",
+        "item_7_heading": "heading",
+        "item_7_text": "text",
+        "item_8_heading": "heading",
+        "item_8_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "catalog_kicker": { "max_words": 2, "max_chars": 24, "fit": "shrink" },
+        "item_1_heading": { "max_words": 2, "max_chars": 20, "fit": "shrink" },
+        "item_2_heading": { "max_words": 2, "max_chars": 20, "fit": "shrink" },
+        "item_3_heading": { "max_words": 2, "max_chars": 20, "fit": "shrink" },
+        "item_4_heading": { "max_words": 2, "max_chars": 20, "fit": "shrink" },
+        "item_5_heading": { "max_words": 2, "max_chars": 20, "fit": "shrink" },
+        "item_6_heading": { "max_words": 2, "max_chars": 20, "fit": "shrink" },
+        "item_7_heading": { "max_words": 2, "max_chars": 20, "fit": "shrink" },
+        "item_8_heading": { "max_words": 2, "max_chars": 20, "fit": "shrink" },
+        "item_1_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "item_2_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "item_3_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "item_4_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "item_5_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "item_6_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "item_7_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "item_8_text": { "max_words": 6, "max_chars": 40, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 15,
+      "id": "initiatives_milestones",
+      "role": "split_milestones",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "slide title",
+        "left_heading": "left heading",
+        "left_point_1": "left point",
+        "left_point_2": "left point",
+        "left_point_3": "left point",
+        "right_heading": "right heading",
+        "milestone_1_label": "label",
+        "milestone_1_text": "text",
+        "milestone_2_label": "label",
+        "milestone_2_text": "text",
+        "milestone_3_label": "label",
+        "milestone_3_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 32, "fit": "shrink" },
+        "left_heading": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "right_heading": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "left_point_1": { "max_words": 11, "max_chars": 76, "fit": "shrink" },
+        "left_point_2": { "max_words": 11, "max_chars": 76, "fit": "shrink" },
+        "left_point_3": { "max_words": 11, "max_chars": 76, "fit": "shrink" },
+        "milestone_1_label": { "max_words": 2, "max_chars": 14, "fit": "shrink" },
+        "milestone_2_label": { "max_words": 2, "max_chars": 14, "fit": "shrink" },
+        "milestone_3_label": { "max_words": 2, "max_chars": 14, "fit": "shrink" },
+        "milestone_1_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" },
+        "milestone_2_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" },
+        "milestone_3_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 16,
+      "id": "segment_distribution",
+      "role": "percentage_distribution",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "distribution title",
+        "segment_1_name": "segment name",
+        "segment_1_percent": "percent",
+        "segment_1_text": "segment text",
+        "segment_2_name": "segment name",
+        "segment_2_percent": "percent",
+        "segment_2_text": "segment text",
+        "segment_3_name": "segment name",
+        "segment_3_percent": "percent",
+        "segment_3_text": "segment text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "segment_1_name": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "segment_2_name": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "segment_3_name": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "segment_1_percent": { "max_chars": 4, "fit": "shrink" },
+        "segment_2_percent": { "max_chars": 4, "fit": "shrink" },
+        "segment_3_percent": { "max_chars": 4, "fit": "shrink" },
+        "segment_1_text": { "max_words": 9, "max_chars": 60, "fit": "shrink" },
+        "segment_2_text": { "max_words": 9, "max_chars": 60, "fit": "shrink" },
+        "segment_3_text": { "max_words": 9, "max_chars": 60, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 17,
+      "id": "kpi_summary",
+      "role": "kpi_highlights",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "slide title",
+        "kpi_1_value": "value",
+        "kpi_1_text": "note",
+        "kpi_2_value": "value",
+        "kpi_2_text": "note",
+        "kpi_3_value": "value",
+        "kpi_3_text": "note",
+        "kpi_4_value": "value",
+        "kpi_4_text": "note",
+        "kpi_5_value": "value",
+        "kpi_5_text": "note"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "kpi_1_value": { "max_chars": 8, "fit": "shrink" },
+        "kpi_2_value": { "max_chars": 8, "fit": "shrink" },
+        "kpi_3_value": { "max_chars": 8, "fit": "shrink" },
+        "kpi_4_value": { "max_chars": 8, "fit": "shrink" },
+        "kpi_5_value": { "max_chars": 8, "fit": "shrink" },
+        "kpi_1_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" },
+        "kpi_2_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" },
+        "kpi_3_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" },
+        "kpi_4_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" },
+        "kpi_5_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 18,
+      "id": "period_comparison",
+      "role": "two_period_comparison",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "comparison title",
+        "period_1_name": "period label",
+        "period_1_text": "period explanation",
+        "period_2_name": "period label",
+        "period_2_text": "period explanation"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "period_1_name": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "period_2_name": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "period_1_text": { "max_words": 22, "max_chars": 136, "fit": "shrink" },
+        "period_2_text": { "max_words": 22, "max_chars": 136, "fit": "shrink" }
+      }
+    }
+  ],
+  "gemini_prompt_package": {
+    "purpose": "Generate content specifically for the business_1_annual_report template.",
+    "input_variables": [
+      "topic",
+      "language",
+      "company_name",
+      "reporting_period",
+      "audience_level",
+      "presentation_goal",
+      "optional_industry",
+      "optional_region",
+      "optional_company_context"
+    ],
+    "prompt_lines": [
+      "You are generating slide content for a PowerPoint template named 'Business Annual Report'.",
+      "The style is executive, commercially plausible, concise and premium.",
+      "Write everything in the requested language only.",
+      "Fill the predefined slots for this exact template and do not redesign the slides.",
+      "This template uses strict prepared text anchors, so every slot must stay compact and fit naturally inside a premium annual-report deck.",
+      "Treat the source PPTX wording as layout scaffolding only; never copy helper text, sample labels or filler content.",
+      "Keep the whole deck tied to one coherent company, reporting period and business context.",
+      "Prefer realistic business language: revenue mix, margins, retention, delivery, risks, reporting, initiatives, governance and next-step priorities.",
+      "Avoid generic filler, decorative buzzwords and unrelated examples.",
+      "Do not output extra cards, extra rows, extra bullets or commentary."
+    ]
+  },
+  "webapp_metadata": {
+    "template_id": "business_1_annual_report",
+    "title": "Business Annual Report",
+    "subtitle": "Executive annual report with highlights, KPIs and business interpretation",
+    "cover_asset": "assets/business-1.svg",
+    "accent": "#355fb2",
+    "summary": "Full annual report deck with narrative summaries, reporting catalog, milestones, segment mix and KPI interpretation."
+  }
+}

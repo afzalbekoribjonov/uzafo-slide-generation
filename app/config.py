@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     legacy_mongodb_db: str | None = Field(default=None, alias='LEGACY_MONGODB_DB')
     admins: list[int] = Field(default_factory=list, validation_alias=AliasChoices('ADMINS', 'ADMIN_IDS'))
     support_contact: str = Field(default='@uzafo', alias='SUPPORT_CONTACT')
+    magic_slide_webapp_url: str | None = Field(default=None, alias='MAGIC_SLIDE_WEBAPP_URL')
     generation_worker_poll_seconds: int = Field(default=3, alias='GENERATION_WORKER_POLL_SECONDS')
     generation_start_cooldown_seconds: int = Field(default=65, alias='GENERATION_START_COOLDOWN_SECONDS')
     gemini_api_key: str | None = Field(default=None, alias='GEMINI_API_KEY')
@@ -78,7 +79,7 @@ class Settings(BaseSettings):
             value = f'/{value}'
         return value
 
-    @field_validator('legacy_mongodb_uri', 'legacy_mongodb_db', mode='before')
+    @field_validator('legacy_mongodb_uri', 'legacy_mongodb_db', 'magic_slide_webapp_url', mode='before')
     @classmethod
     def normalize_optional_strings(cls, value):
         if value is None:

@@ -1,0 +1,429 @@
+{
+  "template_id": "education_1_elegant_education_pack",
+  "template_name": "Elegant Education Pack for Students",
+  "category": "education",
+  "version": "2.0.0",
+  "source_file": "education-1-tokenized.pptx",
+  "model": "gemini-2.5-flash",
+  "template_profile": {
+    "style": "student_education_guide",
+    "tone": "clear, friendly, practical, structured, classroom-ready",
+    "visual_character": "clean education pack with agenda blocks, guided steps, checklist slides, practice planning and compact infographics",
+    "total_slides": 15,
+    "recommended_output_slides": 13,
+    "skip_template_only_slides": [2, 4],
+    "keep_thanks_slide": false,
+    "render_engine": "token_replace_v1"
+  },
+  "global_rules": {
+    "language_policy": "All generated content must be in the user-selected language only.",
+    "education_quality": [
+      "Prefer useful, student-facing, classroom-ready content.",
+      "Avoid generic filler, motivational fluff and placeholder wording.",
+      "Do not reuse software walkthrough text or source helper text from the original PPTX.",
+      "Every slide must stay tightly tied to the user's chosen topic.",
+      "If the topic is theoretical, reinterpret guidance, rules, tasks and materials so they still teach, compare, review or practice the exact topic."
+    ],
+    "writing_rules": [
+      "Respect the slot limits exactly.",
+      "Keep slides scannable and compact.",
+      "Headings should be short and meaningful.",
+      "Do not invent extra bullets, task pairs, materials or checklist items.",
+      "Treat the source PPTX wording as layout scaffolding only."
+    ]
+  },
+  "slides": [
+    {
+      "index": 1,
+      "id": "cover",
+      "role": "cover_title_split",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title_line_1": "first line",
+        "title_line_2": "second line",
+        "subtitle": "short subtitle"
+      },
+      "slot_constraints": {
+        "title_line_1": { "max_words": 4, "max_chars": 26, "fit": "shrink" },
+        "title_line_2": { "max_words": 4, "max_chars": 26, "fit": "shrink" },
+        "subtitle": { "max_words": 14, "max_chars": 88, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 2,
+      "id": "template_resources",
+      "role": "template_info_static",
+      "generate": false,
+      "skip_in_final": true
+    },
+    {
+      "index": 3,
+      "id": "table_of_contents_primary",
+      "role": "toc_six_sections",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "toc_title": "title",
+        "section_1_title": "section title",
+        "section_1_desc": "description",
+        "section_2_title": "section title",
+        "section_2_desc": "description",
+        "section_3_title": "section title",
+        "section_3_desc": "description",
+        "section_4_title": "section title",
+        "section_4_desc": "description",
+        "section_5_title": "section title",
+        "section_5_desc": "description",
+        "section_6_title": "section title",
+        "section_6_desc": "description"
+      },
+      "slot_constraints": {
+        "toc_title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "section_1_title": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "section_2_title": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "section_3_title": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "section_4_title": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "section_5_title": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "section_6_title": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "section_1_desc": { "max_words": 7, "max_chars": 40, "fit": "shrink" },
+        "section_2_desc": { "max_words": 7, "max_chars": 40, "fit": "shrink" },
+        "section_3_desc": { "max_words": 7, "max_chars": 40, "fit": "shrink" },
+        "section_4_desc": { "max_words": 7, "max_chars": 40, "fit": "shrink" },
+        "section_5_desc": { "max_words": 7, "max_chars": 40, "fit": "shrink" },
+        "section_6_desc": { "max_words": 7, "max_chars": 40, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 4,
+      "id": "table_of_contents_secondary",
+      "role": "toc_four_sections_alt",
+      "generate": false,
+      "skip_in_final": true,
+      "optional_variant": true
+    },
+    {
+      "index": 5,
+      "id": "topic_intro",
+      "role": "hero_intro",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "body": "body"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "body": { "max_words": 32, "max_chars": 210, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 6,
+      "id": "guided_instructions",
+      "role": "guided_instructions",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "intro_note": "intro",
+        "step_1": "step",
+        "step_2": "step",
+        "step_3": "step",
+        "step_4": "step",
+        "step_5": "step",
+        "step_6": "step",
+        "step_7": "step"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "intro_note": { "max_words": 18, "max_chars": 120, "fit": "shrink" },
+        "step_1": { "max_words": 10, "max_chars": 70, "fit": "shrink" },
+        "step_2": { "max_words": 10, "max_chars": 70, "fit": "shrink" },
+        "step_3": { "max_words": 10, "max_chars": 70, "fit": "shrink" },
+        "step_4": { "max_words": 10, "max_chars": 70, "fit": "shrink" },
+        "step_5": { "max_words": 10, "max_chars": 70, "fit": "shrink" },
+        "step_6": { "max_words": 10, "max_chars": 70, "fit": "shrink" },
+        "step_7": { "max_words": 10, "max_chars": 70, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 7,
+      "id": "during_process_guidance",
+      "role": "process_guidance",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "step_1": "step",
+        "step_2": "step",
+        "step_3": "step",
+        "step_4": "step",
+        "step_5": "step",
+        "step_6": "step",
+        "tip": "tip",
+        "warning": "warning"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 34, "fit": "shrink" },
+        "step_1": { "max_words": 9, "max_chars": 62, "fit": "shrink" },
+        "step_2": { "max_words": 9, "max_chars": 62, "fit": "shrink" },
+        "step_3": { "max_words": 9, "max_chars": 62, "fit": "shrink" },
+        "step_4": { "max_words": 9, "max_chars": 62, "fit": "shrink" },
+        "step_5": { "max_words": 9, "max_chars": 62, "fit": "shrink" },
+        "step_6": { "max_words": 9, "max_chars": 62, "fit": "shrink" },
+        "tip": { "max_words": 11, "max_chars": 74, "fit": "shrink" },
+        "warning": { "max_words": 14, "max_chars": 90, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 8,
+      "id": "platform_or_tool_instructions",
+      "role": "dual_guide_blocks",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "part_1_heading": "heading",
+        "part_1_step_1": "step",
+        "part_1_step_2": "step",
+        "part_1_step_3": "step",
+        "part_1_step_4": "step",
+        "part_2_heading": "heading",
+        "part_2_step_1": "step",
+        "part_2_step_2": "step",
+        "part_2_step_3": "step"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 6, "max_chars": 42, "fit": "shrink" },
+        "part_1_heading": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "part_2_heading": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "part_1_step_1": { "max_words": 10, "max_chars": 68, "fit": "shrink" },
+        "part_1_step_2": { "max_words": 10, "max_chars": 68, "fit": "shrink" },
+        "part_1_step_3": { "max_words": 10, "max_chars": 68, "fit": "shrink" },
+        "part_1_step_4": { "max_words": 10, "max_chars": 68, "fit": "shrink" },
+        "part_2_step_1": { "max_words": 10, "max_chars": 68, "fit": "shrink" },
+        "part_2_step_2": { "max_words": 10, "max_chars": 68, "fit": "shrink" },
+        "part_2_step_3": { "max_words": 10, "max_chars": 68, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 9,
+      "id": "school_rules",
+      "role": "dos_and_donts",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "ok_1": "item",
+        "ok_2": "item",
+        "ok_3": "item",
+        "not_ok_1": "item",
+        "not_ok_2": "item",
+        "not_ok_3": "item",
+        "ok_label": "label",
+        "not_ok_label": "label"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "ok_label": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "not_ok_label": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "ok_1": { "max_words": 7, "max_chars": 42, "fit": "shrink" },
+        "ok_2": { "max_words": 7, "max_chars": 42, "fit": "shrink" },
+        "ok_3": { "max_words": 7, "max_chars": 42, "fit": "shrink" },
+        "not_ok_1": { "max_words": 7, "max_chars": 42, "fit": "shrink" },
+        "not_ok_2": { "max_words": 7, "max_chars": 42, "fit": "shrink" },
+        "not_ok_3": { "max_words": 7, "max_chars": 42, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 10,
+      "id": "reminder_tasks",
+      "role": "subject_task_grid_compact",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "tasks_heading": "heading",
+        "subjects_heading": "heading",
+        "task_1": "task",
+        "subject_1": "subject",
+        "task_2": "task",
+        "subject_2": "subject",
+        "task_3": "task",
+        "subject_3": "subject",
+        "task_4": "task",
+        "subject_4": "subject"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 26, "fit": "shrink" },
+        "tasks_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "subjects_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "task_1": { "max_words": 6, "max_chars": 34, "fit": "shrink" },
+        "task_2": { "max_words": 6, "max_chars": 34, "fit": "shrink" },
+        "task_3": { "max_words": 6, "max_chars": 34, "fit": "shrink" },
+        "task_4": { "max_words": 6, "max_chars": 34, "fit": "shrink" },
+        "subject_1": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "subject_2": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "subject_3": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "subject_4": { "max_words": 3, "max_chars": 20, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 11,
+      "id": "class_materials",
+      "role": "materials_checklist",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "note_label": "note",
+        "material_1": "material",
+        "material_2": "material",
+        "material_3": "material",
+        "material_4": "material",
+        "material_5": "material",
+        "material_6": "material"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 6, "max_chars": 42, "fit": "shrink" },
+        "note_label": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "material_1": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "material_2": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "material_3": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "material_4": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "material_5": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "material_6": { "max_words": 3, "max_chars": 22, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 12,
+      "id": "review_pending_items",
+      "role": "review_checklist",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "item_1": "item",
+        "item_2": "item",
+        "item_3": "item"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "item_1": { "max_words": 8, "max_chars": 44, "fit": "shrink" },
+        "item_2": { "max_words": 8, "max_chars": 44, "fit": "shrink" },
+        "item_3": { "max_words": 8, "max_chars": 44, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 13,
+      "id": "task_organization",
+      "role": "three_step_planning",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "step_1_heading": "heading",
+        "step_1_text": "text",
+        "step_2_heading": "heading",
+        "step_2_text": "text",
+        "step_3_heading": "heading",
+        "step_3_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "step_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "step_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "step_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "step_1_text": { "max_words": 10, "max_chars": 62, "fit": "shrink" },
+        "step_2_text": { "max_words": 10, "max_chars": 62, "fit": "shrink" },
+        "step_3_text": { "max_words": 10, "max_chars": 62, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 14,
+      "id": "infographic_cards",
+      "role": "four_card_infographic",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "card_1_heading": "heading",
+        "card_1_text": "text",
+        "card_2_heading": "heading",
+        "card_2_text": "text",
+        "card_3_heading": "heading",
+        "card_3_text": "text",
+        "card_4_heading": "heading",
+        "card_4_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "card_1_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "card_2_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "card_3_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "card_4_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "card_1_text": { "max_words": 8, "max_chars": 46, "fit": "shrink" },
+        "card_2_text": { "max_words": 8, "max_chars": 46, "fit": "shrink" },
+        "card_3_text": { "max_words": 8, "max_chars": 46, "fit": "shrink" },
+        "card_4_text": { "max_words": 8, "max_chars": 46, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 15,
+      "id": "infographic_comparison",
+      "role": "three_point_infographic_alt",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "item_1_heading": "heading",
+        "item_1_text": "text",
+        "item_2_heading": "heading",
+        "item_2_text": "text",
+        "item_3_heading": "heading",
+        "item_3_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "item_1_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "item_2_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "item_3_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "item_1_text": { "max_words": 8, "max_chars": 46, "fit": "shrink" },
+        "item_2_text": { "max_words": 8, "max_chars": 46, "fit": "shrink" },
+        "item_3_text": { "max_words": 8, "max_chars": 46, "fit": "shrink" }
+      }
+    }
+  ],
+  "gemini_prompt_package": {
+    "purpose": "Generate content specifically for the education_1_elegant_education_pack template.",
+    "input_variables": [
+      "topic",
+      "language",
+      "audience_level",
+      "presentation_goal",
+      "optional_grade_level",
+      "optional_subject",
+      "optional_delivery_mode"
+    ],
+    "prompt_lines": [
+      "You are generating slide content for a PowerPoint template named 'Elegant Education Pack for Students'.",
+      "The style is practical, student-friendly, classroom-ready and compact.",
+      "Write everything in the requested language only.",
+      "Fill the predefined slots for this exact template and do not redesign the slides.",
+      "This template uses strict prepared text anchors, so every slot must stay compact and fit naturally inside a premium education deck.",
+      "Treat the source PPTX wording as layout scaffolding only; never copy helper text, software instructions or placeholder labels.",
+      "Keep the full deck tied to one coherent educational topic.",
+      "If the topic is theoretical or comparative, reinterpret rules, tasks and materials as topic-specific review, correct usage, practice and support.",
+      "Avoid generic filler, motivational fluff and unrelated sample content.",
+      "Do not output extra bullets, extra task pairs, extra materials or commentary."
+    ]
+  },
+  "webapp_metadata": {
+    "template_id": "education_1_elegant_education_pack",
+    "title": "Elegant Education Pack",
+    "subtitle": "Student-friendly guided learning presentation",
+    "cover_asset": "assets/education-1.svg",
+    "accent": "#355fb2",
+    "summary": "Education presentation with guided steps, classroom support, task planning and compact review slides."
+  }
+}

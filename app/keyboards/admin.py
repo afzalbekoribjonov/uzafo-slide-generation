@@ -15,10 +15,11 @@ def admin_main_keyboard() -> InlineKeyboardMarkup:
     builder.button(text='🏆 Reyting', callback_data=AdminMenuCallback(action='rating'))
     builder.button(text='🔎 Foydalanuvchi qidirish', callback_data=AdminMenuCallback(action='users'))
     builder.button(text='📢 Majburiy kanallar', callback_data=AdminMenuCallback(action='channels'))
+    builder.button(text='✨ Magic Slayd', callback_data=AdminMenuCallback(action='magic'))
     builder.button(text='📣 Ommaviy xabar', callback_data=AdminMenuCallback(action='broadcast'))
     builder.button(text='📤 Eksport', callback_data=AdminMenuCallback(action='exports'))
     builder.button(text='◀️ User menyusi', callback_data=MenuCallback(action='main'))
-    builder.adjust(2, 2, 1, 1, 1)
+    builder.adjust(2, 2, 2, 1, 1)
     return builder.as_markup()
 
 

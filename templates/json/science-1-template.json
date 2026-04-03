@@ -1,0 +1,496 @@
+{
+  "template_id": "science_1_science_fair_newsletter",
+  "template_name": "Science Fair Newsletter",
+  "category": "science",
+  "version": "2.0.0",
+  "source_file": "science-1-tokenized.pptx",
+  "model": "gemini-2.5-flash",
+  "template_profile": {
+    "style": "science_newsletter_editorial",
+    "tone": "clear, energetic, informative, student-friendly, event-oriented",
+    "visual_character": "science newsletter deck with section openers, announcements, monthly highlights, deep-dive blocks, recap cards, metrics and team welcome slides",
+    "total_slides": 17,
+    "recommended_output_slides": 16,
+    "skip_template_only_slides": [2],
+    "keep_thanks_slide": false,
+    "render_engine": "token_replace_v1"
+  },
+  "global_rules": {
+    "language_policy": "All generated content must be in the user-selected language only.",
+    "science_quality": [
+      "Prefer realistic science fair, school club, experiment showcase and event-update language.",
+      "Treat the source PPTX wording as layout scaffolding only and never copy helper text or sample labels.",
+      "Keep the full deck tied to one coherent topic, issue or event story.",
+      "Avoid placeholder wording, astronomy filler and unrelated examples.",
+      "Use concise science-communication phrasing suitable for students, teachers and event visitors."
+    ],
+    "writing_rules": [
+      "Respect slot limits exactly.",
+      "Keep headings compact and memorable.",
+      "Keep body text concise enough for premium editorial slides.",
+      "Do not invent extra cards, rows, bullets or commentary.",
+      "Prefer newsletter-style summaries over long explanations."
+    ],
+    "event_rules": [
+      "Metrics should stay simple and believable for fairs, clubs or school events.",
+      "Reviews should sound short, natural and positive.",
+      "Timeline and recap slides should preserve a clear sequence from earlier to later moments."
+    ]
+  },
+  "slides": [
+    {
+      "index": 1,
+      "id": "cover",
+      "role": "cover_title",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "main newsletter title",
+        "subtitle": "issue subtitle"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 6, "max_chars": 34, "fit": "shrink" },
+        "subtitle": { "max_words": 12, "max_chars": 78, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 2,
+      "id": "template_resources",
+      "role": "template_info_static",
+      "generate": false,
+      "skip_in_final": true
+    },
+    {
+      "index": 3,
+      "id": "table_of_contents",
+      "role": "toc_five_sections",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "toc_title": "contents title",
+        "section_1_title": "section title",
+        "section_1_desc": "short description",
+        "section_2_title": "section title",
+        "section_2_desc": "short description",
+        "section_3_title": "section title",
+        "section_3_desc": "short description",
+        "section_4_title": "section title",
+        "section_4_desc": "short description",
+        "section_5_title": "section title",
+        "section_5_desc": "short description"
+      },
+      "slot_constraints": {
+        "toc_title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "section_1_title": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "section_2_title": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "section_3_title": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "section_4_title": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "section_5_title": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "section_1_desc": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "section_2_desc": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "section_3_desc": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "section_4_desc": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "section_5_desc": { "max_words": 6, "max_chars": 40, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 4,
+      "id": "section_divider_announcements",
+      "role": "section_divider",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "section_number": "section number",
+        "section_title": "section title",
+        "section_subtitle": "subtitle"
+      },
+      "slot_constraints": {
+        "section_number": { "max_chars": 2, "fit": "shrink" },
+        "section_title": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "section_subtitle": { "max_words": 7, "max_chars": 44, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 5,
+      "id": "lead_announcement",
+      "role": "single_announcement",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "announcement title",
+        "body": "announcement body"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "body": { "max_words": 24, "max_chars": 148, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 6,
+      "id": "highlights_of_the_month",
+      "role": "three_highlights",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "highlights title",
+        "highlight_1_heading": "heading",
+        "highlight_1_text": "text",
+        "highlight_2_heading": "heading",
+        "highlight_2_text": "text",
+        "highlight_3_heading": "heading",
+        "highlight_3_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "highlight_1_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "highlight_2_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "highlight_3_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "highlight_1_text": { "max_words": 9, "max_chars": 54, "fit": "shrink" },
+        "highlight_2_text": { "max_words": 9, "max_chars": 54, "fit": "shrink" },
+        "highlight_3_text": { "max_words": 9, "max_chars": 54, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 7,
+      "id": "visual_photo_break",
+      "role": "full_image_caption",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "visual title",
+        "caption": "image caption"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 6, "max_chars": 36, "fit": "shrink" },
+        "caption": { "max_words": 12, "max_chars": 72, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 8,
+      "id": "section_divider_in_depth",
+      "role": "section_divider",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "section_number": "section number",
+        "section_title": "section title",
+        "section_subtitle": "subtitle"
+      },
+      "slot_constraints": {
+        "section_number": { "max_chars": 2, "fit": "shrink" },
+        "section_title": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "section_subtitle": { "max_words": 7, "max_chars": 44, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 9,
+      "id": "in_depth_cards",
+      "role": "three_topic_deep_dive",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "slide title",
+        "topic_1_heading": "heading",
+        "topic_1_text": "text",
+        "topic_2_heading": "heading",
+        "topic_2_text": "text",
+        "topic_3_heading": "heading",
+        "topic_3_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "topic_1_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "topic_2_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "topic_3_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "topic_1_text": { "max_words": 10, "max_chars": 60, "fit": "shrink" },
+        "topic_2_text": { "max_words": 10, "max_chars": 60, "fit": "shrink" },
+        "topic_3_text": { "max_words": 10, "max_chars": 60, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 10,
+      "id": "in_depth_timeline",
+      "role": "year_based_progression",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "timeline title",
+        "year_1": "year",
+        "year_1_heading": "heading",
+        "year_1_text": "text",
+        "year_2": "year",
+        "year_2_heading": "heading",
+        "year_2_text": "text",
+        "year_3": "year",
+        "year_3_heading": "heading",
+        "year_3_text": "text",
+        "focus_heading": "focus heading",
+        "focus_text": "focus text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "year_1": { "max_chars": 4, "fit": "shrink" },
+        "year_2": { "max_chars": 4, "fit": "shrink" },
+        "year_3": { "max_chars": 4, "fit": "shrink" },
+        "year_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "year_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "year_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "focus_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "year_1_text": { "max_words": 7, "max_chars": 46, "fit": "shrink" },
+        "year_2_text": { "max_words": 7, "max_chars": 46, "fit": "shrink" },
+        "year_3_text": { "max_words": 7, "max_chars": 46, "fit": "shrink" },
+        "focus_text": { "max_words": 7, "max_chars": 46, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 11,
+      "id": "sector_news",
+      "role": "multi_item_news_grid",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "news title",
+        "item_1_heading": "heading",
+        "item_1_text": "text",
+        "item_2_heading": "heading",
+        "item_2_text": "text",
+        "item_3_heading": "heading",
+        "item_3_text": "text",
+        "item_4_heading": "heading",
+        "item_4_text": "text",
+        "item_5_heading": "heading",
+        "item_5_text": "text",
+        "item_6_heading": "heading",
+        "item_6_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "item_1_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "item_2_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "item_3_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "item_4_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "item_5_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "item_6_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "item_1_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "item_2_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "item_3_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "item_4_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "item_5_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "item_6_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 12,
+      "id": "in_brief_list",
+      "role": "bullet_roundup",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "brief title",
+        "item_1": "brief item",
+        "item_2": "brief item",
+        "item_3": "brief item",
+        "item_4": "brief item",
+        "item_5": "brief item",
+        "item_6": "brief item",
+        "item_7": "brief item",
+        "item_8": "brief item"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "item_1": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "item_2": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "item_3": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "item_4": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "item_5": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "item_6": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "item_7": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "item_8": { "max_words": 6, "max_chars": 38, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 13,
+      "id": "participant_reviews",
+      "role": "testimonial_grid",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "reviews title",
+        "review_1_text": "quote",
+        "review_1_author": "author",
+        "review_2_text": "quote",
+        "review_2_author": "author",
+        "review_3_text": "quote",
+        "review_3_author": "author",
+        "review_4_text": "quote",
+        "review_4_author": "author"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "review_1_text": { "max_words": 10, "max_chars": 60, "fit": "shrink" },
+        "review_2_text": { "max_words": 10, "max_chars": 60, "fit": "shrink" },
+        "review_3_text": { "max_words": 10, "max_chars": 60, "fit": "shrink" },
+        "review_4_text": { "max_words": 10, "max_chars": 60, "fit": "shrink" },
+        "review_1_author": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "review_2_author": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "review_3_author": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "review_4_author": { "max_words": 3, "max_chars": 24, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 14,
+      "id": "news_columns",
+      "role": "three_news_columns",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "news title",
+        "column_1_heading": "heading",
+        "column_1_text": "text",
+        "column_2_heading": "heading",
+        "column_2_text": "text",
+        "column_3_heading": "heading",
+        "column_3_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "column_1_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "column_2_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "column_3_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "column_1_text": { "max_words": 12, "max_chars": 74, "fit": "shrink" },
+        "column_2_text": { "max_words": 12, "max_chars": 74, "fit": "shrink" },
+        "column_3_text": { "max_words": 12, "max_chars": 74, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 15,
+      "id": "our_numbers",
+      "role": "metrics_table",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "numbers title",
+        "header_project": "header",
+        "header_metric_a": "header",
+        "header_metric_b": "header",
+        "header_metric_c": "header",
+        "row_1_project": "project",
+        "row_1_metric_a": "value",
+        "row_1_metric_b": "value",
+        "row_1_metric_c": "value",
+        "row_2_project": "project",
+        "row_2_metric_a": "value",
+        "row_2_metric_b": "value",
+        "row_2_metric_c": "value",
+        "row_3_project": "project",
+        "row_3_metric_a": "value",
+        "row_3_metric_b": "value",
+        "row_3_metric_c": "value"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "header_project": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "header_metric_a": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "header_metric_b": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "header_metric_c": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_1_project": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_2_project": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_3_project": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_1_metric_a": { "max_chars": 8, "fit": "shrink" },
+        "row_1_metric_b": { "max_chars": 8, "fit": "shrink" },
+        "row_1_metric_c": { "max_chars": 8, "fit": "shrink" },
+        "row_2_metric_a": { "max_chars": 8, "fit": "shrink" },
+        "row_2_metric_b": { "max_chars": 8, "fit": "shrink" },
+        "row_2_metric_c": { "max_chars": 8, "fit": "shrink" },
+        "row_3_metric_a": { "max_chars": 8, "fit": "shrink" },
+        "row_3_metric_b": { "max_chars": 8, "fit": "shrink" },
+        "row_3_metric_c": { "max_chars": 8, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 16,
+      "id": "welcome_team",
+      "role": "welcome_people_slide",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "welcome title",
+        "person_1_name": "name",
+        "person_1_role": "role",
+        "person_2_name": "name",
+        "person_2_role": "role"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "person_1_name": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "person_2_name": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "person_1_role": { "max_words": 10, "max_chars": 62, "fit": "shrink" },
+        "person_2_role": { "max_words": 10, "max_chars": 62, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 17,
+      "id": "past_events_review",
+      "role": "five_event_recap",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "review title",
+        "event_1_heading": "heading",
+        "event_1_text": "text",
+        "event_2_heading": "heading",
+        "event_2_text": "text",
+        "event_3_heading": "heading",
+        "event_3_text": "text",
+        "event_4_heading": "heading",
+        "event_4_text": "text",
+        "event_5_heading": "heading",
+        "event_5_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "event_1_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "event_2_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "event_3_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "event_4_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "event_5_heading": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "event_1_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "event_2_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "event_3_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "event_4_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "event_5_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" }
+      }
+    }
+  ],
+  "gemini_prompt_package": {
+    "purpose": "Generate content specifically for the science_1_science_fair_newsletter template.",
+    "input_variables": [
+      "topic",
+      "language",
+      "audience_level",
+      "presentation_goal",
+      "optional_focus_area",
+      "optional_event_name"
+    ],
+    "prompt_lines": [
+      "You are generating slide content for a PowerPoint template named 'Science Fair Newsletter'.",
+      "The style is lively, editorial, school-friendly and premium.",
+      "Write everything in the requested language only.",
+      "Fill the predefined slots for this exact template and do not redesign the slides.",
+      "This template uses strict prepared text anchors, so every slot must stay compact and fit naturally inside a premium science newsletter deck.",
+      "Treat the source PPTX wording as layout scaffolding only; never copy helper text, sample labels or filler content.",
+      "Keep the whole deck tied to one coherent science topic, fair issue or event story.",
+      "Prefer newsletter-style phrases: updates, highlights, project notes, mentor insights, visitor reactions, results and recap moments.",
+      "Avoid generic filler, decorative buzzwords and unrelated examples.",
+      "Do not output extra cards, rows, bullets, labels or commentary."
+    ]
+  },
+  "webapp_metadata": {
+    "template_id": "science_1_science_fair_newsletter",
+    "title": "Science Fair Newsletter",
+    "subtitle": "Editorial science deck with highlights, updates, metrics and event recap",
+    "cover_asset": "assets/science-1.svg",
+    "accent": "#355fb2",
+    "summary": "Science newsletter deck with announcements, deep-dive cards, recap slides, metrics and a team welcome section."
+  }
+}

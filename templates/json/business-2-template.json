@@ -1,0 +1,439 @@
+{
+  "template_id": "business_2_elegant_workplan",
+  "template_name": "Elegant Workplan",
+  "category": "business",
+  "version": "2.1.0",
+  "source_file": "business-2-tokenized.pptx",
+  "model": "gemini-2.5-flash",
+  "template_profile": {
+    "style": "elegant_business_workplan",
+    "tone": "clear, professional, concise, structured, action-oriented",
+    "visual_character": "minimal business workplan deck with three section dividers, compact priority snapshots, two balanced comparison slides, one workstream overview, one visual pause, one infographic and a compact control table",
+    "total_slides": 13,
+    "recommended_output_slides": 13,
+    "skip_template_only_slides": [],
+    "keep_thanks_slide": false,
+    "render_engine": "token_replace_v1"
+  },
+  "global_rules": {
+    "language_policy": "All generated content must be in the user-selected language only.",
+    "business_quality": [
+      "Prefer realistic business, planning, operations, project or strategy content.",
+      "Avoid generic filler and motivational fluff.",
+      "Do not copy sample wording from the source PPTX.",
+      "Keep the wording suitable for an executive, manager or delivery team presentation.",
+      "Make content actionable, presentation-ready and commercially plausible."
+    ],
+    "writing_rules": [
+      "Use concise sentences suitable for slides.",
+      "Respect the slot limits exactly.",
+      "Keep headings sharp and compact.",
+      "Do not add extra bullets, rows or labels beyond the declared slots.",
+      "Compact snapshot slides must stay especially short and easy to scan.",
+      "Each slide must serve one clear workplan, roadmap or reporting purpose."
+    ],
+    "consistency_rules": [
+      "Maintain one coherent topic across all slides.",
+      "Ensure that section labels, comparisons, columns, infographic items and table entries all belong to the same workplan.",
+      "Do not introduce unrelated products, departments or timeframes without context."
+    ]
+  },
+  "slides": [
+    {
+      "index": 1,
+      "id": "cover",
+      "role": "cover_title",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "main presentation title",
+        "subtitle": "short introductory subtitle"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 8, "max_chars": 52, "fit": "shrink" },
+        "subtitle": { "max_words": 14, "max_chars": 90, "fit": "shrink" }
+      },
+      "rules": [
+        "Title should be 3-8 words.",
+        "Subtitle should be 6-14 words.",
+        "The title should sound like a business workplan, roadmap or strategic plan."
+      ]
+    },
+    {
+      "index": 2,
+      "id": "table_of_contents",
+      "role": "toc_four_sections",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "toc_title": "table of contents title",
+        "section_1_title": "section title",
+        "section_1_desc": "short description",
+        "section_2_title": "section title",
+        "section_2_desc": "short description",
+        "section_3_title": "section title",
+        "section_3_desc": "short description",
+        "section_4_title": "section title",
+        "section_4_desc": "short description"
+      },
+      "slot_constraints": {
+        "toc_title": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "section_1_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_2_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_3_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_4_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_1_desc": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "section_2_desc": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "section_3_desc": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "section_4_desc": { "max_words": 6, "max_chars": 40, "fit": "shrink" }
+      },
+      "rules": [
+        "Exactly 4 major sections.",
+        "Each section title should be 1-3 words.",
+        "Each description should be 3-6 words.",
+        "The sections should reflect a realistic workplan flow."
+      ]
+    },
+    {
+      "index": 3,
+      "id": "section_divider_context",
+      "role": "section_divider",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "section_title": "section title",
+        "section_number": "section number like 01",
+        "section_subtitle": "optional short subtitle"
+      },
+      "slot_constraints": {
+        "section_title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "section_number": { "max_chars": 2, "fit": "shrink" },
+        "section_subtitle": { "max_words": 8, "max_chars": 50, "fit": "shrink" }
+      },
+      "rules": [
+        "Use this to open the context section.",
+        "Section title should be compact and strong.",
+        "Subtitle should stay concise."
+      ]
+    },
+    {
+      "index": 4,
+      "id": "priority_snapshot",
+      "role": "list_highlights",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "slide title",
+        "intro_text": "short introductory sentence",
+        "bullet_1": "bullet point",
+        "bullet_2": "bullet point"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 34, "fit": "shrink" },
+        "intro_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" },
+        "bullet_1": { "max_words": 6, "max_chars": 34, "fit": "shrink" },
+        "bullet_2": { "max_words": 6, "max_chars": 34, "fit": "shrink" }
+      },
+      "rules": [
+        "Use exactly 2 bullets.",
+        "Keep the intro line very short.",
+        "This slide should summarize the immediate business priorities."
+      ]
+    },
+    {
+      "index": 5,
+      "id": "channel_comparison",
+      "role": "two_concept_comparison",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "comparison title",
+        "concept_1_heading": "concept label",
+        "concept_1_text": "concept explanation",
+        "concept_2_heading": "concept label",
+        "concept_2_text": "concept explanation"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 34, "fit": "shrink" },
+        "concept_1_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "concept_2_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "concept_1_text": { "max_words": 13, "max_chars": 78, "fit": "shrink" },
+        "concept_2_text": { "max_words": 13, "max_chars": 78, "fit": "shrink" }
+      },
+      "rules": [
+        "Compare two related channels, directions or business levers.",
+        "Each explanation should stay brief and parallel.",
+        "Keep both concepts balanced."
+      ]
+    },
+    {
+      "index": 6,
+      "id": "workstreams_overview",
+      "role": "three_column_overview",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "overview title",
+        "column_1_heading": "column label",
+        "column_1_text": "column explanation",
+        "column_2_heading": "column label",
+        "column_2_text": "column explanation",
+        "column_3_heading": "column label",
+        "column_3_text": "column explanation"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 34, "fit": "shrink" },
+        "column_1_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "column_2_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "column_3_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "column_1_text": { "max_words": 10, "max_chars": 58, "fit": "shrink" },
+        "column_2_text": { "max_words": 10, "max_chars": 58, "fit": "shrink" },
+        "column_3_text": { "max_words": 10, "max_chars": 58, "fit": "shrink" }
+      },
+      "rules": [
+        "Use exactly 3 workstreams.",
+        "Each heading should be 1-3 words.",
+        "Each explanation should be 7-10 words.",
+        "Columns should represent phases, teams, priorities or workstreams."
+      ]
+    },
+    {
+      "index": 7,
+      "id": "section_divider_execution",
+      "role": "section_divider",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "section_title": "section title",
+        "section_number": "section number like 02",
+        "section_subtitle": "optional short subtitle"
+      },
+      "slot_constraints": {
+        "section_title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "section_number": { "max_chars": 2, "fit": "shrink" },
+        "section_subtitle": { "max_words": 8, "max_chars": 50, "fit": "shrink" }
+      },
+      "rules": [
+        "Use this to open the execution section.",
+        "Section title should be compact and strong.",
+        "Subtitle should stay concise."
+      ]
+    },
+    {
+      "index": 8,
+      "id": "execution_balances",
+      "role": "two_concept_comparison",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "comparison title",
+        "concept_1_heading": "concept label",
+        "concept_1_text": "concept explanation",
+        "concept_2_heading": "concept label",
+        "concept_2_text": "concept explanation"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 34, "fit": "shrink" },
+        "concept_1_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "concept_2_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "concept_1_text": { "max_words": 13, "max_chars": 78, "fit": "shrink" },
+        "concept_2_text": { "max_words": 13, "max_chars": 78, "fit": "shrink" }
+      },
+      "rules": [
+        "Compare two execution balances, such as speed vs stability or reach vs service quality.",
+        "Each explanation should stay brief and practical.",
+        "Keep both concepts balanced."
+      ]
+    },
+    {
+      "index": 9,
+      "id": "risk_control_snapshot",
+      "role": "list_highlights",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "slide title",
+        "intro_text": "short introductory sentence",
+        "bullet_1": "bullet point",
+        "bullet_2": "bullet point"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 34, "fit": "shrink" },
+        "intro_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" },
+        "bullet_1": { "max_words": 6, "max_chars": 34, "fit": "shrink" },
+        "bullet_2": { "max_words": 6, "max_chars": 34, "fit": "shrink" }
+      },
+      "rules": [
+        "Use exactly 2 bullets.",
+        "Keep the intro line very short.",
+        "This slide should summarize the main execution risks or control points."
+      ]
+    },
+    {
+      "index": 10,
+      "id": "image_focus",
+      "role": "image_with_caption",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "visual slide title",
+        "caption": "short supporting text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 8, "max_chars": 52, "fit": "shrink" },
+        "caption": { "max_words": 14, "max_chars": 88, "fit": "shrink" }
+      },
+      "rules": [
+        "Title should be 4-8 words.",
+        "Caption should be 8-14 words.",
+        "This slide should work as a visual pause with one supporting idea."
+      ]
+    },
+    {
+      "index": 11,
+      "id": "section_divider_governance",
+      "role": "section_divider",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "section_title": "section title",
+        "section_number": "section number like 03",
+        "section_subtitle": "optional short subtitle"
+      },
+      "slot_constraints": {
+        "section_title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "section_number": { "max_chars": 2, "fit": "shrink" },
+        "section_subtitle": { "max_words": 8, "max_chars": 50, "fit": "shrink" }
+      },
+      "rules": [
+        "Use this to open the governance and control section.",
+        "Section title should be compact and strong.",
+        "Subtitle should stay concise."
+      ]
+    },
+    {
+      "index": 12,
+      "id": "infographic",
+      "role": "four_item_infographic",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "infographic title",
+        "item_1_heading": "item label",
+        "item_1_text": "item explanation",
+        "item_2_heading": "item label",
+        "item_2_text": "item explanation",
+        "item_3_heading": "item label",
+        "item_3_text": "item explanation",
+        "item_4_heading": "item label",
+        "item_4_text": "item explanation"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 6, "max_chars": 40, "fit": "shrink" },
+        "item_1_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "item_2_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "item_3_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "item_4_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "item_1_text": { "max_words": 8, "max_chars": 44, "fit": "shrink" },
+        "item_2_text": { "max_words": 8, "max_chars": 44, "fit": "shrink" },
+        "item_3_text": { "max_words": 8, "max_chars": 44, "fit": "shrink" },
+        "item_4_text": { "max_words": 8, "max_chars": 44, "fit": "shrink" }
+      },
+      "rules": [
+        "Exactly 4 items.",
+        "Each heading should be 1-3 words.",
+        "Each explanation should be 4-8 words.",
+        "Items should describe pillars, controls, responsibilities or support components."
+      ]
+    },
+    {
+      "index": 13,
+      "id": "table_summary",
+      "role": "comparison_table",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "table title",
+        "table_stub_header": "row header title",
+        "table_column_1": "column title",
+        "table_column_2": "column title",
+        "table_column_3": "column title",
+        "row_1_label": "row label",
+        "row_1_value_1": "value",
+        "row_1_value_2": "value",
+        "row_1_value_3": "value",
+        "row_2_label": "row label",
+        "row_2_value_1": "value",
+        "row_2_value_2": "value",
+        "row_2_value_3": "value",
+        "row_3_label": "row label",
+        "row_3_value_1": "value",
+        "row_3_value_2": "value",
+        "row_3_value_3": "value"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 6, "max_chars": 42, "fit": "shrink" },
+        "table_stub_header": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "table_column_1": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "table_column_2": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "table_column_3": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "row_1_label": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_2_label": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_3_label": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_1_value_1": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_1_value_2": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_1_value_3": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_2_value_1": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_2_value_2": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_2_value_3": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_3_value_1": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_3_value_2": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_3_value_3": { "max_words": 3, "max_chars": 18, "fit": "shrink" }
+      },
+      "rules": [
+        "Use a compact business summary table.",
+        "Keep labels and values short and presentation-friendly.",
+        "Use the table for phase comparison, resource summary or KPI snapshot."
+      ]
+    }
+  ],
+  "gemini_prompt_package": {
+    "purpose": "Generate content specifically for the business_2_elegant_workplan template.",
+    "input_variables": [
+      "topic",
+      "language",
+      "audience_level",
+      "presentation_goal",
+      "company_name",
+      "reporting_period",
+      "industry",
+      "region",
+      "customer_notes"
+    ],
+    "prompt_lines": [
+      "You are generating slide content for a PowerPoint template named 'Elegant Workplan'.",
+      "The domain is business and the style is elegant, minimal, professional and planning-oriented.",
+      "Write everything in the requested language only.",
+      "Your job is to fill the predefined slots for this exact template, not to redesign the slides.",
+      "This template uses strict prepared text anchors, so every slot must stay compact and fit naturally inside a premium business presentation.",
+      "The template flow is: cover -> section map -> divider -> compact priorities -> growth-vs-quality comparison -> three workstreams -> divider -> execution balance -> compact risk snapshot -> visual pause -> divider -> infographic -> compact table summary.",
+      "Keep the content suitable for a workplan, roadmap, team plan, project plan, initiative update or strategic execution presentation.",
+      "Avoid generic filler, vague corporate buzzwords and placeholder wording.",
+      "Treat the source PPTX text as layout scaffolding only; never copy its sample wording, sample project names or placeholder labels.",
+      "Do not output extra bullets, extra rows, extra labels or extra commentary.",
+      "Use concise, clear business language with practical meaning.",
+      "Prefer realistic phases, initiatives, deliverables, workstreams, responsibilities, priorities and measurable outcomes.",
+      "Compact snapshot slides must stay very short and easy to scan.",
+      "Maintain one coherent topic across all slides.",
+      "Every slide must remain tightly anchored to the user's chosen topic, timeframe and context."
+    ]
+  },
+  "webapp_metadata": {
+    "template_id": "business_2_elegant_workplan",
+    "title": "Elegant Workplan",
+    "subtitle": "13 slaydli minimal biznes reja",
+    "cover_asset": "assets/business-2.svg",
+    "accent": "#355fb2",
+    "summary": "Uch bo‘limli, ixcham, ammo to‘liq premium biznes reja taqdimoti."
+  }
+}

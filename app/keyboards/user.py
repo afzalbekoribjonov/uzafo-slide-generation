@@ -10,15 +10,16 @@ from app.callbacks.subscription import SubscriptionCallback
 def main_menu_keyboard(*, is_admin: bool = False) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text='🎞 Slayd yaratish', callback_data=MenuCallback(action='create'))
+    builder.button(text='✨ Magic slayd', callback_data=MenuCallback(action='magic'))
     builder.button(text='📊 Mening holatim', callback_data=MenuCallback(action='status'))
     builder.button(text='👥 Taklif qilish', callback_data=MenuCallback(action='invite'))
     builder.button(text='❓ Yordam', callback_data=MenuCallback(action='help'))
     builder.button(text='☎️ Aloqa', callback_data=MenuCallback(action='contact'))
     if is_admin:
         builder.button(text='🛡 Admin panel', callback_data=AdminMenuCallback(action='main'))
-        builder.adjust(1, 2, 2, 1)
+        builder.adjust(2, 2, 2, 1)
     else:
-        builder.adjust(1, 2, 2)
+        builder.adjust(2, 2, 2)
     return builder.as_markup()
 
 

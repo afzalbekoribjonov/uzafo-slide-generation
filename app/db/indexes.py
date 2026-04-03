@@ -44,3 +44,34 @@ async def setup_indexes(db: AsyncIOMotorDatabase) -> None:
             IndexModel([('finished_at', DESCENDING)]),
         ]
     )
+
+    await db.magic_accounts.create_indexes(
+        [
+            IndexModel([('telegram_id', ASCENDING)], unique=True),
+            IndexModel([('balance_uzs', DESCENDING)]),
+            IndexModel([('updated_at', DESCENDING)]),
+        ]
+    )
+
+    await db.magic_cards.create_indexes(
+        [
+            IndexModel([('is_active', ASCENDING)]),
+            IndexModel([('created_at', ASCENDING)]),
+        ]
+    )
+
+    await db.magic_topups.create_indexes(
+        [
+            IndexModel([('telegram_id', ASCENDING)]),
+            IndexModel([('status', ASCENDING), ('created_at', DESCENDING)]),
+            IndexModel([('created_at', DESCENDING)]),
+        ]
+    )
+
+    await db.magic_orders.create_indexes(
+        [
+            IndexModel([('telegram_id', ASCENDING)]),
+            IndexModel([('status', ASCENDING), ('created_at', DESCENDING)]),
+            IndexModel([('created_at', DESCENDING)]),
+        ]
+    )

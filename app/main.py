@@ -15,7 +15,9 @@ from app.config import Settings, get_settings
 from app.db.indexes import setup_indexes
 from app.db.mongo import Mongo
 from app.handlers.admin.panel import router as admin_router
+from app.handlers.admin.magic import router as admin_magic_router
 from app.handlers.user.create import router as create_router
+from app.handlers.user.magic import router as magic_router
 from app.handlers.user.menu import router as menu_router
 from app.handlers.user.start import router as start_router
 from app.handlers.user.subscription import router as subscription_router
@@ -24,6 +26,11 @@ from app.middlewares.subscription_guard import SubscriptionGuardMiddleware
 from app.middlewares.user_access import UserAccessMiddleware
 from app.repositories.channels import ChannelsRepository
 from app.repositories.generations import GenerationsRepository
+from app.repositories.magic_accounts import MagicAccountsRepository
+from app.repositories.magic_cards import MagicCardsRepository
+from app.repositories.magic_orders import MagicOrdersRepository
+from app.repositories.magic_settings import MagicSettingsRepository
+from app.repositories.magic_topups import MagicTopupsRepository
 from app.repositories.referrals import ReferralsRepository
 from app.repositories.users import UsersRepository
 from app.services.admin import AdminService
@@ -31,6 +38,14 @@ from app.services.gemini_planner import GeminiPresentationPlanner
 from app.services.generation_queue import GenerationQueueService
 from app.services.generations import GenerationAccessService
 from app.services.data_migration import LegacyMongoToCurrentDbMigrationService
+from app.services.magic_generation import (
+    MagicContentGenerator,
+    MagicGenerationService,
+    MagicPptxRenderer,
+    MagicTemplateRegistry,
+)
+from app.services.magic_queue import MagicOrderQueueService
+from app.services.magic_slides import MagicSlideService
 from app.services.pptx_generation import PptxGenerationService
 from app.services.referrals import ReferralService
 from app.services.subscriptions import SubscriptionService
@@ -54,6 +69,11 @@ async def build_runtime(settings: Settings) -> dict:
     referrals_repo = ReferralsRepository(mongo.db.referrals)
     channels_repo = ChannelsRepository(mongo.db.mandatory_channels)
     generations_repo = GenerationsRepository(mongo.db.generations)
+    magic_settings_repo = MagicSettingsRepository(mongo.db.magic_settings)
+    magic_cards_repo = MagicCardsRepository(mongo.db.magic_cards)
+    magic_accounts_repo = MagicAccountsRepository(mongo.db.magic_accounts)
+    magic_topups_repo = MagicTopupsRepository(mongo.db.magic_topups)
+    magic_orders_repo = MagicOrdersRepository(mongo.db.magic_orders)
 
     admin_ids = set(settings.admins)
     generation_access_service = GenerationAccessService()
@@ -83,6 +103,31 @@ async def build_runtime(settings: Settings) -> dict:
         generation_access_service=generation_access_service,
         bot_username=me.username or 'your_bot',
     )
+    magic_slide_service = MagicSlideService(
+        settings_repo=magic_settings_repo,
+        cards_repo=magic_cards_repo,
+        accounts_repo=magic_accounts_repo,
+        topups_repo=magic_topups_repo,
+        orders_repo=magic_orders_repo,
+        admin_ids=admin_ids,
+        webapp_url=settings.magic_slide_webapp_url,
+    )
+    magic_generation_service = MagicGenerationService(
+        registry=MagicTemplateRegistry(),
+        content_generator=MagicContentGenerator(
+            api_key=settings.gemini_api_key,
+            model_name=settings.gemini_model,
+        ),
+        renderer=MagicPptxRenderer(),
+    )
+    magic_order_queue_service = MagicOrderQueueService(
+        orders_repo=magic_orders_repo,
+        accounts_repo=magic_accounts_repo,
+        users_repo=users_repo,
+        generation_service=magic_generation_service,
+        poll_interval_seconds=settings.generation_worker_poll_seconds,
+        start_cooldown_seconds=settings.generation_start_cooldown_seconds,
+    )
     data_migration_service = LegacyMongoToCurrentDbMigrationService(
         current_db=mongo.db,
         legacy_mongodb_uri=settings.legacy_mongodb_uri,
@@ -99,6 +144,9 @@ async def build_runtime(settings: Settings) -> dict:
     dp['generation_queue_service'] = generation_queue_service
     dp['subscription_service'] = subscription_service
     dp['admin_service'] = admin_service
+    dp['magic_slide_service'] = magic_slide_service
+    dp['magic_generation_service'] = magic_generation_service
+    dp['magic_order_queue_service'] = magic_order_queue_service
     dp['data_migration_service'] = data_migration_service
     dp['admin_ids'] = admin_ids
     dp['bot_username'] = me.username or 'your_bot'
@@ -115,9 +163,11 @@ async def build_runtime(settings: Settings) -> dict:
     dp.callback_query.middleware(subscription_guard)
 
     dp.include_router(admin_router)
+    dp.include_router(admin_magic_router)
     dp.include_router(start_router)
     dp.include_router(subscription_router)
     dp.include_router(create_router)
+    dp.include_router(magic_router)
     dp.include_router(menu_router)
 
     return {
@@ -126,6 +176,7 @@ async def build_runtime(settings: Settings) -> dict:
         'dp': dp,
         'mongo': mongo,
         'generation_queue_service': generation_queue_service,
+        'magic_order_queue_service': magic_order_queue_service,
         'bot_username': me.username or 'your_bot',
     }
 
@@ -133,19 +184,27 @@ async def build_runtime(settings: Settings) -> dict:
 async def generation_worker_context(app: web.Application):
     bot: Bot = app['bot']
     generation_queue_service: GenerationQueueService = app['generation_queue_service']
+    magic_order_queue_service: MagicOrderQueueService = app['magic_order_queue_service']
     mongo: Mongo = app['mongo']
 
     worker_task = asyncio.create_task(generation_queue_service.run_worker(bot), name='generation-queue-worker')
+    magic_worker_task = asyncio.create_task(magic_order_queue_service.run_worker(bot), name='magic-order-queue-worker')
     app['generation_worker_task'] = worker_task
+    app['magic_order_worker_task'] = magic_worker_task
     logger.info('Generation queue worker started.')
+    logger.info('Magic order queue worker started.')
 
     try:
         yield
     finally:
         worker_task.cancel()
+        magic_worker_task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await worker_task
+        with contextlib.suppress(asyncio.CancelledError):
+            await magic_worker_task
         logger.info('Generation queue worker stopped.')
+        logger.info('Magic order queue worker stopped.')
 
         await mongo.close()
         await bot.session.close()
@@ -206,16 +265,21 @@ async def run_polling() -> None:
     dp: Dispatcher = runtime['dp']
     mongo: Mongo = runtime['mongo']
     generation_queue_service: GenerationQueueService = runtime['generation_queue_service']
+    magic_order_queue_service: MagicOrderQueueService = runtime['magic_order_queue_service']
 
     worker_task = asyncio.create_task(generation_queue_service.run_worker(bot), name='generation-queue-worker')
+    magic_worker_task = asyncio.create_task(magic_order_queue_service.run_worker(bot), name='magic-order-queue-worker')
     logger.info('Starting polling mode.')
 
     try:
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     finally:
         worker_task.cancel()
+        magic_worker_task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await worker_task
+        with contextlib.suppress(asyncio.CancelledError):
+            await magic_worker_task
         await mongo.close()
         await bot.session.close()
 

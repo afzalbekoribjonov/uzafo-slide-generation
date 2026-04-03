@@ -1,0 +1,757 @@
+{
+  "template_id": "history_2_victorian_era_thesis_defense",
+  "template_name": "History of Victorian Era Thesis Defense",
+  "category": "history",
+  "version": "2.0.0",
+  "source_file": "history-2-tokenized.pptx",
+  "model": "gemini-2.5-flash",
+  "template_profile": {
+    "style": "historical_thesis_defense",
+    "tone": "formal, clear, evidence-aware, analytical, presentation-ready",
+    "visual_character": "classic thesis-defense flow with a six-part contents map, strong section dividers, quote and image pauses, literature and framework slides, a research schedule, two-phase analysis and compact historical conclusions",
+    "total_slides": 28,
+    "recommended_output_slides": 25,
+    "skip_template_only_slides": [2, 27, 28],
+    "keep_thanks_slide": false,
+    "render_engine": "token_replace_v1"
+  },
+  "global_rules": {
+    "language_policy": "All generated content must be in the user-selected language only.",
+    "history_quality": [
+      "Prefer historically grounded, thesis-defense-ready content.",
+      "Use realistic periods, forces, actors, institutions, places and legacies when appropriate.",
+      "Avoid generic filler, motivational language and sample wording from the source PPTX.",
+      "Keep the reasoning academically plausible but compact enough for slides.",
+      "Every slide must stay anchored to the same topic, focus period and regional context."
+    ],
+    "writing_rules": [
+      "Respect the slot limits exactly.",
+      "Keep headings short and meaningful.",
+      "Keep body text concise enough for premium thesis slides.",
+      "Do not invent extra cards, rows, labels or helper notes.",
+      "Treat the source PPTX wording as layout scaffolding only."
+    ],
+    "citation_rules": [
+      "Do not fabricate archival codes, exact page numbers or unverifiable quotations.",
+      "Bibliographic entries may remain high-level and presentation-friendly.",
+      "If an exact quote is not safely attributable, write a thesis-style statement instead."
+    ]
+  },
+  "slides": [
+    {
+      "index": 1,
+      "id": "cover",
+      "role": "cover_title",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "main thesis title",
+        "subtitle": "short subtitle"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 10, "max_chars": 66, "fit": "shrink" },
+        "subtitle": { "max_words": 12, "max_chars": 82, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 2,
+      "id": "template_resources",
+      "role": "template_info_static",
+      "generate": false,
+      "skip_in_final": true
+    },
+    {
+      "index": 3,
+      "id": "table_of_contents",
+      "role": "toc_six_sections",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "toc_title": "contents title",
+        "part_1_title": "section title",
+        "part_1_desc": "short description",
+        "part_2_title": "section title",
+        "part_2_desc": "short description",
+        "part_3_title": "section title",
+        "part_3_desc": "short description",
+        "part_4_title": "section title",
+        "part_4_desc": "short description",
+        "part_5_title": "section title",
+        "part_5_desc": "short description",
+        "part_6_title": "section title",
+        "part_6_desc": "short description"
+      },
+      "slot_constraints": {
+        "toc_title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "part_1_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "part_2_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "part_3_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "part_4_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "part_5_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "part_6_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "part_1_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "part_2_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "part_3_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "part_4_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "part_5_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "part_6_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 4,
+      "id": "section_divider_intro",
+      "role": "section_divider",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "section_title": "section title",
+        "section_subtitle": "short subtitle",
+        "section_number": "01"
+      },
+      "slot_constraints": {
+        "section_title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "section_subtitle": { "max_words": 8, "max_chars": 50, "fit": "shrink" },
+        "section_number": { "max_chars": 2, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 5,
+      "id": "core_questions",
+      "role": "three_point_statement",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "slide title",
+        "point_1_heading": "heading",
+        "point_1_text": "text",
+        "point_2_heading": "heading",
+        "point_2_text": "text",
+        "point_3_heading": "heading",
+        "point_3_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 34, "fit": "shrink" },
+        "point_1_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "point_2_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "point_3_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "point_1_text": { "max_words": 14, "max_chars": 92, "fit": "shrink" },
+        "point_2_text": { "max_words": 14, "max_chars": 92, "fit": "shrink" },
+        "point_3_text": { "max_words": 14, "max_chars": 92, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 6,
+      "id": "image_break",
+      "role": "image_break_title",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "short visual title"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 34, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 7,
+      "id": "visual_support",
+      "role": "image_support_note",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title_line_1": "first title line",
+        "title_line_2": "second title line",
+        "body": "supporting note"
+      },
+      "slot_constraints": {
+        "title_line_1": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "title_line_2": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "body": { "max_words": 20, "max_chars": 118, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 8,
+      "id": "quote_slide",
+      "role": "quote_highlight",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "quote": "quote or thesis line",
+        "author": "attribution"
+      },
+      "slot_constraints": {
+        "quote": { "max_words": 24, "max_chars": 160, "fit": "shrink" },
+        "author": { "max_words": 4, "max_chars": 34, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 9,
+      "id": "hypotheses",
+      "role": "three_hypotheses",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "hypotheses title",
+        "hypothesis_1_heading": "heading",
+        "hypothesis_1_text": "text",
+        "hypothesis_2_heading": "heading",
+        "hypothesis_2_text": "text",
+        "hypothesis_3_heading": "heading",
+        "hypothesis_3_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "hypothesis_1_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "hypothesis_2_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "hypothesis_3_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "hypothesis_1_text": { "max_words": 14, "max_chars": 92, "fit": "shrink" },
+        "hypothesis_2_text": { "max_words": 14, "max_chars": 92, "fit": "shrink" },
+        "hypothesis_3_text": { "max_words": 14, "max_chars": 92, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 10,
+      "id": "main_value",
+      "role": "big_number_highlight",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "main_value": "large value",
+        "caption": "short caption"
+      },
+      "slot_constraints": {
+        "main_value": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "caption": { "max_words": 8, "max_chars": 54, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 11,
+      "id": "stat_triplet",
+      "role": "three_stat_cards",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "stat_1_value": "value",
+        "stat_1_label": "label",
+        "stat_2_value": "value",
+        "stat_2_label": "label",
+        "stat_3_value": "value",
+        "stat_3_label": "label"
+      },
+      "slot_constraints": {
+        "stat_1_value": { "max_words": 3, "max_chars": 16, "fit": "shrink" },
+        "stat_2_value": { "max_words": 3, "max_chars": 16, "fit": "shrink" },
+        "stat_3_value": { "max_words": 3, "max_chars": 16, "fit": "shrink" },
+        "stat_1_label": { "max_words": 5, "max_chars": 30, "fit": "shrink" },
+        "stat_2_label": { "max_words": 5, "max_chars": 30, "fit": "shrink" },
+        "stat_3_label": { "max_words": 5, "max_chars": 30, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 12,
+      "id": "section_pause",
+      "role": "title_only",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "pause title"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 13,
+      "id": "current_situation",
+      "role": "problem_analysis",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "slide title",
+        "situation_heading": "heading",
+        "situation_text": "summary",
+        "problems_heading": "heading",
+        "problem_1_heading": "heading",
+        "problem_1_text": "text",
+        "problem_2_heading": "heading",
+        "problem_2_text": "text",
+        "problem_3_heading": "heading",
+        "problem_3_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 36, "fit": "shrink" },
+        "situation_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "problems_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "situation_text": { "max_words": 24, "max_chars": 150, "fit": "shrink" },
+        "problem_1_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "problem_2_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "problem_3_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "problem_1_text": { "max_words": 10, "max_chars": 64, "fit": "shrink" },
+        "problem_2_text": { "max_words": 10, "max_chars": 64, "fit": "shrink" },
+        "problem_3_text": { "max_words": 10, "max_chars": 64, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 14,
+      "id": "study_objectives",
+      "role": "three_objectives",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "objective_1_heading": "heading",
+        "objective_1_text": "text",
+        "objective_2_heading": "heading",
+        "objective_2_text": "text",
+        "objective_3_heading": "heading",
+        "objective_3_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "objective_1_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "objective_2_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "objective_3_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "objective_1_text": { "max_words": 9, "max_chars": 56, "fit": "shrink" },
+        "objective_2_text": { "max_words": 9, "max_chars": 56, "fit": "shrink" },
+        "objective_3_text": { "max_words": 9, "max_chars": 56, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 15,
+      "id": "insights_grid",
+      "role": "six_insight_grid",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "insight_1_heading": "heading",
+        "insight_1_text": "text",
+        "insight_2_heading": "heading",
+        "insight_2_text": "text",
+        "insight_3_heading": "heading",
+        "insight_3_text": "text",
+        "insight_4_heading": "heading",
+        "insight_4_text": "text",
+        "insight_5_heading": "heading",
+        "insight_5_text": "text",
+        "insight_6_heading": "heading",
+        "insight_6_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 34, "fit": "shrink" },
+        "insight_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "insight_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "insight_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "insight_4_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "insight_5_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "insight_6_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "insight_1_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "insight_2_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "insight_3_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "insight_4_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "insight_5_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "insight_6_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 16,
+      "id": "literature_review",
+      "role": "literature_review_five",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "entry_1_ref": "reference",
+        "entry_1_note": "note",
+        "entry_2_ref": "reference",
+        "entry_2_note": "note",
+        "entry_3_ref": "reference",
+        "entry_3_note": "note",
+        "entry_4_ref": "reference",
+        "entry_4_note": "note",
+        "entry_5_ref": "reference",
+        "entry_5_note": "note"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "entry_1_ref": { "max_words": 3, "max_chars": 28, "fit": "shrink" },
+        "entry_2_ref": { "max_words": 3, "max_chars": 28, "fit": "shrink" },
+        "entry_3_ref": { "max_words": 3, "max_chars": 28, "fit": "shrink" },
+        "entry_4_ref": { "max_words": 3, "max_chars": 28, "fit": "shrink" },
+        "entry_5_ref": { "max_words": 3, "max_chars": 28, "fit": "shrink" },
+        "entry_1_note": { "max_words": 10, "max_chars": 72, "fit": "shrink" },
+        "entry_2_note": { "max_words": 10, "max_chars": 72, "fit": "shrink" },
+        "entry_3_note": { "max_words": 10, "max_chars": 72, "fit": "shrink" },
+        "entry_4_note": { "max_words": 10, "max_chars": 72, "fit": "shrink" },
+        "entry_5_note": { "max_words": 10, "max_chars": 72, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 17,
+      "id": "theoretical_framework",
+      "role": "framework_slide_history",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "framework_kicker": "kicker",
+        "key_terms_heading": "heading",
+        "theories_heading": "heading",
+        "key_term_1": "term",
+        "key_term_2": "term",
+        "key_term_3": "term",
+        "theory_1_heading": "heading",
+        "theory_1_text": "text",
+        "theory_2_heading": "heading",
+        "theory_2_text": "text",
+        "framework_heading": "heading",
+        "framework_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 32, "fit": "shrink" },
+        "framework_kicker": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "key_terms_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "theories_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "framework_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "key_term_1": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "key_term_2": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "key_term_3": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "theory_1_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "theory_2_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "theory_1_text": { "max_words": 12, "max_chars": 76, "fit": "shrink" },
+        "theory_2_text": { "max_words": 12, "max_chars": 76, "fit": "shrink" },
+        "framework_text": { "max_words": 20, "max_chars": 120, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 18,
+      "id": "schedule_table",
+      "role": "schedule_table",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "header_task": "header",
+        "header_description": "header",
+        "header_date": "header",
+        "header_status": "header",
+        "row_1_task": "task",
+        "row_1_description": "description",
+        "row_1_date": "date",
+        "row_1_status": "status",
+        "row_2_task": "task",
+        "row_2_description": "description",
+        "row_2_date": "date",
+        "row_2_status": "status",
+        "row_3_task": "task",
+        "row_3_description": "description",
+        "row_3_date": "date",
+        "row_3_status": "status",
+        "row_4_task": "task",
+        "row_4_description": "description",
+        "row_4_date": "date",
+        "row_4_status": "status",
+        "row_5_task": "task",
+        "row_5_description": "description",
+        "row_5_date": "date",
+        "row_5_status": "status"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "header_task": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "header_description": { "max_words": 2, "max_chars": 22, "fit": "shrink" },
+        "header_date": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "header_status": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_1_task": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_2_task": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_3_task": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_4_task": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_5_task": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "row_1_description": { "max_words": 6, "max_chars": 46, "fit": "shrink" },
+        "row_2_description": { "max_words": 6, "max_chars": 46, "fit": "shrink" },
+        "row_3_description": { "max_words": 6, "max_chars": 46, "fit": "shrink" },
+        "row_4_description": { "max_words": 6, "max_chars": 46, "fit": "shrink" },
+        "row_5_description": { "max_words": 6, "max_chars": 46, "fit": "shrink" },
+        "row_1_date": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "row_2_date": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "row_3_date": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "row_4_date": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "row_5_date": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "row_1_status": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_2_status": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_3_status": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_4_status": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_5_status": { "max_words": 2, "max_chars": 18, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 19,
+      "id": "methodology",
+      "role": "methodology_pillars",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "pillar_1_heading": "heading",
+        "pillar_1_text": "text",
+        "pillar_2_heading": "heading",
+        "pillar_2_text": "text",
+        "pillar_3_heading": "heading",
+        "pillar_3_text": "text",
+        "pillar_4_heading": "heading",
+        "pillar_4_text": "text",
+        "pillar_5_heading": "heading"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "pillar_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "pillar_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "pillar_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "pillar_4_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "pillar_5_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "pillar_1_text": { "max_words": 10, "max_chars": 66, "fit": "shrink" },
+        "pillar_2_text": { "max_words": 10, "max_chars": 66, "fit": "shrink" },
+        "pillar_3_text": { "max_words": 10, "max_chars": 66, "fit": "shrink" },
+        "pillar_4_text": { "max_words": 10, "max_chars": 66, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 20,
+      "id": "analysis_phases",
+      "role": "two_phase_analysis",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "phase_1_heading": "heading",
+        "phase_1_point_1": "point",
+        "phase_1_point_2": "point",
+        "phase_1_point_3": "point",
+        "phase_2_heading": "heading",
+        "phase_2_point_1": "point",
+        "phase_2_point_2": "point",
+        "phase_2_point_3": "point"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 34, "fit": "shrink" },
+        "phase_1_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "phase_2_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "phase_1_point_1": { "max_words": 7, "max_chars": 46, "fit": "shrink" },
+        "phase_1_point_2": { "max_words": 7, "max_chars": 46, "fit": "shrink" },
+        "phase_1_point_3": { "max_words": 7, "max_chars": 46, "fit": "shrink" },
+        "phase_2_point_1": { "max_words": 7, "max_chars": 46, "fit": "shrink" },
+        "phase_2_point_2": { "max_words": 7, "max_chars": 46, "fit": "shrink" },
+        "phase_2_point_3": { "max_words": 7, "max_chars": 46, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 21,
+      "id": "analysis_graph",
+      "role": "graph_plus_notes",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "chart_caption": "caption",
+        "note_1_heading": "heading",
+        "note_1_text": "text",
+        "note_2_heading": "heading",
+        "note_2_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 34, "fit": "shrink" },
+        "chart_caption": { "max_words": 22, "max_chars": 140, "fit": "shrink" },
+        "note_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "note_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "note_1_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "note_2_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 22,
+      "id": "results_summary",
+      "role": "three_way_result_analysis",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "result_1_heading": "heading",
+        "result_1_text": "text",
+        "result_2_heading": "heading",
+        "result_2_text": "text",
+        "result_3_heading": "heading",
+        "result_3_text": "text",
+        "highlight_value": "percent"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 34, "fit": "shrink" },
+        "result_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "result_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "result_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "result_1_text": { "max_words": 9, "max_chars": 54, "fit": "shrink" },
+        "result_2_text": { "max_words": 9, "max_chars": 54, "fit": "shrink" },
+        "result_3_text": { "max_words": 9, "max_chars": 54, "fit": "shrink" },
+        "highlight_value": { "max_chars": 4, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 23,
+      "id": "regional_map",
+      "role": "geo_context_map",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "location_1_name": "location",
+        "location_1_text": "note",
+        "location_2_name": "location",
+        "location_2_text": "note",
+        "location_3_name": "location",
+        "location_3_text": "note"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 34, "fit": "shrink" },
+        "location_1_name": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "location_2_name": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "location_3_name": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "location_1_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "location_2_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "location_3_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 24,
+      "id": "discussion",
+      "role": "discussion_two_columns",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "intro_heading": "heading",
+        "intro_text": "text",
+        "discussion_1_heading": "heading",
+        "discussion_1_text": "text",
+        "discussion_2_heading": "heading",
+        "discussion_2_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "intro_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "intro_text": { "max_words": 26, "max_chars": 160, "fit": "shrink" },
+        "discussion_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "discussion_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "discussion_1_text": { "max_words": 12, "max_chars": 74, "fit": "shrink" },
+        "discussion_2_text": { "max_words": 12, "max_chars": 74, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 25,
+      "id": "conclusions",
+      "role": "four_point_conclusion",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "point_1_heading": "heading",
+        "point_1_text": "text",
+        "point_2_heading": "heading",
+        "point_2_text": "text",
+        "point_3_heading": "heading",
+        "point_3_text": "text",
+        "point_4_heading": "heading",
+        "point_4_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "point_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "point_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "point_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "point_4_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "point_1_text": { "max_words": 9, "max_chars": 56, "fit": "shrink" },
+        "point_2_text": { "max_words": 9, "max_chars": 56, "fit": "shrink" },
+        "point_3_text": { "max_words": 9, "max_chars": 56, "fit": "shrink" },
+        "point_4_text": { "max_words": 9, "max_chars": 56, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 26,
+      "id": "bibliography",
+      "role": "bibliography_list",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "title",
+        "entry_1": "entry",
+        "entry_2": "entry",
+        "entry_3": "entry",
+        "entry_4": "entry",
+        "entry_5": "entry",
+        "entry_6": "entry",
+        "entry_7": "entry",
+        "entry_8": "entry",
+        "entry_9": "entry",
+        "entry_10": "entry"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 28, "fit": "shrink" },
+        "entry_1": { "max_words": 8, "max_chars": 64, "fit": "shrink" },
+        "entry_2": { "max_words": 8, "max_chars": 64, "fit": "shrink" },
+        "entry_3": { "max_words": 8, "max_chars": 64, "fit": "shrink" },
+        "entry_4": { "max_words": 8, "max_chars": 64, "fit": "shrink" },
+        "entry_5": { "max_words": 8, "max_chars": 64, "fit": "shrink" },
+        "entry_6": { "max_words": 8, "max_chars": 64, "fit": "shrink" },
+        "entry_7": { "max_words": 8, "max_chars": 64, "fit": "shrink" },
+        "entry_8": { "max_words": 8, "max_chars": 64, "fit": "shrink" },
+        "entry_9": { "max_words": 8, "max_chars": 64, "fit": "shrink" },
+        "entry_10": { "max_words": 8, "max_chars": 64, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 27,
+      "id": "mockups",
+      "role": "mockups",
+      "generate": false,
+      "skip_in_final": true,
+      "content_slots": {}
+    },
+    {
+      "index": 28,
+      "id": "thanks",
+      "role": "thanks",
+      "generate": false,
+      "skip_in_final": true,
+      "content_slots": {}
+    }
+  ],
+  "gemini_prompt_package": {
+    "purpose": "Generate content specifically for the history_2_victorian_era_thesis_defense template.",
+    "input_variables": [
+      "topic",
+      "language",
+      "audience_level",
+      "presentation_goal",
+      "optional_focus_period",
+      "optional_region"
+    ],
+    "prompt_lines": [
+      "You are generating slide content for a PowerPoint template named 'History of Victorian Era Thesis Defense'.",
+      "The style is formal historical thesis defense: analytical, compact, academically plausible and presentation-ready.",
+      "Write everything in the requested language only.",
+      "Fill the predefined slots for this exact template and do not redesign the slides.",
+      "This template uses strict prepared text anchors, so every slot must stay compact and fit naturally inside a premium history thesis deck.",
+      "Treat the source PPTX wording as layout scaffolding only; never copy sample labels, helper text or filler content.",
+      "Keep the whole deck tied to one coherent historical topic, time frame and regional context.",
+      "Use realistic historical pressures, institutions, actors, developments, interpretations and legacies where appropriate.",
+      "Avoid generic filler, decorative buzzwords and non-historical dummy content.",
+      "Do not output extra cards, extra rows, helper labels or commentary."
+    ]
+  },
+  "webapp_metadata": {
+    "template_id": "history_2_victorian_era_thesis_defense",
+    "title": "History Thesis Defense",
+    "subtitle": "Formal historical defense with context, analysis and conclusions",
+    "cover_asset": "assets/history-2.svg",
+    "accent": "#355fb2",
+    "summary": "History-focused defense deck with context slides, analytical sections, a schedule, regional map and compact conclusions."
+  }
+}

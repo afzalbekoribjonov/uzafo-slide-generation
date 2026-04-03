@@ -1,0 +1,604 @@
+{
+  "template_id": "education_2_analysis_conclusions_high_school",
+  "template_name": "Analysis and Conclusions Template for High School",
+  "category": "education",
+  "version": "2.0.0",
+  "source_file": "education-2-tokenized.pptx",
+  "model": "gemini-2.5-flash",
+  "template_profile": {
+    "style": "school_analysis_report",
+    "tone": "clear, structured, educational, semi-formal, presentation-ready",
+    "visual_character": "analysis-focused education deck with objectives, evidence slides, device views, a map, a timeline, a semantic network and compact comparison tables",
+    "total_slides": 22,
+    "recommended_output_slides": 21,
+    "skip_template_only_slides": [2],
+    "keep_thanks_slide": false,
+    "render_engine": "token_replace_v1"
+  },
+  "global_rules": {
+    "language_policy": "All generated content must be in the user-selected language only.",
+    "education_quality": [
+      "Prefer clear school-level analytical language.",
+      "Treat the source PPTX wording as layout scaffolding only and never copy helper text or sample labels.",
+      "Keep the full deck tied to one coherent topic, class context and analysis goal.",
+      "Avoid placeholder wording, astronomy filler and unrelated examples.",
+      "Use plausible educational observations, findings, comparisons and recommendations."
+    ],
+    "writing_rules": [
+      "Respect slot limits exactly.",
+      "Keep headings compact and meaningful.",
+      "Keep body text concise enough for premium classroom or school presentations.",
+      "Do not invent extra cards, rows, bullets or commentary.",
+      "Prefer slide-ready educational phrasing over essay-like prose."
+    ],
+    "data_rules": [
+      "Tables and chart notes should stay simple, believable and presentation-friendly.",
+      "If a topic is not geographic, the map slide may use regions, schools or communities with clear relevance.",
+      "Use neutral attribution if an exact quote is not safely available."
+    ]
+  },
+  "slides": [
+    {
+      "index": 1,
+      "id": "cover",
+      "role": "cover_title_author",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "main presentation title",
+        "author": "presenter label"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 10, "max_chars": 68, "fit": "shrink" },
+        "author": { "max_words": 4, "max_chars": 34, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 2,
+      "id": "template_resources",
+      "role": "template_info_static",
+      "generate": false,
+      "skip_in_final": true
+    },
+    {
+      "index": 3,
+      "id": "table_of_contents",
+      "role": "toc_six_sections",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "toc_title": "contents title",
+        "section_1_title": "section title",
+        "section_1_desc": "short description",
+        "section_2_title": "section title",
+        "section_2_desc": "short description",
+        "section_3_title": "section title",
+        "section_3_desc": "short description",
+        "section_4_title": "section title",
+        "section_4_desc": "short description",
+        "section_5_title": "section title",
+        "section_5_desc": "short description",
+        "section_6_title": "section title",
+        "section_6_desc": "short description"
+      },
+      "slot_constraints": {
+        "toc_title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "section_1_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_2_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_3_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_4_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_5_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_6_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_1_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "section_2_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "section_3_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "section_4_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "section_5_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "section_6_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 4,
+      "id": "introduction",
+      "role": "opening_intro",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "introduction title",
+        "body": "introductory paragraph"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "body": { "max_words": 28, "max_chars": 176, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 5,
+      "id": "general_objective",
+      "role": "two_column_main_objective",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "objective title",
+        "objective_text": "main objective explanation",
+        "supporting_context": "supporting explanation"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 38, "fit": "shrink" },
+        "objective_text": { "max_words": 26, "max_chars": 166, "fit": "shrink" },
+        "supporting_context": { "max_words": 26, "max_chars": 166, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 6,
+      "id": "specific_objectives",
+      "role": "bullet_objectives",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "specific objectives title",
+        "intro_line": "lead-in sentence",
+        "bullet_1": "objective bullet",
+        "bullet_2": "objective bullet",
+        "bullet_3": "objective bullet",
+        "bullet_4": "objective bullet"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "intro_line": { "max_words": 10, "max_chars": 68, "fit": "shrink" },
+        "bullet_1": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "bullet_2": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "bullet_3": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "bullet_4": { "max_words": 10, "max_chars": 72, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 7,
+      "id": "objective_limitations",
+      "role": "two_card_scope_constraints",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "slide title",
+        "card_1_heading": "scope label",
+        "card_1_text": "scope explanation",
+        "card_2_heading": "constraint label",
+        "card_2_text": "constraint explanation"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "card_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "card_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "card_1_text": { "max_words": 14, "max_chars": 92, "fit": "shrink" },
+        "card_2_text": { "max_words": 14, "max_chars": 92, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 8,
+      "id": "objectives_relevance",
+      "role": "three_type_relevance",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "relevance title",
+        "type_1_heading": "category label",
+        "type_1_text": "category explanation",
+        "type_2_heading": "category label",
+        "type_2_text": "category explanation",
+        "type_3_heading": "category label",
+        "type_3_text": "category explanation"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "type_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "type_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "type_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "type_1_text": { "max_words": 9, "max_chars": 58, "fit": "shrink" },
+        "type_2_text": { "max_words": 9, "max_chars": 58, "fit": "shrink" },
+        "type_3_text": { "max_words": 9, "max_chars": 58, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 9,
+      "id": "study_population",
+      "role": "four_factor_sample",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "population title",
+        "factor_1_heading": "factor heading",
+        "factor_1_text": "factor text",
+        "factor_2_heading": "factor heading",
+        "factor_2_text": "factor text",
+        "factor_3_heading": "factor heading",
+        "factor_3_text": "factor text",
+        "factor_4_heading": "factor heading",
+        "factor_4_text": "factor text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 36, "fit": "shrink" },
+        "factor_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "factor_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "factor_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "factor_4_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "factor_1_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" },
+        "factor_2_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" },
+        "factor_3_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" },
+        "factor_4_text": { "max_words": 8, "max_chars": 52, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 10,
+      "id": "data_presentation",
+      "role": "six_aspect_data_overview",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "data title",
+        "aspect_1_heading": "heading",
+        "aspect_1_text": "text",
+        "aspect_2_heading": "heading",
+        "aspect_2_text": "text",
+        "aspect_3_heading": "heading",
+        "aspect_3_text": "text",
+        "aspect_4_heading": "heading",
+        "aspect_4_text": "text",
+        "aspect_5_heading": "heading",
+        "aspect_5_text": "text",
+        "aspect_6_heading": "heading",
+        "aspect_6_text": "text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "aspect_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "aspect_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "aspect_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "aspect_4_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "aspect_5_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "aspect_6_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "aspect_1_text": { "max_words": 8, "max_chars": 50, "fit": "shrink" },
+        "aspect_2_text": { "max_words": 8, "max_chars": 50, "fit": "shrink" },
+        "aspect_3_text": { "max_words": 8, "max_chars": 50, "fit": "shrink" },
+        "aspect_4_text": { "max_words": 8, "max_chars": 50, "fit": "shrink" },
+        "aspect_5_text": { "max_words": 8, "max_chars": 50, "fit": "shrink" },
+        "aspect_6_text": { "max_words": 8, "max_chars": 50, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 11,
+      "id": "quote_slide",
+      "role": "quote_highlight",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "quote": "quote",
+        "author": "attribution"
+      },
+      "slot_constraints": {
+        "quote": { "max_words": 22, "max_chars": 160, "fit": "shrink" },
+        "author": { "max_words": 4, "max_chars": 34, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 12,
+      "id": "image_break_title",
+      "role": "full_image_title",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "visual title"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 7, "max_chars": 52, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 13,
+      "id": "visual_explanation",
+      "role": "image_support_explanation",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "headline_line_1": "headline line 1",
+        "headline_line_2": "headline line 2",
+        "body": "short explanation"
+      },
+      "slot_constraints": {
+        "headline_line_1": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "headline_line_2": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "body": { "max_words": 18, "max_chars": 116, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 14,
+      "id": "computer_mockup",
+      "role": "device_mockup_desktop",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "desktop title",
+        "caption": "desktop caption"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 26, "fit": "shrink" },
+        "caption": { "max_words": 18, "max_chars": 112, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 15,
+      "id": "tablet_mockup",
+      "role": "device_mockup_tablet",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "tablet title",
+        "caption": "tablet caption"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 26, "fit": "shrink" },
+        "caption": { "max_words": 18, "max_chars": 112, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 16,
+      "id": "phone_mockup",
+      "role": "device_mockup_phone",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "phone title",
+        "caption": "phone caption"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 26, "fit": "shrink" },
+        "caption": { "max_words": 18, "max_chars": 112, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 17,
+      "id": "global_impact_map",
+      "role": "three_location_map",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "map title",
+        "location_1_name": "location name",
+        "location_1_text": "location significance",
+        "location_2_name": "location name",
+        "location_2_text": "location significance",
+        "location_3_name": "location name",
+        "location_3_text": "location significance"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "location_1_name": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "location_2_name": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "location_3_name": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "location_1_text": { "max_words": 8, "max_chars": 50, "fit": "shrink" },
+        "location_2_text": { "max_words": 8, "max_chars": 50, "fit": "shrink" },
+        "location_3_text": { "max_words": 8, "max_chars": 50, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 18,
+      "id": "key_events_timeline",
+      "role": "timeline_with_milestone",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "timeline title",
+        "event_1_heading": "event heading",
+        "event_1_text": "event text",
+        "event_2_heading": "event heading",
+        "event_2_text": "event text",
+        "event_3_heading": "event heading",
+        "event_3_text": "event text",
+        "event_4_heading": "event heading",
+        "event_4_text": "event text",
+        "milestone_heading": "milestone heading",
+        "milestone_text": "milestone text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "event_1_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "event_2_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "event_3_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "event_4_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "milestone_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "event_1_text": { "max_words": 8, "max_chars": 54, "fit": "shrink" },
+        "event_2_text": { "max_words": 8, "max_chars": 54, "fit": "shrink" },
+        "event_3_text": { "max_words": 8, "max_chars": 54, "fit": "shrink" },
+        "event_4_text": { "max_words": 8, "max_chars": 54, "fit": "shrink" },
+        "milestone_text": { "max_words": 8, "max_chars": 54, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 19,
+      "id": "semantic_map",
+      "role": "relationship_network",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "map title",
+        "subtitle": "short subtitle",
+        "node_1_heading": "node heading",
+        "node_1_text": "node text",
+        "node_2_heading": "node heading",
+        "node_2_text": "node text",
+        "node_3_heading": "node heading",
+        "node_3_text": "node text",
+        "node_4_heading": "node heading",
+        "node_4_text": "node text",
+        "node_5_heading": "node heading",
+        "node_5_text": "node text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 34, "fit": "shrink" },
+        "subtitle": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "node_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "node_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "node_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "node_4_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "node_5_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "node_1_text": { "max_words": 6, "max_chars": 36, "fit": "shrink" },
+        "node_2_text": { "max_words": 6, "max_chars": 36, "fit": "shrink" },
+        "node_3_text": { "max_words": 6, "max_chars": 36, "fit": "shrink" },
+        "node_4_text": { "max_words": 6, "max_chars": 36, "fit": "shrink" },
+        "node_5_text": { "max_words": 6, "max_chars": 36, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 20,
+      "id": "key_findings_table",
+      "role": "results_table",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "findings title",
+        "header_aspect": "header",
+        "header_subject_a": "header",
+        "header_subject_b": "header",
+        "header_subject_c": "header",
+        "row_1_aspect": "row label",
+        "row_1_subject_a": "value",
+        "row_1_subject_b": "value",
+        "row_1_subject_c": "value",
+        "row_2_aspect": "row label",
+        "row_2_subject_a": "value",
+        "row_2_subject_b": "value",
+        "row_2_subject_c": "value",
+        "row_3_aspect": "row label",
+        "row_3_subject_a": "value",
+        "row_3_subject_b": "value",
+        "row_3_subject_c": "value",
+        "row_4_aspect": "row label",
+        "row_4_subject_a": "value",
+        "row_4_subject_b": "value",
+        "row_4_subject_c": "value"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 32, "fit": "shrink" },
+        "header_aspect": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "header_subject_a": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "header_subject_b": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "header_subject_c": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_1_aspect": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_2_aspect": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_3_aspect": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_4_aspect": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_1_subject_a": { "max_chars": 10, "fit": "shrink" },
+        "row_1_subject_b": { "max_chars": 10, "fit": "shrink" },
+        "row_1_subject_c": { "max_chars": 10, "fit": "shrink" },
+        "row_2_subject_a": { "max_chars": 10, "fit": "shrink" },
+        "row_2_subject_b": { "max_chars": 10, "fit": "shrink" },
+        "row_2_subject_c": { "max_chars": 10, "fit": "shrink" },
+        "row_3_subject_a": { "max_chars": 10, "fit": "shrink" },
+        "row_3_subject_b": { "max_chars": 10, "fit": "shrink" },
+        "row_3_subject_c": { "max_chars": 10, "fit": "shrink" },
+        "row_4_subject_a": { "max_chars": 10, "fit": "shrink" },
+        "row_4_subject_b": { "max_chars": 10, "fit": "shrink" },
+        "row_4_subject_c": { "max_chars": 10, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 21,
+      "id": "periodic_analysis_chart",
+      "role": "four_series_chart",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "chart title",
+        "chart_caption": "short caption",
+        "series_1_label": "label",
+        "series_1_text": "note",
+        "series_2_label": "label",
+        "series_2_text": "note",
+        "series_3_label": "label",
+        "series_3_text": "note",
+        "series_4_label": "label",
+        "series_4_text": "note"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "chart_caption": { "max_words": 20, "max_chars": 132, "fit": "shrink" },
+        "series_1_label": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "series_2_label": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "series_3_label": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "series_4_label": { "max_words": 2, "max_chars": 16, "fit": "shrink" },
+        "series_1_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "series_2_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "series_3_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "series_4_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 22,
+      "id": "organized_data_summary",
+      "role": "data_dictionary_table",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "summary title",
+        "header_data": "header",
+        "header_description": "header",
+        "row_1_data": "row label",
+        "row_1_description": "description",
+        "row_2_data": "row label",
+        "row_2_description": "description",
+        "row_3_data": "row label",
+        "row_3_description": "description",
+        "row_4_data": "row label",
+        "row_4_description": "description",
+        "row_5_data": "row label",
+        "row_5_description": "description"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "header_data": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "header_description": { "max_words": 2, "max_chars": 22, "fit": "shrink" },
+        "row_1_data": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_2_data": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_3_data": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_4_data": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_5_data": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "row_1_description": { "max_words": 9, "max_chars": 60, "fit": "shrink" },
+        "row_2_description": { "max_words": 9, "max_chars": 60, "fit": "shrink" },
+        "row_3_description": { "max_words": 9, "max_chars": 60, "fit": "shrink" },
+        "row_4_description": { "max_words": 9, "max_chars": 60, "fit": "shrink" },
+        "row_5_description": { "max_words": 9, "max_chars": 60, "fit": "shrink" }
+      }
+    }
+  ],
+  "gemini_prompt_package": {
+    "purpose": "Generate content specifically for the education_2_analysis_conclusions_high_school template.",
+    "input_variables": [
+      "topic",
+      "language",
+      "audience_level",
+      "presentation_goal",
+      "optional_grade_level",
+      "optional_subject",
+      "optional_dataset_context"
+    ],
+    "prompt_lines": [
+      "You are generating slide content for a PowerPoint template named 'Analysis and Conclusions Template for High School'.",
+      "The style is educational, structured, school-friendly and premium.",
+      "Write everything in the requested language only.",
+      "Fill the predefined slots for this exact template and do not redesign the slides.",
+      "This template uses strict prepared text anchors, so every slot must stay compact and fit naturally inside a premium school analysis deck.",
+      "Treat the source PPTX wording as layout scaffolding only; never copy helper text, sample labels or filler content.",
+      "Keep the whole deck tied to one coherent topic, learning context and analysis goal.",
+      "Prefer clear educational language: objectives, evidence, observations, comparisons, learner impact and practical conclusions.",
+      "Avoid generic filler, decorative buzzwords and unrelated examples.",
+      "Do not output extra cards, rows, bullets, labels or commentary."
+    ]
+  },
+  "webapp_metadata": {
+    "template_id": "education_2_analysis_conclusions_high_school",
+    "title": "Analysis and Conclusions",
+    "subtitle": "School analysis deck with objectives, evidence, tables and compact conclusions",
+    "cover_asset": "assets/education-2.svg",
+    "accent": "#355fb2",
+    "summary": "Education-focused analysis deck with objective slides, evidence views, map, timeline, findings table and organized data summary."
+  }
+}

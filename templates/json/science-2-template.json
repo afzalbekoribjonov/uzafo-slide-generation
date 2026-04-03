@@ -1,0 +1,623 @@
+{
+  "template_id": "science_2_epidemiology_thesis_defense",
+  "template_name": "Epidemiology Study on Infectious Diseases Thesis Defense",
+  "category": "science",
+  "version": "2.0.0",
+  "source_file": "science-2-tokenized.pptx",
+  "model": "gemini-2.5-flash",
+  "template_profile": {
+    "style": "scientific_thesis_defense",
+    "tone": "formal, analytical, evidence-oriented, academic, presentation-ready",
+    "visual_character": "clean thesis-defense structure with section dividers, focused analytical cards, compact framework and methodology blocks, visual result slides and a short conclusion grid",
+    "total_slides": 21,
+    "recommended_output_slides": 20,
+    "skip_template_only_slides": [21],
+    "keep_thanks_slide": false,
+    "render_engine": "token_replace_v1"
+  },
+  "global_rules": {
+    "language_policy": "All generated content must be in the user-selected language only.",
+    "science_quality": [
+      "Prefer real scientific framing, research logic, epidemiological concepts, methods and plausible findings.",
+      "Avoid generic filler, decorative wording and placeholder labels.",
+      "Do not use unrelated astronomy or sample template content.",
+      "Keep slides academically credible but presentation-friendly."
+    ],
+    "writing_rules": [
+      "Respect the slot limits exactly.",
+      "Keep headings short and meaningful.",
+      "Keep body text compact enough for thesis-defense slides.",
+      "Do not invent extra sections, bullets or helper labels.",
+      "Every slide must support one clear scientific purpose."
+    ],
+    "citation_rules": [
+      "Do not invent exact citations, dataset IDs or page numbers.",
+      "Literature references may remain high-level and non-fabricated."
+    ]
+  },
+  "slides": [
+    {
+      "index": 1,
+      "id": "cover",
+      "role": "cover_title",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "main thesis title",
+        "subtitle": "short subtitle"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 10, "max_chars": 64, "fit": "shrink" },
+        "subtitle": { "max_words": 12, "max_chars": 76, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 2,
+      "id": "table_of_contents",
+      "role": "toc_six_sections",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "toc_title": "contents title",
+        "section_1_title": "section title",
+        "section_1_desc": "very short description",
+        "section_2_title": "section title",
+        "section_2_desc": "very short description",
+        "section_3_title": "section title",
+        "section_3_desc": "very short description",
+        "section_4_title": "section title",
+        "section_4_desc": "very short description",
+        "section_5_title": "section title",
+        "section_5_desc": "very short description",
+        "section_6_title": "section title",
+        "section_6_desc": "very short description"
+      },
+      "slot_constraints": {
+        "toc_title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "section_1_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_2_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_3_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_4_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_5_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_6_title": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "section_1_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "section_2_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "section_3_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "section_4_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "section_5_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" },
+        "section_6_desc": { "max_words": 6, "max_chars": 38, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 3,
+      "id": "section_divider_statement",
+      "role": "section_divider",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "section_number": "01",
+        "section_title": "statement",
+        "section_subtitle": "short subtitle"
+      },
+      "slot_constraints": {
+        "section_number": { "max_chars": 2, "fit": "shrink" },
+        "section_title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "section_subtitle": { "max_words": 8, "max_chars": 48, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 4,
+      "id": "introduction",
+      "role": "scientific_introduction",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "introduction title",
+        "body": "opening scientific context paragraph"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "body": { "max_words": 40, "max_chars": 240, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 5,
+      "id": "purpose_statement",
+      "role": "three_question_rationale",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "purpose statement title",
+        "question_1": "guiding question",
+        "text_1": "explanation",
+        "question_2": "guiding question",
+        "text_2": "explanation",
+        "question_3": "guiding question",
+        "text_3": "explanation"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 34, "fit": "shrink" },
+        "question_1": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "question_2": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "question_3": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "text_1": { "max_words": 14, "max_chars": 92, "fit": "shrink" },
+        "text_2": { "max_words": 14, "max_chars": 92, "fit": "shrink" },
+        "text_3": { "max_words": 14, "max_chars": 92, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 6,
+      "id": "quote_slide",
+      "role": "quote_highlight",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "quote": "short quote or thesis line",
+        "author": "attribution"
+      },
+      "slot_constraints": {
+        "quote": { "max_words": 24, "max_chars": 160, "fit": "shrink" },
+        "author": { "max_words": 4, "max_chars": 34, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 7,
+      "id": "current_situation_problems",
+      "role": "problem_analysis",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "current situation & problems",
+        "current_situation_heading": "left panel heading",
+        "current_situation_text": "situation summary",
+        "problem_1_heading": "problem label",
+        "problem_1_text": "problem detail",
+        "problem_2_heading": "problem label",
+        "problem_2_text": "problem detail",
+        "problem_3_heading": "problem label",
+        "problem_3_text": "problem detail"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 36, "fit": "shrink" },
+        "current_situation_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "current_situation_text": { "max_words": 20, "max_chars": 120, "fit": "shrink" },
+        "problem_1_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "problem_2_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "problem_3_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "problem_1_text": { "max_words": 11, "max_chars": 70, "fit": "shrink" },
+        "problem_2_text": { "max_words": 11, "max_chars": 70, "fit": "shrink" },
+        "problem_3_text": { "max_words": 11, "max_chars": 70, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 8,
+      "id": "section_divider_hypothesis",
+      "role": "section_divider",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "section_number": "02",
+        "section_title": "hypothesis",
+        "section_subtitle": "short subtitle"
+      },
+      "slot_constraints": {
+        "section_number": { "max_chars": 2, "fit": "shrink" },
+        "section_title": { "max_words": 4, "max_chars": 30, "fit": "shrink" },
+        "section_subtitle": { "max_words": 8, "max_chars": 48, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 9,
+      "id": "hypotheses",
+      "role": "three_hypotheses",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "hypotheses title",
+        "hypothesis_1_heading": "hypothesis label",
+        "hypothesis_1_text": "hypothesis statement",
+        "hypothesis_2_heading": "hypothesis label",
+        "hypothesis_2_text": "hypothesis statement",
+        "hypothesis_3_heading": "hypothesis label",
+        "hypothesis_3_text": "hypothesis statement"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "hypothesis_1_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "hypothesis_2_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "hypothesis_3_heading": { "max_words": 3, "max_chars": 18, "fit": "shrink" },
+        "hypothesis_1_text": { "max_words": 15, "max_chars": 92, "fit": "shrink" },
+        "hypothesis_2_text": { "max_words": 15, "max_chars": 92, "fit": "shrink" },
+        "hypothesis_3_text": { "max_words": 15, "max_chars": 92, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 10,
+      "id": "study_objectives",
+      "role": "four_objectives",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "study objectives title",
+        "objective_1_heading": "objective label",
+        "objective_1_text": "objective note",
+        "objective_2_heading": "objective label",
+        "objective_2_text": "objective note",
+        "objective_3_heading": "objective label",
+        "objective_3_text": "objective note",
+        "objective_4_heading": "objective label",
+        "objective_4_text": "objective note"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "objective_1_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "objective_2_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "objective_3_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "objective_4_heading": { "max_words": 3, "max_chars": 20, "fit": "shrink" },
+        "objective_1_text": { "max_words": 10, "max_chars": 66, "fit": "shrink" },
+        "objective_2_text": { "max_words": 10, "max_chars": 66, "fit": "shrink" },
+        "objective_3_text": { "max_words": 10, "max_chars": 66, "fit": "shrink" },
+        "objective_4_text": { "max_words": 10, "max_chars": 66, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 11,
+      "id": "concept_review",
+      "role": "concept_grid",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "concept review title",
+        "concept_1_heading": "concept label",
+        "concept_1_text": "concept explanation",
+        "concept_2_heading": "concept label",
+        "concept_2_text": "concept explanation",
+        "concept_3_heading": "concept label",
+        "concept_3_text": "concept explanation",
+        "concept_4_heading": "concept label",
+        "concept_4_text": "concept explanation",
+        "concept_5_heading": "concept label",
+        "concept_5_text": "concept explanation"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 34, "fit": "shrink" },
+        "concept_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "concept_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "concept_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "concept_4_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "concept_5_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "concept_1_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "concept_2_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "concept_3_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "concept_4_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "concept_5_text": { "max_words": 7, "max_chars": 44, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 12,
+      "id": "literature_review",
+      "role": "literature_review_five",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "literature review title",
+        "entry_1_ref": "reference label",
+        "entry_1_note": "finding summary",
+        "entry_2_ref": "reference label",
+        "entry_2_note": "finding summary",
+        "entry_3_ref": "reference label",
+        "entry_3_note": "finding summary",
+        "entry_4_ref": "reference label",
+        "entry_4_note": "finding summary",
+        "entry_5_ref": "reference label",
+        "entry_5_note": "finding summary"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 28, "fit": "shrink" },
+        "entry_1_ref": { "max_words": 3, "max_chars": 28, "fit": "shrink" },
+        "entry_2_ref": { "max_words": 3, "max_chars": 28, "fit": "shrink" },
+        "entry_3_ref": { "max_words": 3, "max_chars": 28, "fit": "shrink" },
+        "entry_4_ref": { "max_words": 3, "max_chars": 28, "fit": "shrink" },
+        "entry_5_ref": { "max_words": 3, "max_chars": 28, "fit": "shrink" },
+        "entry_1_note": { "max_words": 10, "max_chars": 72, "fit": "shrink" },
+        "entry_2_note": { "max_words": 10, "max_chars": 72, "fit": "shrink" },
+        "entry_3_note": { "max_words": 10, "max_chars": 72, "fit": "shrink" },
+        "entry_4_note": { "max_words": 10, "max_chars": 72, "fit": "shrink" },
+        "entry_5_note": { "max_words": 10, "max_chars": 72, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 13,
+      "id": "theoretical_framework",
+      "role": "framework_slide",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "theoretical framework title",
+        "key_terms_heading": "key terms heading",
+        "key_term_1": "term",
+        "key_term_2": "term",
+        "key_term_3": "term",
+        "key_term_4": "term",
+        "key_term_5": "term",
+        "key_term_6": "term",
+        "key_term_7": "term",
+        "theories_heading": "theories heading",
+        "theory_1_heading": "theory label",
+        "theory_1_text": "theory explanation",
+        "theory_2_heading": "theory label",
+        "theory_2_text": "theory explanation",
+        "framework_heading": "framework heading",
+        "framework_text": "framework summary"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 34, "fit": "shrink" },
+        "key_terms_heading": { "max_words": 2, "max_chars": 20, "fit": "shrink" },
+        "theories_heading": { "max_words": 2, "max_chars": 20, "fit": "shrink" },
+        "framework_heading": { "max_words": 2, "max_chars": 20, "fit": "shrink" },
+        "key_term_1": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "key_term_2": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "key_term_3": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "key_term_4": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "key_term_5": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "key_term_6": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "key_term_7": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "theory_1_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "theory_2_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "theory_1_text": { "max_words": 12, "max_chars": 80, "fit": "shrink" },
+        "theory_2_text": { "max_words": 12, "max_chars": 80, "fit": "shrink" },
+        "framework_text": { "max_words": 20, "max_chars": 120, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 14,
+      "id": "methodology",
+      "role": "methodology_matrix",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "methodology title",
+        "method_label": "method label",
+        "data_type_label": "type of data",
+        "data_type_text": "data note",
+        "motives_label": "motives",
+        "motives_text": "motives note",
+        "collection_label": "data collection",
+        "collection_text": "collection note",
+        "sampling_label": "specific sampling",
+        "sampling_text": "sampling note"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "method_label": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "data_type_label": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "motives_label": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "collection_label": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "sampling_label": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "data_type_text": { "max_words": 12, "max_chars": 80, "fit": "shrink" },
+        "motives_text": { "max_words": 12, "max_chars": 80, "fit": "shrink" },
+        "collection_text": { "max_words": 12, "max_chars": 80, "fit": "shrink" },
+        "sampling_text": { "max_words": 12, "max_chars": 80, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 15,
+      "id": "analysis_development_phases",
+      "role": "two_phase_analysis",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "analysis & development title",
+        "phase_1_heading": "phase heading",
+        "phase_1_point_1": "point",
+        "phase_1_point_2": "point",
+        "phase_1_point_3": "point",
+        "phase_2_heading": "phase heading",
+        "phase_2_point_1": "point",
+        "phase_2_point_2": "point",
+        "phase_2_point_3": "point"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 34, "fit": "shrink" },
+        "phase_1_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "phase_2_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "phase_1_point_1": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "phase_1_point_2": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "phase_1_point_3": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "phase_2_point_1": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "phase_2_point_2": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "phase_2_point_3": { "max_words": 7, "max_chars": 44, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 16,
+      "id": "analysis_graph",
+      "role": "graph_plus_notes",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "analysis slide title",
+        "graph_caption": "left narrative summary",
+        "note_1_heading": "short note heading",
+        "note_1_text": "short note text",
+        "note_2_heading": "short note heading",
+        "note_2_text": "short note text"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 34, "fit": "shrink" },
+        "graph_caption": { "max_words": 24, "max_chars": 150, "fit": "shrink" },
+        "note_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "note_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "note_1_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "note_2_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 17,
+      "id": "analysis_results",
+      "role": "percent_result_slide",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "analysis of the results title",
+        "highlight_percent": "percentage",
+        "result_1_heading": "result label",
+        "result_1_text": "short note",
+        "result_2_heading": "result label",
+        "result_2_text": "short note",
+        "result_3_heading": "result label",
+        "result_3_text": "short note"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 4, "max_chars": 34, "fit": "shrink" },
+        "highlight_percent": { "max_chars": 4, "fit": "shrink" },
+        "result_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "result_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "result_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "result_1_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "result_2_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" },
+        "result_3_text": { "max_words": 8, "max_chars": 48, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 18,
+      "id": "discussion",
+      "role": "discussion_two_columns",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "discussion title",
+        "intro_heading": "left panel heading",
+        "intro_text": "discussion summary paragraph",
+        "bullet_1": "point",
+        "bullet_2": "point",
+        "bullet_3": "point",
+        "bullet_4": "point",
+        "discussion_1_heading": "discussion label",
+        "discussion_1_text": "discussion note",
+        "discussion_2_heading": "discussion label",
+        "discussion_2_text": "discussion note"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "intro_heading": { "max_words": 3, "max_chars": 22, "fit": "shrink" },
+        "intro_text": { "max_words": 24, "max_chars": 150, "fit": "shrink" },
+        "bullet_1": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "bullet_2": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "bullet_3": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "bullet_4": { "max_words": 7, "max_chars": 44, "fit": "shrink" },
+        "discussion_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "discussion_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "discussion_1_text": { "max_words": 11, "max_chars": 72, "fit": "shrink" },
+        "discussion_2_text": { "max_words": 11, "max_chars": 72, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 19,
+      "id": "study_steps",
+      "role": "five_step_process",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "study steps title",
+        "step_1_heading": "step label",
+        "step_1_text": "step note",
+        "step_2_heading": "step label",
+        "step_2_text": "step note",
+        "step_3_heading": "step label",
+        "step_3_text": "step note",
+        "step_4_heading": "step label",
+        "step_4_text": "step note",
+        "step_5_heading": "step label",
+        "step_5_text": "step note"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 5, "max_chars": 40, "fit": "shrink" },
+        "step_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "step_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "step_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "step_4_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "step_5_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "step_1_text": { "max_words": 7, "max_chars": 42, "fit": "shrink" },
+        "step_2_text": { "max_words": 7, "max_chars": 42, "fit": "shrink" },
+        "step_3_text": { "max_words": 7, "max_chars": 42, "fit": "shrink" },
+        "step_4_text": { "max_words": 7, "max_chars": 42, "fit": "shrink" },
+        "step_5_text": { "max_words": 7, "max_chars": 42, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 20,
+      "id": "conclusions",
+      "role": "four_point_conclusion",
+      "generate": true,
+      "render_strategy": "token_replace",
+      "content_slots": {
+        "title": "conclusions title",
+        "point_1_heading": "label",
+        "point_1_text": "summary",
+        "point_2_heading": "label",
+        "point_2_text": "summary",
+        "point_3_heading": "label",
+        "point_3_text": "summary",
+        "point_4_heading": "label",
+        "point_4_text": "summary"
+      },
+      "slot_constraints": {
+        "title": { "max_words": 3, "max_chars": 24, "fit": "shrink" },
+        "point_1_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "point_2_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "point_3_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "point_4_heading": { "max_words": 2, "max_chars": 18, "fit": "shrink" },
+        "point_1_text": { "max_words": 9, "max_chars": 54, "fit": "shrink" },
+        "point_2_text": { "max_words": 9, "max_chars": 54, "fit": "shrink" },
+        "point_3_text": { "max_words": 9, "max_chars": 54, "fit": "shrink" },
+        "point_4_text": { "max_words": 9, "max_chars": 54, "fit": "shrink" }
+      }
+    },
+    {
+      "index": 21,
+      "id": "mockups",
+      "role": "multi_mockup_visual",
+      "generate": false,
+      "skip_in_final": true,
+      "content_slots": {}
+    }
+  ],
+  "gemini_prompt_package": {
+    "purpose": "Generate content specifically for the science_2_epidemiology_thesis_defense template.",
+    "input_variables": [
+      "topic",
+      "language",
+      "audience_level",
+      "presentation_goal",
+      "optional_focus_area",
+      "optional_region",
+      "optional_source_pack"
+    ],
+    "prompt_lines": [
+      "You are generating slide content for a PowerPoint template named 'Epidemiology Study on Infectious Diseases Thesis Defense'.",
+      "The style is scientific thesis defense: formal, clear, structured and evidence-oriented.",
+      "Write everything in the requested language only.",
+      "Fill the predefined slots for this exact template and do not redesign the slides.",
+      "This template uses strict prepared text anchors, so every slot must stay compact and fit naturally inside a premium thesis-defense deck.",
+      "The flow is: cover -> contents -> divider -> introduction -> guiding questions -> thesis quote -> problem analysis -> divider -> hypotheses -> objectives -> concept review -> literature review -> framework -> methodology -> two analysis phases -> graph narrative -> highlighted results -> discussion -> five-step process -> conclusions.",
+      "Use real scientific framing, research logic, methods, variables and plausible findings where appropriate.",
+      "Avoid placeholder text, decorative filler and unrelated astronomy content.",
+      "Treat the source PPTX wording as layout scaffolding only; never copy sample labels or helper instructions.",
+      "Every slide must stay tightly anchored to the user's chosen topic, research question and scientific context.",
+      "Do not mention slide design, layout notes or template instructions inside the content.",
+      "Keep the wording academically plausible, concise and presentation-friendly.",
+      "Headings, hypotheses, methods, concepts, phases and conclusion points must be short meaningful scientific phrases.",
+      "When exact citations are unavailable, keep references high-level and non-fabricated.",
+      "Do not output extra bullets, extra rows, helper labels or commentary."
+    ]
+  },
+  "webapp_metadata": {
+    "template_id": "science_2_epidemiology_thesis_defense",
+    "title": "Epidemiology Thesis Defense",
+    "subtitle": "Scientific defense with structured problem, methods and findings",
+    "cover_asset": "assets/science-2.svg",
+    "accent": "#355fb2",
+    "summary": "Academic-style epidemiology defense with compact concepts, methods, findings and conclusions."
+  }
+}

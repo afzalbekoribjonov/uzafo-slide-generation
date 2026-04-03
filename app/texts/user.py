@@ -32,6 +32,8 @@ def main_menu_text(full_name: str) -> str:
         f"<b>Assalomu alaykum, {escape(full_name)}!</b>\n\n"
         "Ushbu bot mavzu asosida <b>tayyor PPTX taqdimot</b> yaratishga yordam beradi. "
         "Jarayon sodda, tushunarli va bosqichma-bosqich olib boriladi.\n\n"
+        "• <b>Slayd yaratish</b> — referral va mavjud limitlar orqali ishlaydi\n"
+        "• <b>Magic Slayd</b> — premium template va pulli premium bo‘lim\n\n"
         "Kerakli bo‘limni tanlash uchun quyidagi tugmalardan birini bosing."
     )
 

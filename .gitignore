@@ -7,5 +7,4 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .generated/
-premium-webapp-demo/
-templates/
+magic-slide-webapp/
