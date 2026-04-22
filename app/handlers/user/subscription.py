@@ -39,7 +39,7 @@ async def subscription_check_handler(
             if 'message is not modified' not in str(e):
                 raise
 
-        await callback.answer('Barcha majburiy kanallarga obuna bo‘ling.', show_alert=True)
+        await callback.answer('Avval ro‘yxatdagi kanallarga obuna bo‘ling.', show_alert=True)
         return
 
     await users_repo.mark_subscription_verified(callback.from_user.id)
@@ -50,12 +50,12 @@ async def subscription_check_handler(
             await callback.bot.send_message(
                 reward_info['inviter_id'],
                 (
-                    "<b>🎉 Yangi referral tasdiqlandi</b>\n\n"
-                    f"👤 Foydalanuvchi: <b>{reward_info['invitee_name']}</b>\n"
-                    "✅ Barcha majburiy kanallarga obuna bo‘ldi\n"
+                    "<b>🎉 Yangi taklif tasdiqlandi</b>\n\n"
+                    f"👤 Do‘stingiz: <b>{reward_info['invitee_name']}</b>\n"
+                    "✅ Kerakli kanallarga obuna bo‘ldi\n"
                     "🎁 Sizga 1 ta qo‘shimcha yaratish imkoni qo‘shildi\n\n"
-                    f"📊 Jami tasdiqlangan referral: <b>{reward_info['referral_count']}</b>\n"
-                    f"🎟 Mavjud referral kreditlar: <b>{reward_info['referral_credits']}</b>"
+                    f"📊 Jami tasdiqlangan takliflar: <b>{reward_info['referral_count']}</b>\n"
+                    f"🎟 Taklif orqali olingan imkoniyatlar: <b>{reward_info['referral_credits']}</b>"
                 ),
             )
         except Exception:
@@ -66,4 +66,4 @@ async def subscription_check_handler(
         text=main_menu_text(user['full_name']),
         reply_markup=main_menu_keyboard(is_admin=bool(user.get('is_admin'))),
     )
-    await callback.answer('Obuna muvaffaqiyatli tasdiqlandi.')
+    await callback.answer('Obuna tasdiqlandi.')

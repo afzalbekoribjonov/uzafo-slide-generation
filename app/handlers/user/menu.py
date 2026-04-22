@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from aiogram import F, Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, ReplyKeyboardRemove
+from aiogram.types import CallbackQuery, Message
 
 from app.callbacks.admin import PublicPostCallback
 from app.callbacks.menu import MenuCallback, StatusCallback
@@ -29,23 +30,21 @@ from app.texts.user import (
 router = Router(name='user-menu')
 
 
+async def _safe_edit_text(message: Message, *, text: str, reply_markup=None) -> None:
+    try:
+        await message.edit_text(text=text, reply_markup=reply_markup)
+    except TelegramBadRequest as exc:
+        if 'message is not modified' in str(exc).lower():
+            return
+        raise
+
+
 @router.callback_query(MenuCallback.filter(F.action == 'main'))
 async def menu_main_handler(callback: CallbackQuery, users_repo: UsersRepository, state: FSMContext) -> None:
-    data = await state.get_data()
-    prompt_chat_id = data.get('magic_webapp_prompt_chat_id')
-    prompt_message_id = data.get('magic_webapp_prompt_message_id')
-    if prompt_chat_id and prompt_message_id:
-        try:
-            await callback.bot.delete_message(chat_id=int(prompt_chat_id), message_id=int(prompt_message_id))
-        except Exception:
-            pass
-        await callback.message.answer(
-            'Magic Slayd yaratish oynasi yopildi.',
-            reply_markup=ReplyKeyboardRemove(),
-        )
     await state.clear()
     user = await users_repo.get_by_telegram_id(callback.from_user.id)
-    await callback.message.edit_text(
+    await _safe_edit_text(
+        callback.message,
         text=main_menu_text(user['full_name']),
         reply_markup=main_menu_keyboard(is_admin=bool(user.get('is_admin'))),
     )
@@ -61,7 +60,8 @@ async def menu_status_handler(
     user = await users_repo.get_by_telegram_id(callback.from_user.id)
     available = generation_access_service.available_generations(user)
 
-    await callback.message.edit_text(
+    await _safe_edit_text(
+        callback.message,
         text=status_text(user, available),
         reply_markup=status_keyboard(),
     )
@@ -79,7 +79,8 @@ async def menu_invite_handler(
     available = generation_access_service.available_generations(user)
     referral_link = f'https://t.me/{bot_username}?start={callback.from_user.id}'
 
-    await callback.message.edit_text(
+    await _safe_edit_text(
+        callback.message,
         text=invite_text(
             referral_link=referral_link,
             available_generations=available,
@@ -97,7 +98,8 @@ async def referrals_handler(
     referral_service: ReferralService,
 ) -> None:
     referrals = await referral_service.list_invited_users(callback.from_user.id)
-    await callback.message.edit_text(
+    await _safe_edit_text(
+        callback.message,
         text=referrals_text(referrals),
         reply_markup=referrals_keyboard(),
     )
@@ -106,7 +108,8 @@ async def referrals_handler(
 
 @router.callback_query(MenuCallback.filter(F.action == 'help'))
 async def help_handler(callback: CallbackQuery) -> None:
-    await callback.message.edit_text(
+    await _safe_edit_text(
+        callback.message,
         text=help_text(),
         reply_markup=help_keyboard(),
     )
@@ -115,7 +118,8 @@ async def help_handler(callback: CallbackQuery) -> None:
 
 @router.callback_query(MenuCallback.filter(F.action == 'contact'))
 async def contact_handler(callback: CallbackQuery, support_contact: str) -> None:
-    await callback.message.edit_text(
+    await _safe_edit_text(
+        callback.message,
         text=contact_text(support_contact),
         reply_markup=contact_keyboard(),
     )
@@ -134,7 +138,7 @@ async def public_post_button_handler(
     action = callback_data.action
     user = await users_repo.get_by_telegram_id(callback.from_user.id)
     if not user:
-        await callback.answer('Foydalanuvchi topilmadi.', show_alert=True)
+        await callback.answer('Profil topilmadi. /start ni bosib qayta urinib ko‘ring.', show_alert=True)
         return
 
     if action == 'main':

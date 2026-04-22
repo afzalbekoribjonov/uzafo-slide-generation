@@ -12,11 +12,11 @@ class Settings(BaseSettings):
     legacy_mongodb_db: str | None = Field(default=None, alias='LEGACY_MONGODB_DB')
     admins: list[int] = Field(default_factory=list, validation_alias=AliasChoices('ADMINS', 'ADMIN_IDS'))
     support_contact: str = Field(default='@uzafo', alias='SUPPORT_CONTACT')
-    magic_slide_webapp_url: str | None = Field(default=None, alias='MAGIC_SLIDE_WEBAPP_URL')
+    public_bot_username: str | None = Field(default=None, alias='PUBLIC_BOT_USERNAME')
     generation_worker_poll_seconds: int = Field(default=3, alias='GENERATION_WORKER_POLL_SECONDS')
     generation_start_cooldown_seconds: int = Field(default=65, alias='GENERATION_START_COOLDOWN_SECONDS')
     gemini_api_key: str | None = Field(default=None, alias='GEMINI_API_KEY')
-    gemini_model: str = Field(default='gemini-2.5-flash-lite', alias='GEMINI_MODEL')
+    gemini_model: str = Field(default='gemini-2.5-flash', alias='GEMINI_MODEL')
     gemini_max_retries: int = Field(default=3, alias='GEMINI_MAX_RETRIES')
     gemini_initial_backoff_seconds: int = Field(default=10, alias='GEMINI_INITIAL_BACKOFF_SECONDS')
 
@@ -79,12 +79,20 @@ class Settings(BaseSettings):
             value = f'/{value}'
         return value
 
-    @field_validator('legacy_mongodb_uri', 'legacy_mongodb_db', 'magic_slide_webapp_url', mode='before')
+    @field_validator('legacy_mongodb_uri', 'legacy_mongodb_db', mode='before')
     @classmethod
     def normalize_optional_strings(cls, value):
         if value is None:
             return None
         value = str(value).strip()
+        return value or None
+
+    @field_validator('public_bot_username', mode='before')
+    @classmethod
+    def normalize_public_bot_username(cls, value):
+        if value is None:
+            return None
+        value = str(value).strip().lstrip('@')
         return value or None
 
     @property

@@ -1,0 +1,48 @@
+{
+  "id": "coral_magazine",
+  "name": "Coral Magazine",
+  "button_label": "🎨 Coral",
+  "description": "Editorial/jurnal uslubi: iliq coral va teal ranglar, katta ta'sirli sarlavhalar, kreativ asimmetrik matn bloklari. Lifestyle, marketing va ijodiy taqdimotlar uchun.",
+  "preview_path": "previews/coral_magazine.png",
+  "theme": {
+    "font_family": "Trebuchet MS",
+    "background": "#fffaf5",
+    "cover_background": "#fff7ed",
+    "primary": "#c2410c",
+    "secondary": "#0d9488",
+    "accent": "#fed7aa",
+    "text": "#292524",
+    "muted": "#78716c",
+    "footer": "#a8a29e",
+    "surface": "#ffffff",
+    "surface_alt": "#ffedd5",
+    "border": "#fdba74",
+    "on_primary": "#ffffff",
+    "table_header_bg": "#0d9488",
+    "table_header_text": "#ffffff",
+    "table_row_even": "#fff7ed",
+    "table_row_odd": "#ffffff",
+    "process_colors": ["#fed7aa", "#99f6e4", "#fde68a", "#fecaca", "#ddd6fe"]
+  },
+  "layout": {
+    "header_style": "corner_band",
+    "cover_style": "magazine",
+    "agenda_style": "tiles",
+    "facts_style": "spotlight",
+    "process_style": "cards",
+    "summary_style": "cards",
+    "accent_style": "editorial_corner"
+  },
+  "prompt_guidance": [
+    "Create engaging, magazine-style section titles that are factual yet captivating.",
+    "Each fact should tell a mini-story or reveal an interesting insight.",
+    "Keep facts slide-friendly in 1-2 lines and avoid dense paragraphs.",
+    "Use vivid but accurate language, balancing creativity with credibility.",
+    "Use tables sparingly, usually 0-1 per deck, for key comparisons only."
+  ],
+  "accessibility": {
+    "min_contrast_ratio": 6.5,
+    "font_size_min": 14,
+    "recommended_for": ["lifestyle", "marketing", "creative", "editorial"]
+  }
+}

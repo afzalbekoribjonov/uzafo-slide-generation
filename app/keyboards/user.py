@@ -10,16 +10,15 @@ from app.callbacks.subscription import SubscriptionCallback
 def main_menu_keyboard(*, is_admin: bool = False) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text='🎞 Slayd yaratish', callback_data=MenuCallback(action='create'))
-    builder.button(text='✨ Magic slayd', callback_data=MenuCallback(action='magic'))
     builder.button(text='📊 Mening holatim', callback_data=MenuCallback(action='status'))
     builder.button(text='👥 Taklif qilish', callback_data=MenuCallback(action='invite'))
     builder.button(text='❓ Yordam', callback_data=MenuCallback(action='help'))
     builder.button(text='☎️ Aloqa', callback_data=MenuCallback(action='contact'))
     if is_admin:
         builder.button(text='🛡 Admin panel', callback_data=AdminMenuCallback(action='main'))
-        builder.adjust(2, 2, 2, 1)
+        builder.adjust(1, 2, 2, 1)
     else:
-        builder.adjust(2, 2, 2)
+        builder.adjust(1, 2, 2)
     return builder.as_markup()
 
 
@@ -95,10 +94,22 @@ def create_credit_missing_keyboard(*, back_only: bool = False) -> InlineKeyboard
 
 def create_slide_count_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
-    for count in range(6, 16):
+    for count in range(6, 13):
         builder.button(text=str(count), callback_data=CreateFlowCallback(action='slides', value=str(count)))
     builder.button(text='❌ Bekor qilish', callback_data=CreateFlowCallback(action='cancel', value='cancel'))
-    builder.adjust(5, 5, 1)
+    builder.adjust(4, 3, 1)
+    return builder.as_markup()
+
+
+def create_template_keyboard(templates: list[dict]) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    for template in templates:
+        builder.button(
+            text=str(template.get('button_label') or template.get('name') or template.get('id')),
+            callback_data=CreateFlowCallback(action='template', value=str(template['id'])),
+        )
+    builder.button(text='❌ Bekor qilish', callback_data=CreateFlowCallback(action='cancel', value='cancel'))
+    builder.adjust(2, 2, 1)
     return builder.as_markup()
 
 

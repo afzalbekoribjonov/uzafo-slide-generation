@@ -7,4 +7,13 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .generated/
-magic-slide-webapp/
+.dist/
+build/
+*.egg-info/
+*.log
+*.bak
+*.swp
+.DS_Store
+.idea/
+.vscode/
+*.iml

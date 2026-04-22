@@ -112,7 +112,15 @@ class GeminiPresentationPlanner:
     def enabled(self) -> bool:
         return bool(self.api_key and genai is not None and types is not None)
 
-    def build_plan(self, *, topic: str, presenter_name: str, slide_count: int, language_code: str) -> PresentationPlan:
+    def build_plan(
+        self,
+        *,
+        topic: str,
+        presenter_name: str,
+        slide_count: int,
+        language_code: str,
+        template: dict[str, Any] | None = None,
+    ) -> PresentationPlan:
         if not self.api_key:
             raise GeminiPlannerError('GEMINI_API_KEY topilmadi.')
         if genai is None or types is None:
@@ -129,6 +137,7 @@ class GeminiPresentationPlanner:
                 slide_count=slide_count,
                 section_count=section_count,
                 language_code=language_code,
+                template=template,
             ),
             response_schema=RESEARCH_DOSSIER_RESPONSE_SCHEMA,
             model=ResearchDossier,
@@ -145,6 +154,7 @@ class GeminiPresentationPlanner:
                 section_count=section_count,
                 language_code=language_code,
                 dossier=dossier,
+                template=template,
             )
             try:
                 plan = self._run_json_call(
@@ -423,14 +433,19 @@ class GeminiPresentationPlanner:
         generic_starts = (
             'bu bo‘lim', 'ushbu bo‘lim', 'the section', 'this section', 'mavzu muhim', 'topic is important',
             'mazmun umumiy', 'taqdimot', 'mavzuni yoritadi', 'this topic', 'the topic', 'tema vazhna',
+            'introduction', 'overview', 'kirish', 'xulosa', 'conclusion',
         )
         banned_fragments = (
             'muhim jihat', 'important aspect', 'важный аспект', 'keng qamrovli', 'very important',
             'this presentation', 'what this deck covers', 'overview of', 'rahmat', 'thank you', 'спасибо',
+            'ko‘plab jihatlar', 'many aspects', 'turli jihatlar', 'various aspects',
         )
         repeated_units: Counter[str] = Counter()
         too_generic = 0
+        table_count = 0
         for section in plan.sections:
+            if section.content_type == 'table':
+                table_count += 1
             focus = section.focus.lower().strip()
             repeated_units[focus] += 1
             if focus.startswith(generic_starts) or any(fragment in focus for fragment in banned_fragments):
@@ -447,6 +462,8 @@ class GeminiPresentationPlanner:
                 if len(set(re.findall(r"[a-zA-ZÀ-ÿА-Яа-я0-9ʻ’']+", lowered))) < 4:
                     too_generic += 1
         too_generic += sum(1 for _, count in repeated_units.items() if count > 1)
+        if table_count > 2:
+            too_generic += table_count - 2
         if too_generic >= 5:
             raise GeminiPlannerError('Gemini juda ko‘p umumiy/generic matn qaytardi.')
 
@@ -476,17 +493,17 @@ class GeminiPresentationPlanner:
                 'unknown_topic': 'Тема',
                 'section_label': 'Раздел',
                 'scope_template': '{topic}: кратко раскрываются основные понятия, структура и важные особенности темы.',
-                'focus_template': '{title} раскрывает ключевые аспекты темы {topic}.',
-                'focus_section_template': '{title} помогает последовательно объяснить ключевое содержание темы.',
+                'focus_template': '{title} связывает конкретные факты, примеры и последствия темы {topic}.',
+                'focus_section_template': '{title} показывает факты, примеры и причинно-следственные связи темы.',
                 'fact_pool': [
                     '{base}',
-                    '{base} объясняется через исторический, научный или практический контекст.',
-                    '{base} рассматривается через причины, признаки и последствия.',
-                    '{base} помогает выделить наиболее важные свойства темы.',
-                    '{base} показывает значимость темы на практике или в теории.',
+                    '{base} связывается с конкретным контекстом, причиной и наблюдаемым результатом.',
+                    '{base} раскрывается через признаки, примеры и последствия, которые можно сравнить.',
+                    '{base} требует точных терминов, имен, дат или показателей, когда они известны.',
+                    '{base} лучше объясняется через практическое применение и проверяемые факты.',
                 ],
-                'key_terms_seed': ['ключевое понятие', 'развитие', 'особенность', 'значение'],
-                'agenda_seed': ['Введение', 'Основные понятия', 'Ключевые особенности', 'Практическое значение', 'Вывод'],
+                'key_terms_seed': ['контекст', 'механизм', 'пример', 'результат'],
+                'agenda_seed': ['Контекст и причины', 'Основные понятия', 'Факты и примеры', 'Сравнение и данные', 'Практическое значение'],
                 'agenda_suffix': '{topic}: основной раздел',
                 'summary_seed': [
                     '{topic} раскрывается через несколько взаимосвязанных аспектов.',
@@ -502,17 +519,17 @@ class GeminiPresentationPlanner:
                 'unknown_topic': 'Topic',
                 'section_label': 'Section',
                 'scope_template': '{topic}: the core concepts, structure, and most important characteristics are summarized concisely.',
-                'focus_template': '{title} explains key aspects of the topic {topic}.',
-                'focus_section_template': '{title} helps explain the core content of the topic in a clear sequence.',
+                'focus_template': '{title} connects concrete facts, examples, and outcomes within {topic}.',
+                'focus_section_template': '{title} shows facts, examples, and cause-effect links in the topic.',
                 'fact_pool': [
                     '{base}',
-                    '{base} is explained through historical, scientific, or practical context.',
-                    '{base} is examined through causes, features, and consequences.',
-                    '{base} highlights the most important characteristics of the topic.',
-                    '{base} shows why the topic matters in practice or theory.',
+                    '{base} connects to a concrete context, cause, and observable outcome.',
+                    '{base} is clarified through features, examples, and consequences that can be compared.',
+                    '{base} benefits from precise terms, names, dates, or metrics when they are known.',
+                    '{base} becomes clearer through practical application and verifiable facts.',
                 ],
-                'key_terms_seed': ['core concept', 'development', 'feature', 'importance'],
-                'agenda_seed': ['Introduction', 'Core concepts', 'Key features', 'Practical relevance', 'Conclusion'],
+                'key_terms_seed': ['context', 'mechanism', 'example', 'outcome'],
+                'agenda_seed': ['Context and causes', 'Core concepts', 'Facts and examples', 'Comparison and data', 'Practical relevance'],
                 'agenda_suffix': '{topic}: main section',
                 'summary_seed': [
                     '{topic} is understood most clearly through its interconnected dimensions.',
@@ -527,17 +544,17 @@ class GeminiPresentationPlanner:
             'unknown_topic': 'Mavzu',
             'section_label': 'Bo‘lim',
             'scope_template': '{topic}: mavzuning asosiy tushunchalari, tuzilishi va muhim xususiyatlari qisqacha yoritiladi.',
-            'focus_template': '{title} {topic} mavzusining muhim jihatlarini tushuntiradi.',
-            'focus_section_template': '{title} mavzuning asosiy mazmunini izchil yoritishga yordam beradi.',
+            'focus_template': '{title} {topic} bo‘yicha aniq faktlar, misollar va natijalarni bog‘laydi.',
+            'focus_section_template': '{title} mavzudagi faktlar, misollar va sabab-natija aloqalarini ko‘rsatadi.',
             'fact_pool': [
                 '{base}',
-                '{base} tarixiy, ilmiy yoki amaliy kontekst orqali tushuntiriladi.',
-                '{base} sabablar, belgilar va natijalar orqali ko‘rib chiqiladi.',
-                '{base} mavzuning eng muhim xususiyatlarini ajratib ko‘rsatadi.',
-                '{base} mavzuning amaliy yoki nazariy ahamiyatini ko‘rsatadi.',
+                '{base} aniq kontekst, sabab va kuzatiladigan natija bilan bog‘lanadi.',
+                '{base} solishtirish mumkin bo‘lgan belgilar, misollar va oqibatlar orqali ochiladi.',
+                '{base} uchun ma’lum bo‘lsa, aniq atamalar, nomlar, sanalar yoki ko‘rsatkichlar ishlatiladi.',
+                '{base} amaliy qo‘llanish va tekshiriladigan faktlar orqali ravshanlashadi.',
             ],
-            'key_terms_seed': ['asosiy tushuncha', 'rivojlanish', 'xususiyat', 'ahamiyat'],
-            'agenda_seed': ['Kirish', 'Asosiy tushunchalar', 'Muhim xususiyatlar', 'Amaliy ahamiyati', 'Xulosa'],
+            'key_terms_seed': ['kontekst', 'mexanizm', 'misol', 'natija'],
+            'agenda_seed': ['Kontekst va sabablar', 'Asosiy tushunchalar', 'Faktlar va misollar', 'Taqqoslash va ma’lumotlar', 'Amaliy ahamiyati'],
             'agenda_suffix': '{topic}: asosiy bo‘lim',
             'summary_seed': [
                 '{topic} bir nechta o‘zaro bog‘liq jihatlar orqali tushuniladi.',
@@ -557,28 +574,64 @@ class GeminiPresentationPlanner:
         slide_count: int,
         section_count: int,
         language_code: str,
+        template: dict[str, Any] | None = None,
     ) -> str:
         language_name = self._language_name(language_code)
         domain_rules = self._domain_rules(topic)
-        return f"""Write ONLY in {language_name}. Return only valid JSON.
+        template_note = self._template_prompt_note(template)
+        return f"""TASK: Expert research analysis in {language_name}
+Output: pure JSON only. No markdown, no preamble.
 
-Role: {self._domain_role(topic)}
-Topic: {topic}
-Needed section_notes: {section_count}
+ROLE: {self._domain_role(topic)}
+You are preparing research notes for a high-quality visual presentation.
 
-Goal:
-Collect factual notes about the topic itself. Do not mention slides, audience, presenter, or deck structure.
+TOPIC: {topic}
+TARGET: Create exactly {section_count} comprehensive section_notes.
+VISUAL CONTEXT: {template_note}
 
-Rules:
-- Build exactly {section_count} section_notes.
-- scope_summary: one concise factual sentence, max 170 characters.
-- Each section must have 4 to 7 concrete facts.
-- Facts must contain topic content such as names, dates, places, causes, outcomes, examples, or characteristics when relevant.
-- Avoid generic lines like "this topic is important" or "this section explains".
-- If uncertain, use only safe, well-known facts and keep wording specific.
+CORE REQUIREMENTS:
 
-Domain guidance:
+1. FACTUAL DEPTH
+- Each section MUST contain 4-7 concrete, specific facts.
+- Include real names, dates, places, numbers, statistics, examples, causes, outcomes, or characteristics when relevant.
+- Avoid vague statements like "this is important", "widely known", or "this section explains".
+- Each fact should stand alone as a complete, meaningful sentence.
+
+2. CONTENT STRUCTURE
+- topic_title: clear, engaging title; max 120 characters.
+- scope_summary: one precise sentence summarizing the topic essence; 30-170 characters.
+- key_terms: 4-10 specific domain terms or concepts.
+- section_notes[]: exactly {section_count} sections.
+- section_notes[].title: specific heading; 3-90 characters.
+- section_notes[].focus: what this section reveals; 12-180 characters.
+- section_notes[].facts[]: 4-7 concrete statements.
+- final_takeaways: 3-5 factual conclusions or insights.
+
+3. WRITING STYLE
+- Write ONLY in {language_name}.
+- Use active voice and precise language.
+- Facts must be slide-ready: concise but complete, one sentence each.
+- Do not write paragraphs, nested lists, markdown, or presentation meta-language.
+- Include examples, comparisons, metrics, dates, or named entities where natural.
+
+4. TABLE-READY CONTENT
+- If the topic involves comparisons, periods, categories, or metrics, make some facts table-friendly.
+- Table-friendly fact format: "Period: 14th century; Location: Samarkand; Development: trade expansion".
+- Keep these facts compact and consistent so a later step can build tables from them.
+
+5. QUALITY BAR
+- GOOD: "1404-yilda Samarqandda Bibixonim masjidi qurilishi yakuniga yetdi."
+- BAD: "Mavzu juda muhim va keng qamrovli hisoblanadi."
+- GOOD: "GDP grew 3.2% in Q4 2023, driven by technology sector expansion."
+- BAD: "The economy improved during this period."
+
+DOMAIN-SPECIFIC GUIDANCE:
 {domain_rules}
+
+REMEMBER:
+- Output ONLY valid JSON matching the requested fields.
+- Focus on topic content, not the presentation process.
+- Every fact must add real knowledge, not filler.
 """
 
 
@@ -589,9 +642,11 @@ Domain guidance:
         section_count: int,
         language_code: str,
         dossier: ResearchDossier,
+        template: dict[str, Any] | None = None,
     ) -> str:
         language_name = self._language_name(language_code)
         dossier_json = json.dumps(dossier.model_dump(mode='json'), ensure_ascii=False, indent=2)
+        template_note = self._template_prompt_note(template)
         example_bad_focus = {
             'uz': 'Bu bo‘lim mavzuning muhim jihatlarini yoritadi.',
             'ru': 'Этот раздел раскрывает важные аспекты темы.',
@@ -612,67 +667,168 @@ Domain guidance:
             'ru': 'В 1404 году в Самарканде было завершено строительство мечети Биби-Ханым.',
             'en': 'In 1404, construction of the Bibi-Khanym Mosque in Samarkand reached completion.',
         }[language_code if language_code in {'uz', 'ru', 'en'} else 'uz']
-        return f"""Write ONLY in {language_name}. Return only valid JSON.
+        return f"""TASK: Transform research into a visual presentation plan
+Output: pure JSON only. No markdown, no preamble.
+Language: {language_name}
 
-Task:
-Convert the research dossier into a factual presentation plan about the topic itself.
-Do not mention slides, audience, presenter, deck, overview, or thank-you language.
-
+CONTEXT:
 Topic: {topic}
-Needed sections: {section_count}
+Sections needed: {section_count}
+Visual template: {template_note}
 
-Rules:
-- sections must contain exactly {section_count} items.
-- Use only content supported by the dossier.
-- agenda_items must be short topic sections or periods, not meta labels.
-- focus must be specific and factual, not generic.
-- facts must be concrete statements, not filler.
-- Use content_type="process" only for chronology, sequence, or development.
-- Use content_type="table" only when the dossier clearly contains comparisons, categories, dated records, or other structured contrasts.
-- Use 0 to 2 table sections. Never force a table.
-- For table sections, put the table data inside facts as compact row-like strings, for example: "Period: 14th century; Center: Samarkand; Feature: trade growth".
-- Do not output nested table JSON objects. The system will build the visual table later.
-- summary_points must be factual conclusions about the topic.
+OBJECTIVE:
+Convert the research dossier into a factual, visual-ready plan. This plan directly drives slide creation, so every field must be polished, specific, and concise.
 
-Bad vs good examples:
+CRITICAL RULES:
+
+1. CONTENT FIDELITY
+- Use ONLY information supported by the research dossier.
+- sections array MUST have exactly {section_count} items.
+- Never mention slides, deck, audience, presenter, "this presentation", "overview", or thank-you language.
+- Never invent unsupported facts.
+
+2. CONTENT TYPE SELECTION
+- content_type="facts": use for explanations, characteristics, examples, and insights. Use 4-6 short facts.
+- content_type="process": use ONLY for chronology, evolution, phases, steps, workflows, or clear logical order. Use 4-5 sequential steps.
+- content_type="table": use ONLY when the dossier contains comparisons, categories, dated records, entities with properties, or metrics. Use 0-2 table sections max.
+- For table sections, put compact row-like strings in facts[], for example: "Period: 14th century; Center: Samarkand; Feature: trade growth".
+- Do NOT output nested table JSON objects; the system will infer table visuals from facts[].
+- Prefer a varied mix when supported: facts, process, facts, table, facts is better than all facts.
+
+3. FIELD QUALITY
+- presentation_title: use the topic or dossier topic_title; engaging but professional; max 120 characters.
+- title_subtitle: one sentence from dossier scope_summary; max 180 characters.
+- agenda_items: 4-8 short topic sections, periods, or themes; never generic labels like Introduction, Overview, Conclusion.
+- sections[].title: specific, descriptive heading; max 90 characters.
+- sections[].focus: concrete statement of what the section reveals; max 180 characters.
+- sections[].facts[]: complete and specific statements; each max 170 characters.
+- summary_points: 3-5 factual conclusions; no gratitude, no meta-commentary.
+
+4. VISUAL OPTIMIZATION
+- Keep facts short enough for cards, tables, and two-column layouts.
+- Use numbers, dates, places, named examples, and measurable comparisons when supported.
+- Avoid paragraph-style facts, markdown, nested lists, repeated wording, and generic openings.
+- At least 4 words per fact; every fact should carry one clear idea.
+
+5. QUALITY CHECKS
+- Every focus and fact must be specific to THIS topic.
+- No repeated exact phrases across sections.
+- No generic starts: "Bu bo'lim", "This section", "Этот раздел".
+- Do not create a table unless the facts are genuinely structured.
+
+BAD VS GOOD EXAMPLES:
 - Bad focus: {example_bad_focus}
 - Good focus: {example_good_focus}
 - Bad fact: {example_bad_fact}
 - Good fact: {example_good_fact}
 
-Research dossier:
+RESEARCH DOSSIER:
 {dossier_json}
+
+OUTPUT STRUCTURE:
+{{
+  "presentation_title": "...",
+  "title_subtitle": "...",
+  "agenda_items": ["...", "..."],
+  "sections": [
+    {{
+      "content_type": "facts|process|table",
+      "title": "...",
+      "focus": "...",
+      "facts": ["...", "..."]
+    }}
+  ],
+  "summary_points": ["...", "..."]
+}}
 """
 
     @staticmethod
     def _domain_role(topic: str) -> str:
         lower = topic.lower()
-        if any(marker in lower for marker in ('tarix', 'history', 'dynasty', 'culture', 'madaniyat', 'heritage')):
+        if any(marker in lower for marker in ('tarix', 'history', 'dynasty', 'culture', 'madaniyat', 'heritage', 'civilization')):
             return 'historian and cultural researcher'
-        if any(marker in lower for marker in ('biology', 'kimyo', 'physics', 'science', 'fizika', 'biologiya')):
+        if any(marker in lower for marker in ('biology', 'kimyo', 'physics', 'science', 'fizika', 'biologiya', 'technology', 'texnologiya', 'innovation')):
             return 'scientific explainer'
-        if any(marker in lower for marker in ('business', 'marketing', 'iqtisod', 'economy', 'finance')):
+        if any(marker in lower for marker in ('business', 'marketing', 'iqtisod', 'economy', 'finance', 'startup', 'management')):
             return 'business analyst'
+        if any(marker in lower for marker in ("ta'lim", "o'qitish", 'education', 'teaching', 'learning', 'pedagogika')):
+            return 'education specialist'
         return 'subject-matter expert'
 
     @staticmethod
     def _domain_rules(topic: str) -> str:
         lower = topic.lower()
-        if any(marker in lower for marker in ('tarix', 'history', 'culture', 'madaniyat', 'heritage')):
-            return (
-                '- Organize section_notes around real historical periods, states, rulers, cities, institutions, reforms, conflicts, cultural schools, and legacy.\n'
-                '- Use proper names and approximate dates whenever they are widely known.\n'
-                '- A table is useful for comparing periods, dynasties, cities, or contributions.\n'
+        if any(marker in lower for marker in ('tarix', 'history', 'dynasty', 'culture', 'madaniyat', 'heritage', 'civilization')):
+            return """
+HISTORICAL CONTENT BEST PRACTICES:
+- Organize sections by historical periods, dynasties, rulers, institutions, cities, reforms, conflicts, cultural schools, and legacy.
+- Include specific dates or date ranges, names of rulers, places, monuments, institutions, and cause-effect relationships.
+- Good table opportunities: periods/dynasties compared by dates, rulers, capitals, achievements, or cultural contributions.
+- GOOD: "Amir Temur 1370-1405-yillarda hukmronlik qilib, Samarqandni imperiya markaziga aylantirdi."
+- BAD: "Bu davr madaniy rivojlanish uchun juda muhim bo'lgan."
+"""
+        if any(marker in lower for marker in ('biology', 'kimyo', 'physics', 'science', 'fizika', 'biologiya', 'technology', 'texnologiya', 'innovation')):
+            return """
+SCIENTIFIC AND TECHNOLOGY CONTENT BEST PRACTICES:
+- Build from fundamental concepts toward mechanisms, evidence, applications, and impact.
+- Include mechanisms, formulas, measurements, named scientists or inventors, dates, experiments, and real-world uses when relevant.
+- Good table opportunities: methods, technologies, properties, timelines, performance metrics, or classification.
+- GOOD: "DNA replication in human cells proceeds at about 50 nucleotides per second."
+- BAD: "Science has made great progress."
+"""
+        if any(marker in lower for marker in ('business', 'marketing', 'iqtisod', 'economy', 'finance', 'startup', 'management')):
+            return """
+BUSINESS AND ECONOMICS CONTENT BEST PRACTICES:
+- Focus on mechanisms, strategies, market conditions, metrics, outcomes, and concrete case studies.
+- Include revenue, growth, market share, conversion rates, pricing models, company examples, or measurable results when supported.
+- Good table opportunities: business models, competitors, market segments, metrics across years, SWOT-style comparisons, or pricing structures.
+- GOOD: "AWS revenue grew from $12B in 2016 to $80B in 2022, reflecting a 27% CAGR."
+- BAD: "Business strategy is important for success."
+"""
+        if any(marker in lower for marker in ("ta'lim", "o'qitish", 'education', 'teaching', 'learning', 'pedagogika')):
+            return """
+EDUCATIONAL CONTENT BEST PRACTICES:
+- Organize by learning principles, teaching methods, age groups, assessment, and practical classroom application.
+- Include evidence-based practices, learning outcomes, research findings, or concrete classroom examples when relevant.
+- Good table opportunities: teaching methods, age groups, assessment types, learning strategies, or outcomes.
+- GOOD: "Spaced repetition improves long-term retention by revisiting material at increasing intervals."
+- BAD: "Good teaching is very important for students."
+"""
+        return """
+GENERAL CONTENT BEST PRACTICES:
+- Build sections around the main dimensions, examples, causes, outcomes, practical implications, and relationships between concepts.
+- Include specific examples, comparisons, mechanisms, evidence, or concrete results whenever possible.
+- Use a table only when it genuinely clarifies comparisons, categories, periods, metrics, or structured facts.
+- GOOD: "The approach reduces task completion time by 40% compared with the traditional process."
+- BAD: "This topic has many important aspects."
+"""
+
+    @staticmethod
+    def _template_prompt_note(template: dict[str, Any] | None) -> str:
+        if not isinstance(template, dict):
+            return 'Default clean template'
+        name = str(template.get('name') or template.get('id') or 'Default clean template')
+        description = str(template.get('description') or '').strip()
+        layout = template.get('layout') if isinstance(template.get('layout'), dict) else {}
+        theme = template.get('theme') if isinstance(template.get('theme'), dict) else {}
+        guidance = template.get('prompt_guidance')
+        guidance_lines = []
+        if isinstance(guidance, list):
+            guidance_lines = [str(item).strip() for item in guidance if str(item).strip()]
+        details = [name]
+        if description:
+            details.append(description)
+        if isinstance(layout, dict) and layout:
+            details.append(
+                'Layout preferences: '
+                f"facts={layout.get('facts_style', 'auto')}, "
+                f"process={layout.get('process_style', 'cards')}, "
+                f"agenda={layout.get('agenda_style', 'list_note')}"
             )
-        if any(marker in lower for marker in ('business', 'marketing', 'economy', 'finance', 'iqtisod')):
-            return (
-                '- Focus on mechanisms, drivers, outcomes, metrics, market conditions, and examples.\n'
-                '- A table is useful for comparisons, metrics, and scenario differences.\n'
-            )
-        return (
-            '- Build section_notes around the main dimensions, examples, causes, outcomes, and practical implications of the topic.\n'
-            '- Use a table only if it genuinely helps compare concepts or structured facts.\n'
-        )
+        if isinstance(theme, dict) and theme.get('primary') and theme.get('background'):
+            details.append(f"Theme colors: primary={theme.get('primary')}, background={theme.get('background')}")
+        details.extend(guidance_lines[:5])
+        return ' | '.join(details)
 
 
     @staticmethod
@@ -802,12 +958,15 @@ Research dossier:
 
         raw_sections = data.get('sections') if isinstance(data.get('sections'), list) else []
         sections: list[dict[str, Any]] = []
+        tables_seen = 0
         for index, raw_section in enumerate(raw_sections[:12], start=1):
             if not isinstance(raw_section, dict):
                 continue
 
             content_type = str(raw_section.get('content_type') or 'facts').strip().lower()
             if content_type not in {'facts', 'process', 'table'}:
+                content_type = 'facts'
+            if content_type == 'table' and tables_seen >= 2:
                 content_type = 'facts'
 
             title = self._fit_text(raw_section.get('title') or f"{pack['section_label']} {index}", 90)
@@ -838,12 +997,42 @@ Research dossier:
                     section_payload['content_type'] = 'facts'
                     section_payload['facts'] = self._ensure_fact_count(facts, min_items=4, fallback_seed=f'{title}. {focus}', language_code=language_code)
                 else:
+                    tables_seen += 1
                     section_payload['facts'] = self._ensure_fact_count(facts[:2], min_items=2, fallback_seed=f'{title}. {focus}', language_code=language_code)
                     section_payload['table'] = normalized_table.model_dump(mode='json')
             else:
                 section_payload['facts'] = self._ensure_fact_count(facts, min_items=4, fallback_seed=f'{title}. {focus}', language_code=language_code)
 
             sections.append(section_payload)
+
+        if tables_seen == 0 and len(sections) >= 5:
+            for index, section in enumerate(sections):
+                if section.get('content_type') != 'facts':
+                    continue
+                combined = f"{section.get('title', '')} {section.get('focus', '')}"
+                if not self._looks_comparative(combined):
+                    continue
+                inferred_table = self._build_table_from_facts(
+                    title=str(section.get('title') or ''),
+                    focus=str(section.get('focus') or ''),
+                    facts=list(section.get('facts') or []),
+                    language_code=language_code,
+                )
+                if inferred_table is None:
+                    continue
+                sections[index] = {
+                    **section,
+                    'content_type': 'table',
+                    'facts': self._ensure_fact_count(
+                        list(section.get('facts') or [])[:2],
+                        min_items=2,
+                        fallback_seed=f"{section.get('title', '')}. {section.get('focus', '')}",
+                        language_code=language_code,
+                    ),
+                    'table': inferred_table.model_dump(mode='json'),
+                }
+                tables_seen = 1
+                break
 
         if len(agenda_items) < 4 and sections:
             agenda_items.extend(self._normalize_string_list([section['title'] for section in sections], max_items=8, item_max_length=70))
@@ -1202,4 +1391,3 @@ Research dossier:
         base = self._fit_text(topic, 80) or str(pack['unknown_topic'])
         pool = [self._fit_text(template.format(topic=base), 170) for template in pack['summary_seed']]
         return pool[:needed]
-

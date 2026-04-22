@@ -96,7 +96,7 @@ class SubscriptionGuardMiddleware(BaseMiddleware):
                     reply_markup=subscription_keyboard(all_channels),
                 )
 
-            await event.answer('Avval majburiy obunani tasdiqlang.', show_alert=True)
+            await event.answer('Avval obunani tasdiqlang.', show_alert=True)
             return None
 
         return await handler(event, data)

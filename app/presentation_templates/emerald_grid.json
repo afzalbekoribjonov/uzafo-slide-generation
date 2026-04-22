@@ -1,0 +1,48 @@
+{
+  "id": "emerald_grid",
+  "name": "Emerald Grid",
+  "button_label": "📊 Emerald",
+  "description": "Tahliliy grid uslubi: professional yashil aksentlar, chap navigatsiya paneli, ikki ustunli strukturali reja va data-driven ko'rinishlar. Tahlil, hisobot va ma'lumot taqdimotlari uchun.",
+  "preview_path": "previews/emerald_grid.png",
+  "theme": {
+    "font_family": "Calibri",
+    "background": "#f6fbf7",
+    "cover_background": "#ecfdf5",
+    "primary": "#047857",
+    "secondary": "#14b8a6",
+    "accent": "#a7f3d0",
+    "text": "#10231d",
+    "muted": "#47665d",
+    "footer": "#5f7d73",
+    "surface": "#ffffff",
+    "surface_alt": "#ecfdf5",
+    "border": "#99f6e4",
+    "on_primary": "#ffffff",
+    "table_header_bg": "#047857",
+    "table_header_text": "#ffffff",
+    "table_row_even": "#ecfdf5",
+    "table_row_odd": "#ffffff",
+    "process_colors": ["#ccfbf1", "#dcfce7", "#d9f99d", "#fef9c3", "#e0f2fe"]
+  },
+  "layout": {
+    "header_style": "left_rail",
+    "cover_style": "center_focus",
+    "agenda_style": "grid",
+    "facts_style": "cards",
+    "process_style": "timeline",
+    "summary_style": "grid",
+    "accent_style": "analytic_grid"
+  },
+  "prompt_guidance": [
+    "Use precise analytical wording with categories, contrasts, and measurable differences where available.",
+    "Prefer compact row-like facts for table sections because this template highlights structured comparison.",
+    "Make agenda items specific: use real categories, time periods, metrics, or sections from the topic.",
+    "Use 1-2 table sections when the topic contains comparisons, classifications, or data.",
+    "Keep facts factual, short, and decision-ready."
+  ],
+  "accessibility": {
+    "min_contrast_ratio": 7.0,
+    "font_size_min": 14,
+    "recommended_for": ["analytics", "reports", "business", "data"]
+  }
+}

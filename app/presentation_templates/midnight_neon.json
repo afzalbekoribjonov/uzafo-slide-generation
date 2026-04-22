@@ -1,0 +1,48 @@
+{
+  "id": "midnight_neon",
+  "name": "Midnight Neon",
+  "button_label": "🌙 Midnight",
+  "description": "Premium qora uslub: zamonaviy tungi fon, yorqin neon aksentlar, dashboard tarzida panellar va yuqori kontrastli jadvallar. Tech, startup va kreativ taqdimotlar uchun.",
+  "preview_path": "previews/midnight_neon.png",
+  "theme": {
+    "font_family": "Segoe UI",
+    "background": "#0a0e1a",
+    "cover_background": "#0f172a",
+    "primary": "#06b6d4",
+    "secondary": "#f59e0b",
+    "accent": "#164e63",
+    "text": "#f1f5f9",
+    "muted": "#cbd5e1",
+    "footer": "#94a3b8",
+    "surface": "#1e293b",
+    "surface_alt": "#334155",
+    "border": "#475569",
+    "on_primary": "#0a0e1a",
+    "table_header_bg": "#06b6d4",
+    "table_header_text": "#0a0e1a",
+    "table_row_even": "#1e293b",
+    "table_row_odd": "#334155",
+    "process_colors": ["#164e63", "#581c87", "#92400e", "#065f46", "#991b1b"]
+  },
+  "layout": {
+    "header_style": "dark_bar",
+    "cover_style": "dashboard",
+    "agenda_style": "grid",
+    "facts_style": "bullets",
+    "process_style": "timeline",
+    "summary_style": "grid",
+    "accent_style": "neon_lines"
+  },
+  "prompt_guidance": [
+    "Use concise, high-impact wording suitable for modern tech/startup decks.",
+    "Focus on metrics, outcomes, and concrete results where possible.",
+    "Prefer 1-2 data-rich table sections for comparisons, metrics, or categorized information.",
+    "Keep language punchy and direct: every word should earn its place.",
+    "Use specific numbers and statistics to add credibility."
+  ],
+  "accessibility": {
+    "min_contrast_ratio": 12.0,
+    "font_size_min": 16,
+    "recommended_for": ["tech", "startup", "creative", "modern_corporate"]
+  }
+}

@@ -13,6 +13,7 @@ from pptx.util import Inches, Pt
 
 from app.schemas.presentation_plan import PresentationPlan, TopicSection
 from app.services.gemini_planner import GeminiPresentationPlanner
+from app.services.presentation_templates import PresentationTemplateRegistry
 
 
 class PptxGenerationService:
@@ -25,6 +26,7 @@ class PptxGenerationService:
         base_dir.mkdir(parents=True, exist_ok=True)
         self.output_dir = base_dir
         self.gemini_planner = gemini_planner
+        self.template_registry = PresentationTemplateRegistry()
 
     def generate(self, payload: dict) -> str:
         plan = self.build_plan(payload)
@@ -38,6 +40,7 @@ class PptxGenerationService:
                 presenter_name=presenter_name,
                 slide_count=slide_count,
                 language_code=language_code,
+                template=pack.get('_template'),
             )
         return self._build_fallback_plan(topic=topic, slide_count=slide_count, pack=pack)
 
@@ -109,7 +112,8 @@ class PptxGenerationService:
             pack=pack,
         )
 
-        safe_stem = self._safe_filename(f"{topic[:60]}_{presenter_name[:30]}_{language_code}")
+        template_id = str((pack.get('_template') or {}).get('id') or 'template')
+        safe_stem = self._safe_filename(f"{topic[:60]}_{presenter_name[:30]}_{language_code}_{template_id}")
         file_path = self.output_dir / f'{safe_stem}.pptx'
         prs.save(file_path)
         return str(file_path)
@@ -123,10 +127,11 @@ class PptxGenerationService:
     def _extract_core(self, payload: dict) -> tuple[str, str, int, str, dict]:
         language_code = str(payload.get('language_code', 'uz') or 'uz')
         pack = self._language_pack(language_code)
+        pack['_template'] = self.template_registry.get(str(payload.get('template_id') or '').strip())
         topic = str(payload.get('topic', 'Untitled presentation')).strip()
         presenter_name = str(payload.get('presenter_name', 'Unknown')).strip()
         slide_count = int(payload.get('slide_count', 6) or 6)
-        slide_count = min(max(slide_count, 6), 15)
+        slide_count = min(max(slide_count, 6), 12)
         return topic, presenter_name, slide_count, language_code, pack
 
 
@@ -170,6 +175,133 @@ class PptxGenerationService:
             'focus_label': 'Bo‘lim markazi',
             'cover_points': ['Boshlanish', 'Rivojlanish', 'Muhim faktlar', 'Ahamiyati'],
         }
+
+    @staticmethod
+    def _hex_to_tuple(value: str, default: tuple[int, int, int]) -> tuple[int, int, int]:
+        text = str(value or '').strip().lstrip('#')
+        if len(text) != 6:
+            return default
+        try:
+            return tuple(int(text[index:index + 2], 16) for index in (0, 2, 4))  # type: ignore[return-value]
+        except ValueError:
+            return default
+
+    def _theme_value(self, pack: dict, key: str, default: str) -> str:
+        template = pack.get('_template') or {}
+        theme = template.get('theme') if isinstance(template, dict) else {}
+        if isinstance(theme, dict):
+            return str(theme.get(key) or default)
+        return default
+
+    def _rgb_tuple(self, pack: dict, key: str, default: tuple[int, int, int]) -> tuple[int, int, int]:
+        return self._hex_to_tuple(self._theme_value(pack, key, ''), default)
+
+    def _rgb(self, pack: dict, key: str, default: tuple[int, int, int]) -> RGBColor:
+        return RGBColor(*self._rgb_tuple(pack, key, default))
+
+    def _font_family(self, pack: dict) -> str:
+        return self._theme_value(pack, 'font_family', 'Aptos')
+
+    def _layout_value(self, pack: dict, key: str, default: str) -> str:
+        template = pack.get('_template') or {}
+        layout = template.get('layout') if isinstance(template, dict) else {}
+        if isinstance(layout, dict):
+            return str(layout.get(key) or default)
+        return default
+
+    def _process_color_list(self, pack: dict) -> list[RGBColor]:
+        template = pack.get('_template') or {}
+        theme = template.get('theme') if isinstance(template, dict) else {}
+        raw_colors = theme.get('process_colors') if isinstance(theme, dict) else None
+        if not isinstance(raw_colors, list) or not raw_colors:
+            raw_colors = ['#dbeafe', '#e0e7ff', '#dcfce7', '#fef3c7', '#fee2e2']
+        defaults = [(219, 234, 254), (224, 231, 255), (220, 252, 231), (254, 243, 199), (254, 226, 226)]
+        return [
+            RGBColor(*self._hex_to_tuple(str(color), defaults[index % len(defaults)]))
+            for index, color in enumerate(raw_colors[:6])
+        ]
+
+    def _motif_rect(self, slide, pack: dict, *, left: float, top: float, width: float, height: float, color_key: str, default: tuple[int, int, int]) -> None:
+        shape = slide.shapes.add_shape(
+            MSO_AUTO_SHAPE_TYPE.RECTANGLE,
+            Inches(left),
+            Inches(top),
+            Inches(width),
+            Inches(height),
+        )
+        shape.fill.solid()
+        shape.fill.fore_color.rgb = self._rgb(pack, color_key, default)
+        shape.line.fill.background()
+
+    def _draw_background_motif(self, slide, pack: dict) -> None:
+        style = self._layout_value(pack, 'accent_style', 'academic_grid')
+        if style == 'neon_lines':
+            for index, y in enumerate((5.72, 5.94, 6.16)):
+                self._motif_rect(
+                    slide,
+                    pack,
+                    left=9.00 + (index * 0.42),
+                    top=y,
+                    width=3.04 - (index * 0.36),
+                    height=0.035,
+                    color_key='primary' if index != 1 else 'secondary',
+                    default=(6, 182, 212),
+                )
+            for index, x in enumerate((11.88, 12.14, 12.40)):
+                self._motif_rect(
+                    slide,
+                    pack,
+                    left=x,
+                    top=1.10 + (index * 0.30),
+                    width=0.035,
+                    height=1.44,
+                    color_key='border',
+                    default=(71, 85, 105),
+                )
+            return
+
+        if style == 'analytic_grid':
+            for x in (1.14, 3.34, 5.54, 7.74, 9.94, 12.14):
+                self._motif_rect(slide, pack, left=x, top=1.66, width=0.012, height=4.86, color_key='border', default=(153, 246, 228))
+            for y in (2.30, 3.22, 4.14, 5.06, 5.98):
+                self._motif_rect(slide, pack, left=0.92, top=y, width=11.44, height=0.012, color_key='border', default=(153, 246, 228))
+            self._motif_rect(slide, pack, left=10.86, top=0.78, width=1.56, height=0.08, color_key='secondary', default=(20, 184, 166))
+            return
+
+        if style == 'editorial_corner':
+            self._motif_rect(slide, pack, left=0.00, top=6.28, width=2.84, height=0.34, color_key='accent', default=(254, 215, 170))
+            self._motif_rect(slide, pack, left=2.26, top=6.58, width=1.42, height=0.10, color_key='secondary', default=(13, 148, 136))
+            self._motif_rect(slide, pack, left=11.58, top=1.26, width=0.54, height=3.84, color_key='surface_alt', default=(255, 237, 213))
+            return
+
+        for index, y in enumerate((1.02, 1.24, 1.46)):
+            self._motif_rect(
+                slide,
+                pack,
+                left=9.34 + (index * 0.34),
+                top=y,
+                width=2.82 - (index * 0.30),
+                height=0.045,
+                color_key='border',
+                default=(125, 211, 252),
+            )
+        self._motif_rect(slide, pack, left=11.88, top=5.86, width=0.46, height=0.46, color_key='accent', default=(186, 230, 253))
+        self._motif_rect(slide, pack, left=12.46, top=5.50, width=0.22, height=0.82, color_key='secondary', default=(14, 165, 233))
+
+    def _style_run(
+        self,
+        run,
+        pack: dict,
+        *,
+        size: float,
+        color_key: str = 'text',
+        default_color: tuple[int, int, int] = (15, 23, 42),
+        bold: bool = False,
+    ) -> None:
+        run.font.size = Pt(size)
+        run.font.bold = bold
+        run.font.name = self._font_family(pack)
+        run.font.color.rgb = self._rgb(pack, color_key, default_color)
 
     def _build_fallback_plan(self, *, topic: str, slide_count: int, pack: dict) -> PresentationPlan:
         language_code = str(pack.get('language_code', 'uz'))
@@ -259,6 +391,13 @@ class PptxGenerationService:
         while len(sections) < section_count:
             sections.append(sections[len(sections) % 3])
         agenda_items = [section.title for section in sections[: min(8, len(sections))]]
+        for item in list(pack.get('cover_points') or []):
+            if len(agenda_items) >= 4:
+                break
+            if item not in agenda_items:
+                agenda_items.append(str(item))
+        while len(agenda_items) < 4:
+            agenda_items.append(topic)
         return PresentationPlan(
             presentation_title=topic,
             title_subtitle=subtitle,
@@ -384,14 +523,15 @@ class PptxGenerationService:
 
 
     @staticmethod
-    def _fit_frame(text_frame, *, max_size: int | float, min_size: int | float = 10, bold: bool = False) -> None:
+    def _fit_frame(text_frame, *, max_size: int | float, min_size: int | float = 10, bold: bool = False, font_family: str = 'Aptos') -> None:
         text_frame.word_wrap = True
         try:
-            text_frame.fit_text(max_size=max_size, font_family='Arial', bold=bold)
+            text_frame.fit_text(max_size=max_size, font_family=font_family, bold=bold)
         except Exception:
             pass
         for paragraph in text_frame.paragraphs:
             for run in paragraph.runs:
+                run.font.name = font_family
                 current = run.font.size.pt if run.font.size else float(max_size)
                 if current < float(min_size):
                     run.font.size = Pt(float(min_size))
@@ -507,6 +647,7 @@ class PptxGenerationService:
         space_after_pt: float,
         align=PP_ALIGN.LEFT,
         min_size: int = 10,
+        font_family: str = 'Aptos',
     ) -> None:
         frame.clear()
         frame.word_wrap = True
@@ -523,8 +664,9 @@ class PptxGenerationService:
             p.space_after = Pt(space_after_pt)
             for run in p.runs:
                 run.font.size = Pt(font_size)
+                run.font.name = font_family
                 run.font.color.rgb = color
-        self._fit_frame(frame, max_size=int(round(font_size)), min_size=min_size)
+        self._fit_frame(frame, max_size=int(round(font_size)), min_size=min_size, font_family=font_family)
 
     def _set_cell_text(
         self,
@@ -535,6 +677,7 @@ class PptxGenerationService:
         bold: bool = False,
         color: tuple[int, int, int] = (31, 41, 55),
         min_size: float = 9.5,
+        font_family: str = 'Aptos',
     ) -> None:
         cell.text = self._normalize_text(text)
         frame = cell.text_frame
@@ -547,8 +690,9 @@ class PptxGenerationService:
             for run in p.runs:
                 run.font.size = Pt(font_size)
                 run.font.bold = bold
+                run.font.name = font_family
                 run.font.color.rgb = RGBColor(*color)
-        self._fit_frame(frame, max_size=font_size, min_size=min_size, bold=bold)
+        self._fit_frame(frame, max_size=font_size, min_size=min_size, bold=bold, font_family=font_family)
 
 
     @staticmethod
@@ -585,21 +729,16 @@ class PptxGenerationService:
             ]
         return []
 
-    def _render_fact_cards(self, slide, *, items: list[str]) -> None:
+    def _render_fact_cards(self, slide, *, items: list[str], pack: dict) -> None:
         coords = self._fact_card_coords(len(items))
-        colors = [
-            RGBColor(239, 246, 255),
-            RGBColor(238, 242, 255),
-            RGBColor(236, 253, 245),
-            RGBColor(255, 247, 237),
-        ]
+        colors = self._process_color_list(pack)
         font_size = 14.4 if max((len(item) for item in items), default=0) <= 72 else 13.2
         for index, item in enumerate(items):
             x, y, w, h = coords[index]
             shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
             shape.fill.solid()
-            shape.fill.fore_color.rgb = RGBColor(255, 255, 255)
-            shape.line.color.rgb = RGBColor(191, 219, 254)
+            shape.fill.fore_color.rgb = self._rgb(pack, 'surface', (255, 255, 255))
+            shape.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
 
             stripe = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(0.18))
             stripe.fill.solid()
@@ -608,7 +747,7 @@ class PptxGenerationService:
 
             badge = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.OVAL, Inches(x + 0.18), Inches(y + 0.26), Inches(0.46), Inches(0.46))
             badge.fill.solid()
-            badge.fill.fore_color.rgb = RGBColor(30, 64, 175)
+            badge.fill.fore_color.rgb = self._rgb(pack, 'primary', (30, 64, 175))
             badge.line.fill.background()
             badge_frame = badge.text_frame
             badge_frame.clear()
@@ -617,9 +756,7 @@ class PptxGenerationService:
             badge_p.alignment = PP_ALIGN.CENTER
             badge_run = badge_p.add_run()
             badge_run.text = str(index + 1)
-            badge_run.font.size = Pt(12)
-            badge_run.font.bold = True
-            badge_run.font.color.rgb = RGBColor(255, 255, 255)
+            self._style_run(badge_run, pack, size=12, color_key='on_primary', default_color=(255, 255, 255), bold=True)
 
             box = slide.shapes.add_textbox(Inches(x + 0.38), Inches(y + 0.86), Inches(w - 0.60), Inches(h - 1.00))
             frame = box.text_frame
@@ -632,15 +769,14 @@ class PptxGenerationService:
             p.alignment = PP_ALIGN.CENTER
             run = p.add_run()
             run.text = item
-            run.font.size = Pt(font_size)
-            run.font.color.rgb = RGBColor(30, 41, 59)
-            self._fit_frame(frame, max_size=font_size, min_size=10.8)
+            self._style_run(run, pack, size=font_size, color_key='text', default_color=(30, 41, 59))
+            self._fit_frame(frame, max_size=font_size, min_size=10.8, font_family=self._font_family(pack))
 
     def _render_focus_spotlight(self, slide, *, focus: str, items: list[str], pack: dict) -> None:
         left = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(0.92), Inches(2.18), Inches(4.12), Inches(3.98))
         left.fill.solid()
-        left.fill.fore_color.rgb = RGBColor(239, 246, 255)
-        left.line.color.rgb = RGBColor(191, 219, 254)
+        left.fill.fore_color.rgb = self._rgb(pack, 'surface_alt', (239, 246, 255))
+        left.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
 
         frame = left.text_frame
         frame.clear()
@@ -652,9 +788,7 @@ class PptxGenerationService:
         header.alignment = PP_ALIGN.LEFT
         run = header.add_run()
         run.text = str(pack['focus_label'])
-        run.font.size = Pt(13.2)
-        run.font.bold = True
-        run.font.color.rgb = RGBColor(30, 64, 175)
+        self._style_run(run, pack, size=13.2, color_key='primary', default_color=(30, 64, 175), bold=True)
 
         focus_p = frame.add_paragraph()
         focus_p.alignment = PP_ALIGN.LEFT
@@ -662,23 +796,23 @@ class PptxGenerationService:
         focus_p.space_after = Pt(10)
         focus_run = focus_p.add_run()
         focus_run.text = self._normalize_text(focus)
-        focus_run.font.size = Pt(15)
-        focus_run.font.color.rgb = RGBColor(30, 41, 59)
-        self._fit_frame(frame, max_size=15, min_size=11.2)
+        self._style_run(focus_run, pack, size=15, color_key='text', default_color=(30, 41, 59))
+        self._fit_frame(frame, max_size=15, min_size=11.2, font_family=self._font_family(pack))
 
         right = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(5.36), Inches(2.18), Inches(7.00), Inches(3.98))
         right.fill.solid()
-        right.fill.fore_color.rgb = RGBColor(255, 255, 255)
-        right.line.color.rgb = RGBColor(203, 213, 225)
+        right.fill.fore_color.rgb = self._rgb(pack, 'surface', (255, 255, 255))
+        right.line.color.rgb = self._rgb(pack, 'border', (203, 213, 225))
 
         inner = slide.shapes.add_textbox(Inches(5.68), Inches(2.46), Inches(6.34), Inches(3.42))
         self._write_bullet_block(
             inner.text_frame,
             items,
             font_size=13.6,
-            color=RGBColor(31, 41, 55),
+            color=self._rgb(pack, 'text', (31, 41, 55)),
             space_after_pt=9,
             min_size=10.2,
+            font_family=self._font_family(pack),
         )
 
     @staticmethod
@@ -722,31 +856,64 @@ class PptxGenerationService:
         total_slides: int,
         pack: dict,
         subtitle: str | None = None,
-        background_rgb: tuple[int, int, int] = (248, 250, 252),
+        background_rgb: tuple[int, int, int] | None = None,
     ):
+        header_style = self._layout_value(pack, 'header_style', 'top_band')
         slide = prs.slides.add_slide(prs.slide_layouts[6])
         background = slide.background.fill
         background.solid()
-        background.fore_color.rgb = RGBColor(*background_rgb)
+        background.fore_color.rgb = RGBColor(*(background_rgb or self._rgb_tuple(pack, 'background', (248, 250, 252))))
+        self._draw_background_motif(slide, pack)
 
-        top_band = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0), Inches(0), Inches(13.333), Inches(0.62))
-        top_band.fill.solid()
-        top_band.fill.fore_color.rgb = RGBColor(30, 64, 175)
-        top_band.line.fill.background()
+        title_x = 0.96
+        title_y = 0.80
+        title_w = 11.10
+        subtitle_y = 1.48
+        footer_y = 6.84
 
-        accent = slide.shapes.add_shape(
-            MSO_AUTO_SHAPE_TYPE.RECTANGLE,
-            Inches(0.72),
-            Inches(0.82),
-            Inches(0.10),
-            Inches(1.22 if subtitle else 0.82),
-        )
-        accent.fill.solid()
-        accent.fill.fore_color.rgb = RGBColor(96, 165, 250)
-        accent.line.fill.background()
+        if header_style == 'left_rail':
+            rail = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0), Inches(0), Inches(0.52), Inches(7.5))
+            rail.fill.solid()
+            rail.fill.fore_color.rgb = self._rgb(pack, 'primary', (4, 120, 87))
+            rail.line.fill.background()
+            marker = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0.52), Inches(0.76), Inches(0.08), Inches(1.42 if subtitle else 0.92))
+            marker.fill.solid()
+            marker.fill.fore_color.rgb = self._rgb(pack, 'secondary', (20, 184, 166))
+            marker.line.fill.background()
+            title_x = 0.92
+            title_y = 0.74
+            subtitle_y = 1.44
+        elif header_style == 'corner_band':
+            corner = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(10.18), Inches(0), Inches(3.16), Inches(1.16))
+            corner.fill.solid()
+            corner.fill.fore_color.rgb = self._rgb(pack, 'primary', (194, 65, 12))
+            corner.line.fill.background()
+            accent = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0.76), Inches(0.72), Inches(1.24), Inches(0.08))
+            accent.fill.solid()
+            accent.fill.fore_color.rgb = self._rgb(pack, 'secondary', (15, 118, 110))
+            accent.line.fill.background()
+            title_y = 0.84
+            subtitle_y = 1.52
+        else:
+            band_h = 0.68 if header_style == 'dark_bar' else 0.62
+            top_band = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0), Inches(0), Inches(13.333), Inches(band_h))
+            top_band.fill.solid()
+            top_band.fill.fore_color.rgb = self._rgb(pack, 'primary', (30, 64, 175))
+            top_band.line.fill.background()
+
+            accent = slide.shapes.add_shape(
+                MSO_AUTO_SHAPE_TYPE.RECTANGLE,
+                Inches(0.72),
+                Inches(0.82),
+                Inches(0.10),
+                Inches(1.22 if subtitle else 0.82),
+            )
+            accent.fill.solid()
+            accent.fill.fore_color.rgb = self._rgb(pack, 'secondary', (96, 165, 250))
+            accent.line.fill.background()
 
         if title:
-            title_box = slide.shapes.add_textbox(Inches(0.96), Inches(0.80), Inches(11.1), Inches(0.92))
+            title_box = slide.shapes.add_textbox(Inches(title_x), Inches(title_y), Inches(title_w), Inches(0.92))
             title_frame = title_box.text_frame
             title_frame.clear()
             title_frame.word_wrap = True
@@ -755,13 +922,11 @@ class PptxGenerationService:
             p = title_frame.paragraphs[0]
             run = p.add_run()
             run.text = self._normalize_text(title)
-            run.font.size = Pt(25)
-            run.font.bold = True
-            run.font.color.rgb = RGBColor(15, 23, 42)
-            self._fit_frame(title_frame, max_size=25, min_size=18, bold=True)
+            self._style_run(run, pack, size=25, color_key='text', default_color=(15, 23, 42), bold=True)
+            self._fit_frame(title_frame, max_size=25, min_size=18, bold=True, font_family=self._font_family(pack))
 
         if subtitle:
-            subtitle_box = slide.shapes.add_textbox(Inches(0.96), Inches(1.48), Inches(11.25), Inches(0.68))
+            subtitle_box = slide.shapes.add_textbox(Inches(title_x), Inches(subtitle_y), Inches(11.25), Inches(0.68))
             subtitle_frame = subtitle_box.text_frame
             subtitle_frame.clear()
             subtitle_frame.word_wrap = True
@@ -770,13 +935,12 @@ class PptxGenerationService:
             p = subtitle_frame.paragraphs[0]
             run = p.add_run()
             run.text = self._normalize_text(subtitle)
-            run.font.size = Pt(12.5)
-            run.font.color.rgb = RGBColor(71, 85, 105)
-            self._fit_frame(subtitle_frame, max_size=12, min_size=10)
+            self._style_run(run, pack, size=12.5, color_key='muted', default_color=(71, 85, 105))
+            self._fit_frame(subtitle_frame, max_size=12, min_size=10, font_family=self._font_family(pack))
 
-        footer_line = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0.72), Inches(6.84), Inches(11.86), Inches(0.02))
+        footer_line = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0.72), Inches(footer_y), Inches(11.86), Inches(0.02))
         footer_line.fill.solid()
-        footer_line.fill.fore_color.rgb = RGBColor(203, 213, 225)
+        footer_line.fill.fore_color.rgb = self._rgb(pack, 'border', (203, 213, 225))
         footer_line.line.fill.background()
 
         author_box = slide.shapes.add_textbox(Inches(0.76), Inches(6.90), Inches(5.8), Inches(0.26))
@@ -784,8 +948,7 @@ class PptxGenerationService:
         author_frame.clear()
         author_run = author_frame.paragraphs[0].add_run()
         author_run.text = f"{pack['prepared_by']}: {self._normalize_text(presenter_name, max_chars=40)}"
-        author_run.font.size = Pt(10)
-        author_run.font.color.rgb = RGBColor(100, 116, 139)
+        self._style_run(author_run, pack, size=10, color_key='footer', default_color=(100, 116, 139))
 
         page_box = slide.shapes.add_textbox(Inches(11.45), Inches(6.90), Inches(1.05), Inches(0.26))
         page_frame = page_box.text_frame
@@ -793,8 +956,7 @@ class PptxGenerationService:
         page_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT
         page_run = page_frame.paragraphs[0].add_run()
         page_run.text = f'{page_number}/{total_slides}'
-        page_run.font.size = Pt(10)
-        page_run.font.color.rgb = RGBColor(100, 116, 139)
+        self._style_run(page_run, pack, size=10, color_key='footer', default_color=(100, 116, 139))
         return slide
 
     def _add_title_slide(
@@ -816,35 +978,58 @@ class PptxGenerationService:
             page_number=page_number,
             total_slides=total_slides,
             pack=pack,
-            background_rgb=(239, 246, 255),
+            background_rgb=self._rgb_tuple(pack, 'cover_background', (239, 246, 255)),
         )
 
-        title_box = slide.shapes.add_textbox(Inches(0.92), Inches(1.28), Inches(6.6), Inches(1.68))
+        cover_style = self._layout_value(pack, 'cover_style', 'split_card')
+        if cover_style == 'center_focus':
+            title_coords = (1.18, 1.02, 10.90, 1.36)
+            subtitle_coords = (1.74, 2.36, 9.78, 0.80)
+            card_coords = (1.28, 3.36, 10.74, 2.28)
+        elif cover_style == 'magazine':
+            block = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(7.38), Inches(0.86), Inches(4.68), Inches(5.28))
+            block.fill.solid()
+            block.fill.fore_color.rgb = self._rgb(pack, 'accent', (254, 215, 170))
+            block.line.fill.background()
+            title_coords = (0.88, 1.02, 6.00, 1.82)
+            subtitle_coords = (0.92, 3.02, 5.80, 1.06)
+            card_coords = (7.06, 1.58, 4.94, 3.74)
+        elif cover_style == 'dashboard':
+            title_coords = (0.88, 1.08, 7.00, 1.72)
+            subtitle_coords = (0.92, 2.96, 6.42, 1.06)
+            card_coords = (8.12, 1.36, 4.16, 4.02)
+        else:
+            title_coords = (0.92, 1.28, 6.6, 1.68)
+            subtitle_coords = (0.95, 2.92, 6.2, 1.18)
+            card_coords = (7.7, 1.56, 4.58, 3.78)
+
+        title_box = slide.shapes.add_textbox(Inches(title_coords[0]), Inches(title_coords[1]), Inches(title_coords[2]), Inches(title_coords[3]))
         frame = title_box.text_frame
         frame.clear()
         frame.word_wrap = True
         p = frame.paragraphs[0]
+        if cover_style == 'center_focus':
+            p.alignment = PP_ALIGN.CENTER
         run = p.add_run()
         run.text = self._normalize_text(presentation_title)
-        run.font.size = Pt(28)
-        run.font.bold = True
-        run.font.color.rgb = RGBColor(15, 23, 42)
-        self._fit_frame(frame, max_size=28, min_size=20, bold=True)
+        self._style_run(run, pack, size=28, color_key='text', default_color=(15, 23, 42), bold=True)
+        self._fit_frame(frame, max_size=28, min_size=20, bold=True, font_family=self._font_family(pack))
 
-        subtitle_box = slide.shapes.add_textbox(Inches(0.95), Inches(2.92), Inches(6.2), Inches(1.18))
+        subtitle_box = slide.shapes.add_textbox(Inches(subtitle_coords[0]), Inches(subtitle_coords[1]), Inches(subtitle_coords[2]), Inches(subtitle_coords[3]))
         subtitle_frame = subtitle_box.text_frame
         subtitle_frame.clear()
         subtitle_frame.word_wrap = True
+        if cover_style == 'center_focus':
+            subtitle_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
         subtitle_run = subtitle_frame.paragraphs[0].add_run()
         subtitle_run.text = self._normalize_text(subtitle)
-        subtitle_run.font.size = Pt(15)
-        subtitle_run.font.color.rgb = RGBColor(51, 65, 85)
-        self._fit_frame(subtitle_frame, max_size=15, min_size=11)
+        self._style_run(subtitle_run, pack, size=15, color_key='muted', default_color=(51, 65, 85))
+        self._fit_frame(subtitle_frame, max_size=15, min_size=11, font_family=self._font_family(pack))
 
-        card = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(7.7), Inches(1.56), Inches(4.58), Inches(3.78))
+        card = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(card_coords[0]), Inches(card_coords[1]), Inches(card_coords[2]), Inches(card_coords[3]))
         card.fill.solid()
-        card.fill.fore_color.rgb = RGBColor(255, 255, 255)
-        card.line.color.rgb = RGBColor(191, 219, 254)
+        card.fill.fore_color.rgb = self._rgb(pack, 'surface', (255, 255, 255))
+        card.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
         card_frame = card.text_frame
         card_frame.clear()
         card_frame.word_wrap = True
@@ -857,18 +1042,15 @@ class PptxGenerationService:
         header.alignment = PP_ALIGN.CENTER
         run = header.add_run()
         run.text = str(pack['key_focus'])
-        run.font.size = Pt(17)
-        run.font.bold = True
-        run.font.color.rgb = RGBColor(30, 64, 175)
+        self._style_run(run, pack, size=17, color_key='primary', default_color=(30, 64, 175), bold=True)
 
         for item in (agenda_preview or list(pack['cover_points'])[:4])[:4]:
             paragraph = card_frame.add_paragraph()
             paragraph.text = f'• {self._normalize_text(item)}'
             paragraph.space_after = Pt(9)
             for run in paragraph.runs:
-                run.font.size = Pt(15)
-                run.font.color.rgb = RGBColor(30, 41, 59)
-        self._fit_frame(card_frame, max_size=17, min_size=11)
+                self._style_run(run, pack, size=15, color_key='text', default_color=(30, 41, 59))
+        self._fit_frame(card_frame, max_size=17, min_size=11, font_family=self._font_family(pack))
 
     def _add_agenda_slide(self, prs: Presentation, *, agenda_items: list[str], agenda_notes: list[str], presenter_name: str, page_number: int, total_slides: int, pack: dict) -> None:
         slide = self._base_slide(
@@ -881,6 +1063,54 @@ class PptxGenerationService:
             subtitle=str(pack['agenda_subtitle']),
         )
         visible_items = [self._normalize_text(item) for item in agenda_items[:8] if self._normalize_text(item)]
+        agenda_style = self._layout_value(pack, 'agenda_style', 'list_note')
+        if agenda_style in {'grid', 'tiles'}:
+            coords: list[tuple[float, float, float, float]] = []
+            cols = 4 if len(visible_items) > 4 else 2
+            rows = 2 if len(visible_items) > 4 else max(1, (len(visible_items) + 1) // 2)
+            card_w = 2.84 if cols == 4 else 5.56
+            card_h = 1.28 if rows == 2 else 1.44
+            start_x = 0.82
+            start_y = 2.28
+            gap_x = 0.30
+            gap_y = 0.34
+            for index in range(len(visible_items)):
+                row = index // cols
+                col = index % cols
+                coords.append((start_x + col * (card_w + gap_x), start_y + row * (card_h + gap_y), card_w, card_h))
+
+            for index, item in enumerate(visible_items, start=1):
+                x, y, w, h = coords[index - 1]
+                shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
+                shape.fill.solid()
+                shape.fill.fore_color.rgb = self._rgb(pack, 'surface', (255, 255, 255))
+                shape.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
+
+                badge = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.OVAL, Inches(x + 0.16), Inches(y + 0.16), Inches(0.38), Inches(0.38))
+                badge.fill.solid()
+                badge.fill.fore_color.rgb = self._rgb(pack, 'primary', (30, 64, 175))
+                badge.line.fill.background()
+                badge_frame = badge.text_frame
+                badge_frame.clear()
+                badge_frame.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
+                badge_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+                badge_run = badge_frame.paragraphs[0].add_run()
+                badge_run.text = str(index)
+                self._style_run(badge_run, pack, size=10.5, color_key='on_primary', default_color=(255, 255, 255), bold=True)
+
+                text_box = slide.shapes.add_textbox(Inches(x + 0.24), Inches(y + 0.56), Inches(w - 0.48), Inches(h - 0.68))
+                frame = text_box.text_frame
+                frame.clear()
+                frame.word_wrap = True
+                frame.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
+                p = frame.paragraphs[0]
+                p.alignment = PP_ALIGN.CENTER
+                run = p.add_run()
+                run.text = item
+                self._style_run(run, pack, size=12.6 if cols == 4 else 14.0, color_key='text', default_color=(15, 23, 42), bold=agenda_style == 'tiles')
+                self._fit_frame(frame, max_size=14, min_size=9.4, bold=agenda_style == 'tiles', font_family=self._font_family(pack))
+            return
+
         layout = self._agenda_layout(len(visible_items))
         note_left = 7.08
         note_width = 5.1
@@ -901,8 +1131,8 @@ class PptxGenerationService:
 
             shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(layout['col_width']), Inches(layout['item_height']))
             shape.fill.solid()
-            shape.fill.fore_color.rgb = RGBColor(255, 255, 255)
-            shape.line.color.rgb = RGBColor(191, 219, 254)
+            shape.fill.fore_color.rgb = self._rgb(pack, 'surface', (255, 255, 255))
+            shape.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
             frame = shape.text_frame
             frame.clear()
             frame.word_wrap = True
@@ -911,13 +1141,12 @@ class PptxGenerationService:
             frame.margin_right = Inches(0.12)
             run = frame.paragraphs[0].add_run()
             run.text = f'{index}. {item}'
-            run.font.size = Pt(body_font)
-            run.font.color.rgb = RGBColor(15, 23, 42)
-            self._fit_frame(frame, max_size=body_font, min_size=10.8)
+            self._style_run(run, pack, size=body_font, color_key='text', default_color=(15, 23, 42))
+            self._fit_frame(frame, max_size=body_font, min_size=10.8, font_family=self._font_family(pack))
 
         note = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(note_left), Inches(2.10), Inches(note_width), Inches(3.62))
         note.fill.solid()
-        note.fill.fore_color.rgb = RGBColor(219, 234, 254)
+        note.fill.fore_color.rgb = self._rgb(pack, 'surface_alt', (219, 234, 254))
         note.line.fill.background()
         note_frame = note.text_frame
         note_frame.clear()
@@ -930,17 +1159,14 @@ class PptxGenerationService:
         title_paragraph.alignment = PP_ALIGN.CENTER
         run = title_paragraph.add_run()
         run.text = str(pack['agenda_note_title'])
-        run.font.size = Pt(15.5)
-        run.font.bold = True
-        run.font.color.rgb = RGBColor(30, 64, 175)
+        self._style_run(run, pack, size=15.5, color_key='primary', default_color=(30, 64, 175), bold=True)
         for item in (agenda_notes or visible_items)[:4]:
             p = note_frame.add_paragraph()
             p.text = f'• {self._normalize_text(item)}'
             p.space_after = Pt(7)
             for run in p.runs:
-                run.font.size = Pt(12.0)
-                run.font.color.rgb = RGBColor(30, 41, 59)
-        self._fit_frame(note_frame, max_size=15, min_size=10.5)
+                self._style_run(run, pack, size=12.0, color_key='text', default_color=(30, 41, 59))
+        self._fit_frame(note_frame, max_size=15, min_size=10.5, font_family=self._font_family(pack))
 
 
     def _add_facts_slide(self, prs: Presentation, *, section: TopicSection, presenter_name: str, page_number: int, total_slides: int, pack: dict) -> None:
@@ -958,9 +1184,10 @@ class PptxGenerationService:
         if not facts:
             return
 
-        variant = self._facts_variant(facts)
+        preferred_variant = self._layout_value(pack, 'facts_style', 'auto')
+        variant = self._facts_variant(facts) if preferred_variant == 'auto' else preferred_variant
         if variant == 'cards':
-            self._render_fact_cards(slide, items=facts[:4])
+            self._render_fact_cards(slide, items=facts[:4], pack=pack)
             return
         if variant == 'spotlight':
             self._render_focus_spotlight(slide, focus=section.focus, items=facts[:4], pack=pack)
@@ -974,12 +1201,12 @@ class PptxGenerationService:
 
         panel = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(panel_left), Inches(panel_top), Inches(panel_width), Inches(panel_height))
         panel.fill.solid()
-        panel.fill.fore_color.rgb = RGBColor(255, 255, 255)
-        panel.line.color.rgb = RGBColor(203, 213, 225)
+        panel.fill.fore_color.rgb = self._rgb(pack, 'surface', (255, 255, 255))
+        panel.line.color.rgb = self._rgb(pack, 'border', (203, 213, 225))
 
         accent = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(panel_left + 0.18), Inches(panel_top + 0.22), Inches(0.10), Inches(panel_height - 0.44))
         accent.fill.solid()
-        accent.fill.fore_color.rgb = RGBColor(191, 219, 254)
+        accent.fill.fore_color.rgb = self._rgb(pack, 'accent', (191, 219, 254))
         accent.line.fill.background()
 
         layout = self._select_facts_layout(facts, panel_height=panel_height - 0.48)
@@ -989,21 +1216,22 @@ class PptxGenerationService:
                 text_box.text_frame,
                 layout['columns_data'][0],
                 font_size=layout['font_size'],
-                color=RGBColor(31, 41, 55),
+                color=self._rgb(pack, 'text', (31, 41, 55)),
                 space_after_pt=layout['space_after'],
                 min_size=10.2,
+                font_family=self._font_family(pack),
             )
             return
 
         left_box = slide.shapes.add_textbox(Inches(panel_left + 0.40), Inches(panel_top + 0.22), Inches(5.02), Inches(panel_height - 0.36))
         right_box = slide.shapes.add_textbox(Inches(panel_left + 5.98), Inches(panel_top + 0.22), Inches(5.02), Inches(panel_height - 0.36))
 
-        self._write_bullet_block(left_box.text_frame, layout['columns_data'][0], font_size=layout['font_size'], color=RGBColor(31, 41, 55), space_after_pt=layout['space_after'], min_size=10.2)
-        self._write_bullet_block(right_box.text_frame, layout['columns_data'][1], font_size=layout['font_size'], color=RGBColor(31, 41, 55), space_after_pt=layout['space_after'], min_size=10.2)
+        self._write_bullet_block(left_box.text_frame, layout['columns_data'][0], font_size=layout['font_size'], color=self._rgb(pack, 'text', (31, 41, 55)), space_after_pt=layout['space_after'], min_size=10.2, font_family=self._font_family(pack))
+        self._write_bullet_block(right_box.text_frame, layout['columns_data'][1], font_size=layout['font_size'], color=self._rgb(pack, 'text', (31, 41, 55)), space_after_pt=layout['space_after'], min_size=10.2, font_family=self._font_family(pack))
 
         divider = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(panel_left + 5.56), Inches(panel_top + 0.26), Inches(0.02), Inches(panel_height - 0.52))
         divider.fill.solid()
-        divider.fill.fore_color.rgb = RGBColor(226, 232, 240)
+        divider.fill.fore_color.rgb = self._rgb(pack, 'border', (226, 232, 240))
         divider.line.fill.background()
 
     def _add_process_slide(self, prs: Presentation, *, section: TopicSection, presenter_name: str, page_number: int, total_slides: int, pack: dict) -> None:
@@ -1021,26 +1249,55 @@ class PptxGenerationService:
         if not items:
             return
         coords = self._process_coords(len(items))
-        colors = [
-            RGBColor(219, 234, 254),
-            RGBColor(224, 231, 255),
-            RGBColor(220, 252, 231),
-            RGBColor(254, 243, 199),
-            RGBColor(254, 226, 226),
-        ]
+        colors = self._process_color_list(pack)
         max_len = max((len(item) for item in items), default=0)
         body_size = 12.5 if max_len <= 70 else 11.5 if max_len <= 100 else 10.5
+        process_style = self._layout_value(pack, 'process_style', 'cards')
+
+        if process_style == 'timeline':
+            line_y = 3.42
+            line = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0.92), Inches(line_y), Inches(11.48), Inches(0.04))
+            line.fill.solid()
+            line.fill.fore_color.rgb = self._rgb(pack, 'accent', (191, 219, 254))
+            line.line.fill.background()
+            item_w = min(2.32, 10.9 / max(1, len(items)))
+            gap = (11.20 - (item_w * len(items))) / max(1, len(items) - 1) if len(items) > 1 else 0
+            start_x = 1.06
+            for idx, item in enumerate(items):
+                x = start_x + idx * (item_w + gap)
+                node = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.OVAL, Inches(x + item_w / 2 - 0.20), Inches(line_y - 0.18), Inches(0.40), Inches(0.40))
+                node.fill.solid()
+                node.fill.fore_color.rgb = self._rgb(pack, 'primary', (30, 64, 175))
+                node.line.fill.background()
+                box_y = 2.08 if idx % 2 == 0 else 3.86
+                shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(x), Inches(box_y), Inches(item_w), Inches(1.10))
+                shape.fill.solid()
+                shape.fill.fore_color.rgb = colors[idx % len(colors)]
+                shape.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
+                frame = shape.text_frame
+                frame.clear()
+                frame.word_wrap = True
+                frame.margin_left = Inches(0.08)
+                frame.margin_right = Inches(0.08)
+                frame.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
+                p = frame.paragraphs[0]
+                p.alignment = PP_ALIGN.CENTER
+                run = p.add_run()
+                run.text = item
+                self._style_run(run, pack, size=10.6, color_key='text', default_color=(51, 65, 85))
+                self._fit_frame(frame, max_size=10.6, min_size=8.2, font_family=self._font_family(pack))
+            return
 
         for idx, item in enumerate(items):
             x, y, w, h = coords[idx]
             shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
             shape.fill.solid()
             shape.fill.fore_color.rgb = colors[idx % len(colors)]
-            shape.line.color.rgb = RGBColor(191, 219, 254)
+            shape.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
 
             badge = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.OVAL, Inches(x + 0.16), Inches(y + 0.16), Inches(0.54), Inches(0.54))
             badge.fill.solid()
-            badge.fill.fore_color.rgb = RGBColor(30, 64, 175)
+            badge.fill.fore_color.rgb = self._rgb(pack, 'primary', (30, 64, 175))
             badge.line.fill.background()
             badge_frame = badge.text_frame
             badge_frame.clear()
@@ -1049,9 +1306,7 @@ class PptxGenerationService:
             badge_p.alignment = PP_ALIGN.CENTER
             badge_run = badge_p.add_run()
             badge_run.text = str(idx + 1)
-            badge_run.font.size = Pt(14)
-            badge_run.font.bold = True
-            badge_run.font.color.rgb = RGBColor(255, 255, 255)
+            self._style_run(badge_run, pack, size=14, color_key='on_primary', default_color=(255, 255, 255), bold=True)
 
             text_box = slide.shapes.add_textbox(Inches(x + 0.28), Inches(y + 0.82), Inches(w - 0.56), Inches(h - 0.98))
             frame = text_box.text_frame
@@ -1062,14 +1317,13 @@ class PptxGenerationService:
             p.alignment = PP_ALIGN.CENTER
             run = p.add_run()
             run.text = item
-            run.font.size = Pt(body_size)
-            run.font.color.rgb = RGBColor(51, 65, 85)
-            self._fit_frame(frame, max_size=int(round(body_size)), min_size=9)
+            self._style_run(run, pack, size=body_size, color_key='text', default_color=(51, 65, 85))
+            self._fit_frame(frame, max_size=int(round(body_size)), min_size=9, font_family=self._font_family(pack))
 
         if len(items) == 5:
             arrow = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.CHEVRON, Inches(5.64), Inches(3.34), Inches(2.05), Inches(0.48))
             arrow.fill.solid()
-            arrow.fill.fore_color.rgb = RGBColor(191, 219, 254)
+            arrow.fill.fore_color.rgb = self._rgb(pack, 'accent', (191, 219, 254))
             arrow.line.fill.background()
 
 
@@ -1140,23 +1394,39 @@ class PptxGenerationService:
         for col_idx, column_name in enumerate(section.table.columns):
             cell = table.cell(0, col_idx)
             cell.fill.solid()
-            cell.fill.fore_color.rgb = RGBColor(219, 234, 254)
-            self._set_cell_text(cell, column_name, font_size=header_font, bold=True, color=(30, 64, 175), min_size=max(10.0, header_font - 1.2))
+            cell.fill.fore_color.rgb = self._rgb(pack, 'table_header_bg', (219, 234, 254))
+            self._set_cell_text(
+                cell,
+                column_name,
+                font_size=header_font,
+                bold=True,
+                color=self._rgb_tuple(pack, 'table_header_text', (30, 64, 175)),
+                min_size=max(10.0, header_font - 1.2),
+                font_family=self._font_family(pack),
+            )
 
         for row_idx, row in enumerate(section.table.rows, start=1):
             for col_idx, value in enumerate(row):
                 cell = table.cell(row_idx, col_idx)
                 cell.fill.solid()
-                cell.fill.fore_color.rgb = RGBColor(255, 255, 255) if row_idx % 2 else RGBColor(248, 250, 252)
-                self._set_cell_text(cell, value, font_size=body_font, bold=False, color=(31, 41, 55), min_size=body_min)
+                cell.fill.fore_color.rgb = self._rgb(pack, 'table_row_odd', (255, 255, 255)) if row_idx % 2 else self._rgb(pack, 'table_row_even', (248, 250, 252))
+                self._set_cell_text(
+                    cell,
+                    value,
+                    font_size=body_font,
+                    bold=False,
+                    color=self._rgb_tuple(pack, 'text', (31, 41, 55)),
+                    min_size=body_min,
+                    font_family=self._font_family(pack),
+                )
 
         if not use_side_note:
             return
 
         note = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(note_left), Inches(content_top), Inches(note_width), Inches(area_height))
         note.fill.solid()
-        note.fill.fore_color.rgb = RGBColor(239, 246, 255)
-        note.line.color.rgb = RGBColor(191, 219, 254)
+        note.fill.fore_color.rgb = self._rgb(pack, 'surface_alt', (239, 246, 255))
+        note.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
 
         note_header_box = slide.shapes.add_textbox(Inches(note_left + 0.10), Inches(content_top + 0.16), Inches(note_width - 0.20), Inches(0.30))
         note_header_frame = note_header_box.text_frame
@@ -1165,9 +1435,7 @@ class PptxGenerationService:
         note_header_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
         run = note_header_frame.paragraphs[0].add_run()
         run.text = str(pack['focus_label'])
-        run.font.size = Pt(12.4)
-        run.font.bold = True
-        run.font.color.rgb = RGBColor(30, 64, 175)
+        self._style_run(run, pack, size=12.4, color_key='primary', default_color=(30, 64, 175), bold=True)
 
         note_body_box = slide.shapes.add_textbox(Inches(note_left + 0.12), Inches(content_top + 0.52), Inches(note_width - 0.24), Inches(area_height - 0.68))
         note_frame = note_body_box.text_frame
@@ -1177,8 +1445,7 @@ class PptxGenerationService:
         focus_p.text = self._normalize_text(section.focus)
         focus_p.space_after = Pt(7)
         for run in focus_p.runs:
-            run.font.size = Pt(10.8)
-            run.font.color.rgb = RGBColor(51, 65, 85)
+            self._style_run(run, pack, size=10.8, color_key='muted', default_color=(51, 65, 85))
 
         side_facts = section.facts[:1] if rows >= 5 else section.facts[:2]
         for fact in side_facts:
@@ -1186,9 +1453,8 @@ class PptxGenerationService:
             p.text = f'• {self._normalize_text(fact)}'
             p.space_after = Pt(4)
             for run in p.runs:
-                run.font.size = Pt(9.8)
-                run.font.color.rgb = RGBColor(31, 41, 55)
-        self._fit_frame(note_frame, max_size=11.2, min_size=9.0)
+                self._style_run(run, pack, size=9.8, color_key='text', default_color=(31, 41, 55))
+        self._fit_frame(note_frame, max_size=11.2, min_size=9.0, font_family=self._font_family(pack))
 
     def _add_summary_slide(self, prs: Presentation, *, title: str, summary_points: list[str], presenter_name: str, page_number: int, total_slides: int, pack: dict) -> None:
         slide = self._base_slide(
@@ -1234,17 +1500,18 @@ class PptxGenerationService:
 
         max_len = max((len(item) for item in items), default=0)
         font_size = 15.2 if max_len <= 75 else 14.0 if max_len <= 110 else 12.8
+        summary_style = self._layout_value(pack, 'summary_style', 'cards')
 
         for idx, item in enumerate(items):
             x, y, w, h = coords[idx]
             shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
             shape.fill.solid()
-            shape.fill.fore_color.rgb = RGBColor(255, 255, 255)
-            shape.line.color.rgb = RGBColor(191, 219, 254)
+            shape.fill.fore_color.rgb = self._rgb(pack, 'surface', (255, 255, 255))
+            shape.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
 
             stripe = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(0.16))
             stripe.fill.solid()
-            stripe.fill.fore_color.rgb = RGBColor(219, 234, 254)
+            stripe.fill.fore_color.rgb = self._rgb(pack, 'primary' if summary_style == 'grid' else 'accent', (219, 234, 254))
             stripe.line.fill.background()
 
             frame = shape.text_frame
@@ -1259,6 +1526,5 @@ class PptxGenerationService:
             p.alignment = PP_ALIGN.CENTER
             run = p.add_run()
             run.text = item
-            run.font.size = Pt(font_size)
-            run.font.color.rgb = RGBColor(30, 41, 59)
-            self._fit_frame(frame, max_size=font_size, min_size=12.2)
+            self._style_run(run, pack, size=font_size, color_key='text', default_color=(30, 41, 59))
+            self._fit_frame(frame, max_size=font_size, min_size=12.2, font_family=self._font_family(pack))

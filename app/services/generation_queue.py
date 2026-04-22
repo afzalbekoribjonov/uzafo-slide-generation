@@ -27,12 +27,14 @@ class GenerationQueueService:
         generations_repo: GenerationsRepository,
         users_repo: UsersRepository,
         pptx_generation_service: PptxGenerationService,
+        bot_username: str = 'your_bot',
         poll_interval_seconds: int = 3,
         start_cooldown_seconds: int = 65,
     ) -> None:
         self.generations_repo = generations_repo
         self.users_repo = users_repo
         self.pptx_generation_service = pptx_generation_service
+        self.bot_username = bot_username.strip().lstrip('@') or 'your_bot'
         self.poll_interval_seconds = max(1, int(poll_interval_seconds))
         self.start_cooldown_seconds = max(0, int(start_cooldown_seconds))
         self._last_started_monotonic: float | None = None
@@ -169,7 +171,7 @@ class GenerationQueueService:
             await bot.send_document(
                 chat_id=telegram_id,
                 document=document,
-                caption=create_generation_success_caption(payload),
+                caption=create_generation_success_caption(payload, self.bot_username),
             )
             await self.generations_repo.mark_done(generation_id, result_file_path=file_path)
             await self.users_repo.increment_successful_generation(telegram_id)

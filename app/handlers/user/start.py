@@ -69,12 +69,12 @@ async def start_handler(
             await message.bot.send_message(
                 reward_info['inviter_id'],
                 (
-                    "<b>🎉 Yangi referral tasdiqlandi</b>\n\n"
-                    f"👤 Foydalanuvchi: <b>{reward_info['invitee_name']}</b>\n"
-                    "✅ Botdan foydalanish shartlarini bajardi\n"
+                    "<b>🎉 Yangi taklif tasdiqlandi</b>\n\n"
+                    f"👤 Do‘stingiz: <b>{reward_info['invitee_name']}</b>\n"
+                    "✅ Botdan foydalanish uchun kerakli shartlarni bajardi\n"
                     "🎁 Sizga 1 ta qo‘shimcha yaratish imkoni qo‘shildi\n\n"
-                    f"📊 Jami tasdiqlangan referral: <b>{reward_info['referral_count']}</b>\n"
-                    f"🎟 Mavjud referral kreditlar: <b>{reward_info['referral_credits']}</b>"
+                    f"📊 Jami tasdiqlangan takliflar: <b>{reward_info['referral_count']}</b>\n"
+                    f"🎟 Taklif orqali olingan imkoniyatlar: <b>{reward_info['referral_credits']}</b>"
                 ),
             )
         except Exception:

@@ -1,0 +1,48 @@
+{
+  "id": "aurora_clean",
+  "name": "Aurora Clean",
+  "button_label": "☀️ Aurora",
+  "description": "Ravshan akademik uslub: yumshoq oq fon, professional ko'k ranglar, aniq tuzilgan kartalar va o'qilishi qulay jadvallar. Ilmiy, ta'limiy va rasmiy taqdimotlar uchun ideal.",
+  "preview_path": "previews/aurora_clean.png",
+  "theme": {
+    "font_family": "Aptos",
+    "background": "#f8fafc",
+    "cover_background": "#e0f2fe",
+    "primary": "#0369a1",
+    "secondary": "#0ea5e9",
+    "accent": "#bae6fd",
+    "text": "#0f172a",
+    "muted": "#475569",
+    "footer": "#64748b",
+    "surface": "#ffffff",
+    "surface_alt": "#f0f9ff",
+    "border": "#7dd3fc",
+    "on_primary": "#ffffff",
+    "table_header_bg": "#0369a1",
+    "table_header_text": "#ffffff",
+    "table_row_even": "#f0f9ff",
+    "table_row_odd": "#ffffff",
+    "process_colors": ["#bae6fd", "#c7d2fe", "#d1fae5", "#fef3c7", "#fecaca"]
+  },
+  "layout": {
+    "header_style": "top_band",
+    "cover_style": "split_card",
+    "agenda_style": "list_note",
+    "facts_style": "auto",
+    "process_style": "cards",
+    "summary_style": "cards",
+    "accent_style": "academic_grid"
+  },
+  "prompt_guidance": [
+    "Create a clear academic narrative with strong, specific section titles.",
+    "Each fact should be concise, complete, and readable in 1-2 slide lines.",
+    "Use 1-2 comparison tables when the topic naturally contains periods, categories, or measurable metrics.",
+    "Avoid generic language: every statement should add specific knowledge.",
+    "Prioritize readability with short sentences, active voice, concrete examples, and clean terminology."
+  ],
+  "accessibility": {
+    "min_contrast_ratio": 7.0,
+    "font_size_min": 14,
+    "recommended_for": ["academic", "corporate", "educational", "research"]
+  }
+}
