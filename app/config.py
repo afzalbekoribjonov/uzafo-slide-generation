@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     generation_worker_poll_seconds: int = Field(default=3, alias='GENERATION_WORKER_POLL_SECONDS')
     generation_start_cooldown_seconds: int = Field(default=65, alias='GENERATION_START_COOLDOWN_SECONDS')
     gemini_api_key: str | None = Field(default=None, alias='GEMINI_API_KEY')
-    gemini_model: str = Field(default='gemini-2.5-flash', alias='GEMINI_MODEL')
+    gemini_model: str = Field(default='gemini-2.0-flash', alias='GEMINI_MODEL')
     gemini_max_retries: int = Field(default=3, alias='GEMINI_MAX_RETRIES')
     gemini_initial_backoff_seconds: int = Field(default=10, alias='GEMINI_INITIAL_BACKOFF_SECONDS')
 
