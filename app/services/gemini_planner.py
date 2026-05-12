@@ -91,22 +91,34 @@ RESEARCH_DOSSIER_RESPONSE_SCHEMA: dict[str, Any] = {
 
 
 class GeminiPresentationPlanner:
+    SUPPORTED_MODELS = ('gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-3.1-flash-lite')
+
     def __init__(
         self,
         *,
         api_key: str | None,
-        model_name: str = 'gemini-2.0-flash',
+        model_name: str | None = None,
         max_retries: int = 3,
         initial_backoff_seconds: int = 10,
         fallback_models: list[str] | tuple[str, ...] | None = None,
     ) -> None:
         self.api_key = (api_key or '').strip()
-        self.model_name = model_name.strip() or 'gemini-2.0-flash'
+        requested_model = (model_name or '').strip()
+        if requested_model not in self.SUPPORTED_MODELS:
+            if requested_model:
+                logger.warning('Unsupported Gemini model %s configured. Falling back to %s.', requested_model, self.SUPPORTED_MODELS[0])
+            requested_model = self.SUPPORTED_MODELS[0]
+        self.model_name = requested_model
         self.max_retries = max(1, int(max_retries))
         self.initial_backoff_seconds = max(1, int(initial_backoff_seconds or 10))
-        default_fallbacks = ('gemini-2.5-flash', 'gemini-flash-latest')
+        start_index = self.SUPPORTED_MODELS.index(self.model_name)
+        default_fallbacks = (*self.SUPPORTED_MODELS[start_index + 1:], *self.SUPPORTED_MODELS[:start_index])
         raw_fallbacks = fallback_models if fallback_models is not None else default_fallbacks
-        self.fallback_models = [item.strip() for item in raw_fallbacks if item and item.strip()]
+        self.fallback_models = [
+            item.strip()
+            for item in raw_fallbacks
+            if item and item.strip() in self.SUPPORTED_MODELS and item.strip() != self.model_name
+        ]
 
     @property
     def enabled(self) -> bool:
@@ -262,7 +274,7 @@ class GeminiPresentationPlanner:
                     )
                     time.sleep(backoff_seconds)
 
-            if last_error is not None and self._is_transient_error(last_error):
+            if last_error is not None and self._should_try_next_model(last_error):
                 logger.warning(
                     'Gemini %s stage failed with model %s. Trying next candidate if available. Error: %s',
                     stage_name,
@@ -386,6 +398,27 @@ class GeminiPresentationPlanner:
         message = str(exc).upper()
         transient_markers = ('429', '503', 'RESOURCE_EXHAUSTED', 'UNAVAILABLE', 'TIMEOUT', 'DEADLINE')
         return any(marker in message for marker in transient_markers)
+
+    @staticmethod
+    def _is_model_availability_error(exc: Exception) -> bool:
+        message = str(exc).upper()
+        markers = (
+            '403',
+            '404',
+            'NOT_FOUND',
+            'PERMISSION_DENIED',
+            'MODEL_NOT_FOUND',
+            'MODEL IS NOT FOUND',
+            'NOT SUPPORTED',
+            'NOT ENABLED',
+            'DEPRECATED',
+            'HAS BEEN SHUT DOWN',
+            'UNAVAILABLE FOR',
+        )
+        return any(marker in message for marker in markers)
+
+    def _should_try_next_model(self, exc: Exception) -> bool:
+        return self._is_transient_error(exc) or self._is_model_availability_error(exc)
 
     @staticmethod
     def _is_schema_complexity_error(exc: Exception) -> bool:
@@ -1351,5 +1384,3 @@ GENERAL CONTENT BEST PRACTICES:
         base = self._fit_text(topic, 80) or str(pack['unknown_topic'])
         pool = [self._fit_text(template.format(topic=base), 170) for template in pack['summary_seed']]
         return pool[:needed]
-
-

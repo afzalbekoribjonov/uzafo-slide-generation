@@ -64,7 +64,7 @@ class PptxGenerationService:
         self._add_agenda_slide(
             prs,
             agenda_items=plan.agenda_items,
-            agenda_notes=[section.focus for section in plan.sections[:4]],
+            agenda_notes=[],
             presenter_name=presenter_name,
             page_number=2,
             total_slides=total_slides,
@@ -143,11 +143,8 @@ class PptxGenerationService:
                 'prepared_by': 'Подготовил',
                 'agenda': 'Основные разделы',
                 'agenda_note_title': 'Краткий обзор',
-                'agenda_subtitle': 'Основные этапы и направления темы.',
                 'summary': 'Итоговые выводы',
-                'summary_subtitle': 'Ключевые факты и выводы по теме.',
                 'key_focus': 'Ключевые темы',
-                'focus_label': 'Фокус раздела',
                 'cover_points': ['Истоки', 'Развитие', 'Ключевые факты', 'Значение'],
             }
         if language_code == 'en':
@@ -156,11 +153,8 @@ class PptxGenerationService:
                 'prepared_by': 'Prepared by',
                 'agenda': 'Main sections',
                 'agenda_note_title': 'Quick overview',
-                'agenda_subtitle': 'The main sections and thematic directions.',
                 'summary': 'Final conclusions',
-                'summary_subtitle': 'The key facts and concluding takeaways.',
                 'key_focus': 'Key themes',
-                'focus_label': 'Section focus',
                 'cover_points': ['Origins', 'Development', 'Key facts', 'Significance'],
             }
         return {
@@ -168,11 +162,8 @@ class PptxGenerationService:
             'prepared_by': 'Tayyorlagan',
             'agenda': 'Asosiy bo‘limlar',
             'agenda_note_title': 'Qisqacha reja',
-            'agenda_subtitle': 'Asosiy davrlar va yo‘nalishlar.',
             'summary': 'Yakuniy xulosalar',
-            'summary_subtitle': 'Mavzu bo‘yicha yakuniy faktlar va xulosalar.',
             'key_focus': 'Asosiy yo‘nalishlar',
-            'focus_label': 'Bo‘lim markazi',
             'cover_points': ['Boshlanish', 'Rivojlanish', 'Muhim faktlar', 'Ahamiyati'],
         }
 
@@ -775,7 +766,9 @@ class PptxGenerationService:
             self._style_run(run, pack, size=font_size, color_key='text', default_color=(30, 41, 59))
             self._fit_frame(frame, max_size=font_size, min_size=10.8, font_family=self._font_family(pack))
 
-    def _render_focus_spotlight(self, slide, *, focus: str, items: list[str], pack: dict) -> None:
+    def _render_focus_spotlight(self, slide, *, items: list[str], pack: dict) -> None:
+        highlight = items[0] if items else ''
+        remaining_items = items[1:] if len(items) > 1 else items
         left = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(0.92), Inches(2.18), Inches(4.12), Inches(3.98))
         left.fill.solid()
         left.fill.fore_color.rgb = self._rgb(pack, 'surface_alt', (239, 246, 255))
@@ -790,7 +783,7 @@ class PptxGenerationService:
         header = frame.paragraphs[0]
         header.alignment = PP_ALIGN.LEFT
         run = header.add_run()
-        run.text = str(pack['focus_label'])
+        run.text = '01'
         self._style_run(run, pack, size=13.2, color_key='primary', default_color=(30, 64, 175), bold=True)
 
         focus_p = frame.add_paragraph()
@@ -798,7 +791,7 @@ class PptxGenerationService:
         focus_p.space_before = Pt(8)
         focus_p.space_after = Pt(10)
         focus_run = focus_p.add_run()
-        focus_run.text = self._normalize_text(focus)
+        focus_run.text = self._normalize_text(highlight)
         self._style_run(focus_run, pack, size=15, color_key='text', default_color=(30, 41, 59))
         self._fit_frame(frame, max_size=15, min_size=11.2, font_family=self._font_family(pack))
 
@@ -810,7 +803,7 @@ class PptxGenerationService:
         inner = slide.shapes.add_textbox(Inches(5.68), Inches(2.46), Inches(6.34), Inches(3.42))
         self._write_bullet_block(
             inner.text_frame,
-            items,
+            remaining_items,
             font_size=13.6,
             color=self._rgb(pack, 'text', (31, 41, 55)),
             space_after_pt=9,
@@ -1088,7 +1081,6 @@ class PptxGenerationService:
             page_number=page_number,
             total_slides=total_slides,
             pack=pack,
-            subtitle=str(pack['agenda_subtitle']),
         )
         visible_items = [self._normalize_text(item) for item in agenda_items[:8] if self._normalize_text(item)]
         agenda_style = self._layout_value(pack, 'agenda_style', 'list_note')
@@ -1205,7 +1197,6 @@ class PptxGenerationService:
             page_number=page_number,
             total_slides=total_slides,
             pack=pack,
-            subtitle=section.focus,
         )
 
         facts = [self._normalize_text(item) for item in section.facts[:10] if self._normalize_text(item)]
@@ -1218,10 +1209,10 @@ class PptxGenerationService:
             self._render_fact_cards(slide, items=facts[:4], pack=pack)
             return
         if variant == 'spotlight':
-            self._render_focus_spotlight(slide, focus=section.focus, items=facts[:4], pack=pack)
+            self._render_focus_spotlight(slide, items=facts[:4], pack=pack)
             return
 
-        content_top, content_bottom = self._content_bounds(bool(section.focus))
+        content_top, content_bottom = self._content_bounds(False)
         panel_left = 0.78
         panel_top = content_top
         panel_width = 11.78
@@ -1270,7 +1261,6 @@ class PptxGenerationService:
             page_number=page_number,
             total_slides=total_slides,
             pack=pack,
-            subtitle=section.focus,
         )
 
         items = [self._normalize_text(item) for item in section.facts[:5] if self._normalize_text(item)]
@@ -1363,11 +1353,10 @@ class PptxGenerationService:
             page_number=page_number,
             total_slides=total_slides,
             pack=pack,
-            subtitle=section.focus,
         )
         assert section.table is not None
 
-        content_top, content_bottom = self._content_bounds(bool(section.focus))
+        content_top, content_bottom = self._content_bounds(False)
         area_height = content_bottom - content_top
 
         rows = len(section.table.rows) + 1
@@ -1456,28 +1445,13 @@ class PptxGenerationService:
         note.fill.fore_color.rgb = self._rgb(pack, 'surface_alt', (239, 246, 255))
         note.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
 
-        note_header_box = slide.shapes.add_textbox(Inches(note_left + 0.10), Inches(content_top + 0.16), Inches(note_width - 0.20), Inches(0.30))
-        note_header_frame = note_header_box.text_frame
-        note_header_frame.clear()
-        note_header_frame.word_wrap = True
-        note_header_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
-        run = note_header_frame.paragraphs[0].add_run()
-        run.text = str(pack['focus_label'])
-        self._style_run(run, pack, size=12.4, color_key='primary', default_color=(30, 64, 175), bold=True)
-
-        note_body_box = slide.shapes.add_textbox(Inches(note_left + 0.12), Inches(content_top + 0.52), Inches(note_width - 0.24), Inches(area_height - 0.68))
+        note_body_box = slide.shapes.add_textbox(Inches(note_left + 0.12), Inches(content_top + 0.18), Inches(note_width - 0.24), Inches(area_height - 0.34))
         note_frame = note_body_box.text_frame
         note_frame.clear()
         note_frame.word_wrap = True
-        focus_p = note_frame.paragraphs[0]
-        focus_p.text = self._normalize_text(section.focus)
-        focus_p.space_after = Pt(7)
-        for run in focus_p.runs:
-            self._style_run(run, pack, size=10.8, color_key='muted', default_color=(51, 65, 85))
-
-        side_facts = section.facts[:1] if rows >= 5 else section.facts[:2]
-        for fact in side_facts:
-            p = note_frame.add_paragraph()
+        side_facts = section.facts[:2] if rows >= 5 else section.facts[:3]
+        for index, fact in enumerate(side_facts):
+            p = note_frame.paragraphs[0] if index == 0 else note_frame.add_paragraph()
             p.text = f'• {self._normalize_text(fact)}'
             p.space_after = Pt(4)
             for run in p.runs:
@@ -1492,7 +1466,6 @@ class PptxGenerationService:
             page_number=page_number,
             total_slides=total_slides,
             pack=pack,
-            subtitle=str(pack['summary_subtitle']),
         )
 
         items = [self._normalize_text(item) for item in summary_points[:5] if self._normalize_text(item)]
@@ -1556,4 +1529,3 @@ class PptxGenerationService:
             run.text = item
             self._style_run(run, pack, size=font_size, color_key='text', default_color=(30, 41, 59))
             self._fit_frame(frame, max_size=font_size, min_size=12.2, font_family=self._font_family(pack))
-
