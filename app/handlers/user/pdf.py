@@ -26,11 +26,10 @@ async def pdf_convert_handler(
     if action == 'no':
         await callback.answer('Bekor qilindi.')
         try:
-            # Delete messages
-            await bot.delete_message(chat_id=callback.message.chat.id, message_id=pptx_msg_id)
+            # Delete only the offer message
             await callback.message.delete()
             
-            # Cleanup file
+            # Cleanup file from server
             job = await generations_repo.get_by_id(generation_id)
             if job and job.get('result_file_path'):
                 path = Path(job['result_file_path'])
@@ -69,11 +68,11 @@ async def pdf_convert_handler(
         else:
             await callback.message.answer("PDFga o'girishda xatolik yuz berdi. Iltimos keyinroq urinib ko'ring.")
             
-        # Cleanup PPTX and messages anyway after 'yes' processing
+        # Cleanup PPTX from server and ONLY the offer message
         try:
             if Path(pptx_path).exists():
                 Path(pptx_path).unlink()
-            await bot.delete_message(chat_id=callback.message.chat.id, message_id=pptx_msg_id)
+            # Do not delete pptx_msg_id
             await callback.message.delete()
         except Exception as e:
             logger.warning(f"Error during 'Yes' callback final cleanup: {e}")

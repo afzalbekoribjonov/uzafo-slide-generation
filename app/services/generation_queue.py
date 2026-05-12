@@ -230,7 +230,7 @@ class GenerationQueueService:
         file_path: str,
         generation_id: Any
     ) -> None:
-        """Waits 15 seconds and deletes the messages and file if not already handled."""
+        """Waits 15 seconds and deletes the offer message and server file if not already handled."""
         await asyncio.sleep(15)
         
         try:
@@ -240,12 +240,12 @@ class GenerationQueueService:
                 logger.info(f"Cleanup skipped for generation {generation_id} as PDF is being processed.")
                 return
 
-            # Delete PPTX file from server
+            # Delete PPTX file from server (Always cleanup server file)
             self._cleanup_file(file_path)
             
-            # Delete messages from Telegram
-            await bot.delete_message(chat_id=chat_id, message_id=pptx_message_id)
+            # Delete ONLY the offer message from Telegram
             await bot.delete_message(chat_id=chat_id, message_id=offer_message_id)
+            # await bot.delete_message(chat_id=chat_id, message_id=pptx_message_id) # REMOVED: Do not delete PPTX message
             logger.info(f"Scheduled cleanup completed for generation {generation_id}")
         except Exception as e:
             logger.debug(f"Scheduled cleanup for {generation_id} could not be fully completed: {e}")
