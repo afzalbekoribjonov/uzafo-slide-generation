@@ -1,11 +1,19 @@
 FROM python:3.11-slim
 
-# Install system dependencies for LibreOffice
+# Install system dependencies for LibreOffice and high-quality fonts
 RUN apt-get update && apt-get install -y \
     libreoffice \
     fonts-liberation \
+    fonts-dejavu \
+    fonts-freefont-ttf \
+    fonts-noto \
+    fonts-noto-cjk \
+    fonts-noto-color-emoji \
+    fonts-font-awesome \
+    fontconfig \
     libcap2-bin \
     --no-install-recommends \
+    && fc-cache -fv \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
