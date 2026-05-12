@@ -813,7 +813,7 @@ GENERAL CONTENT BEST PRACTICES:
             if normalized and normalized not in seen:
                 seen.add(normalized)
                 candidates.append(normalized)
-        return candidates or ['gemini-2.5-flash']
+        return candidates or ['gemini-1.5-flash-002']
 
     def _normalize_payload_for_model(
         self,
@@ -1346,3 +1346,4 @@ GENERAL CONTENT BEST PRACTICES:
         base = self._fit_text(topic, 80) or str(pack['unknown_topic'])
         pool = [self._fit_text(template.format(topic=base), 170) for template in pack['summary_seed']]
         return pool[:needed]
+ed]
