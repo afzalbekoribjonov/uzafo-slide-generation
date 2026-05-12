@@ -21,17 +21,40 @@ class PdfConverterService:
         output_dir = path.parent
         pdf_path = path.with_suffix('.pdf')
 
+        # Try common libreoffice binary names
+        binaries = ['libreoffice', 'soffice']
+        command_base = None
+        
+        for bin_name in binaries:
+            try:
+                # Check if binary exists in PATH
+                check_process = await asyncio.create_subprocess_exec(
+                    bin_name, '--version',
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE
+                )
+                await check_process.communicate()
+                if check_process.returncode == 0:
+                    command_base = bin_name
+                    break
+            except FileNotFoundError:
+                continue
+
+        if not command_base:
+            logger.error("LibreOffice binary ('libreoffice' or 'soffice') not found in PATH.")
+            logger.error(f"Current PATH: {os.environ.get('PATH')}")
+            return None
+
         try:
-            # Using libreoffice headless command
             command = [
-                'libreoffice',
+                command_base,
                 '--headless',
                 '--convert-to', 'pdf',
                 '--outdir', str(output_dir),
                 str(path)
             ]
             
-            logger.info(f"Starting PDF conversion: {' '.join(command)}")
+            logger.info(f"Starting PDF conversion using {command_base}: {' '.join(command)}")
             
             # Run the command
             process = await asyncio.create_subprocess_exec(

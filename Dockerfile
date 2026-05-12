@@ -2,9 +2,7 @@ FROM python:3.11-slim
 
 # Install system dependencies for LibreOffice
 RUN apt-get update && apt-get install -y \
-    libreoffice-common \
-    libreoffice-impress \
-    libreoffice-writer \
+    libreoffice \
     fonts-liberation \
     libcap2-bin \
     --no-install-recommends \
