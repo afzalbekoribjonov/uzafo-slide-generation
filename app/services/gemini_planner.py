@@ -815,6 +815,7 @@ GENERAL CONTENT BEST PRACTICES:
                 candidates.append(normalized)
         return candidates or ['gemini-2.0-flash']
 
+
     def _normalize_payload_for_model(
         self,
         *,
