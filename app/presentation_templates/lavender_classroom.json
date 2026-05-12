@@ -1,0 +1,49 @@
+{
+  "id": "lavender_classroom",
+  "sort_order": 70,
+  "name": "Lavender Classroom",
+  "button_label": "📚 Lavender",
+  "description": "Ta'limiy va iliq uslub: lavender fon, sariq aksentlar, yirik o'qiladigan kartalar va bosqichma-bosqich tushuntirishlar. Dars, seminar va o'quv taqdimotlari uchun.",
+  "preview_path": "previews/lavender_classroom.png",
+  "theme": {
+    "font_family": "Verdana",
+    "background": "#fbf7ff",
+    "cover_background": "#f3e8ff",
+    "primary": "#7c3aed",
+    "secondary": "#f59e0b",
+    "accent": "#ddd6fe",
+    "text": "#2e1065",
+    "muted": "#6b4e8f",
+    "footer": "#8b5cf6",
+    "surface": "#ffffff",
+    "surface_alt": "#fef3c7",
+    "border": "#c4b5fd",
+    "on_primary": "#ffffff",
+    "table_header_bg": "#7c3aed",
+    "table_header_text": "#ffffff",
+    "table_row_even": "#f5f3ff",
+    "table_row_odd": "#ffffff",
+    "process_colors": ["#ddd6fe", "#fef3c7", "#bfdbfe", "#bbf7d0", "#fecdd3"]
+  },
+  "layout": {
+    "header_style": "top_band",
+    "cover_style": "center_focus",
+    "agenda_style": "tiles",
+    "facts_style": "cards",
+    "process_style": "cards",
+    "summary_style": "cards",
+    "accent_style": "academic_grid"
+  },
+  "prompt_guidance": [
+    "Explain concepts in a friendly educational sequence with definitions, examples, and practical classroom use.",
+    "Use short learning-oriented section titles that are clear for students.",
+    "Prefer process sections for methods, learning paths, and step-by-step explanations.",
+    "Use tables for method comparisons, age groups, outcomes, or assessment types when natural.",
+    "Avoid overly technical wording unless the topic requires it."
+  ],
+  "accessibility": {
+    "min_contrast_ratio": 7.0,
+    "font_size_min": 15,
+    "recommended_for": ["education", "training", "workshops", "seminars"]
+  }
+}

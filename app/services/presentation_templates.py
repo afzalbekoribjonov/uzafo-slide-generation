@@ -40,7 +40,13 @@ class PresentationTemplateRegistry:
         return self._fallback_template()
 
     def list_templates(self) -> list[dict[str, Any]]:
-        return list(self._templates.values())
+        return sorted(
+            self._templates.values(),
+            key=lambda item: (
+                int(item.get('sort_order', 10_000) or 10_000),
+                str(item.get('name') or item.get('id') or ''),
+            ),
+        )
 
     @property
     def preview_collage_path(self) -> Path:

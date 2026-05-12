@@ -1,5 +1,6 @@
 {
   "id": "emerald_grid",
+  "sort_order": 30,
   "name": "Emerald Grid",
   "button_label": "📊 Emerald",
   "description": "Tahliliy grid uslubi: professional yashil aksentlar, chap navigatsiya paneli, ikki ustunli strukturali reja va data-driven ko'rinishlar. Tahlil, hisobot va ma'lumot taqdimotlari uchun.",

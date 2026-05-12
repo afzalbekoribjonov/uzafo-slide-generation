@@ -1,0 +1,49 @@
+{
+  "id": "graphite_lime",
+  "sort_order": 80,
+  "name": "Graphite Lime",
+  "button_label": "⚡ Graphite",
+  "description": "Operatsion dashboard uslubi: qoramtir grafit fon, lime aksentlar, yuqori kontrastli kartalar va texnik timeline. IT, engineering, monitoring va mahsulot metrikalari uchun.",
+  "preview_path": "previews/graphite_lime.png",
+  "theme": {
+    "font_family": "Segoe UI",
+    "background": "#111827",
+    "cover_background": "#0f172a",
+    "primary": "#84cc16",
+    "secondary": "#38bdf8",
+    "accent": "#365314",
+    "text": "#f8fafc",
+    "muted": "#cbd5e1",
+    "footer": "#94a3b8",
+    "surface": "#1f2937",
+    "surface_alt": "#263244",
+    "border": "#4b5563",
+    "on_primary": "#111827",
+    "table_header_bg": "#84cc16",
+    "table_header_text": "#111827",
+    "table_row_even": "#1f2937",
+    "table_row_odd": "#263244",
+    "process_colors": ["#365314", "#164e63", "#3f3f46", "#1e40af", "#854d0e"]
+  },
+  "layout": {
+    "header_style": "dark_bar",
+    "cover_style": "dashboard",
+    "agenda_style": "grid",
+    "facts_style": "bullets",
+    "process_style": "timeline",
+    "summary_style": "grid",
+    "accent_style": "neon_lines"
+  },
+  "prompt_guidance": [
+    "Write concise operational insights with clear metrics, statuses, bottlenecks, and outcomes.",
+    "Prefer structured comparisons, dashboards, timelines, and measurable progress indicators.",
+    "Use direct technical language without marketing filler.",
+    "Use 1-2 table sections when the topic includes systems, metrics, stages, or operational categories.",
+    "Keep every fact short enough for high-contrast dashboard panels."
+  ],
+  "accessibility": {
+    "min_contrast_ratio": 11.0,
+    "font_size_min": 16,
+    "recommended_for": ["technology", "engineering", "operations", "metrics"]
+  }
+}

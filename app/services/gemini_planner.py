@@ -28,9 +28,9 @@ class GeminiPlannerError(RuntimeError):
 class ResearchSection(BaseModel):
     model_config = ConfigDict(extra='ignore', str_strip_whitespace=True)
 
-    title: str = Field(min_length=3, max_length=90)
-    focus: str = Field(min_length=12, max_length=180)
-    facts: list[str] = Field(min_length=4, max_length=7)
+    title: str = Field(min_length=3, max_length=100)
+    focus: str = Field(min_length=12, max_length=300)
+    facts: list[str] = Field(min_length=4, max_length=10)
 
     @field_validator('facts')
     @classmethod
@@ -38,17 +38,17 @@ class ResearchSection(BaseModel):
         cleaned = [item.strip() for item in value if item and item.strip()]
         if len(cleaned) < 4:
             raise ValueError('Har bir section uchun kamida 4 ta fakt kerak.')
-        return cleaned[:7]
+        return cleaned[:10]
 
 
 class ResearchDossier(BaseModel):
     model_config = ConfigDict(extra='ignore', str_strip_whitespace=True)
 
     topic_title: str = Field(min_length=3, max_length=120)
-    scope_summary: str = Field(min_length=30, max_length=420)
-    key_terms: list[str] = Field(min_length=4, max_length=10)
+    scope_summary: str = Field(min_length=30, max_length=500)
+    key_terms: list[str] = Field(min_length=4, max_length=12)
     section_notes: list[ResearchSection] = Field(min_length=3, max_length=12)
-    final_takeaways: list[str] = Field(min_length=3, max_length=5)
+    final_takeaways: list[str] = Field(min_length=3, max_length=6)
 
     @field_validator('key_terms', 'final_takeaways')
     @classmethod
@@ -60,9 +60,9 @@ class ResearchDossier(BaseModel):
 
     @model_validator(mode='after')
     def trim_lists(self) -> 'ResearchDossier':
-        self.key_terms = self.key_terms[:10]
+        self.key_terms = self.key_terms[:12]
         self.section_notes = self.section_notes[:12]
-        self.final_takeaways = self.final_takeaways[:5]
+        self.final_takeaways = self.final_takeaways[:6]
         return self
 
 
@@ -583,7 +583,7 @@ class GeminiPresentationPlanner:
 Output: pure JSON only. No markdown, no preamble.
 
 ROLE: {self._domain_role(topic)}
-You are preparing research notes for a high-quality visual presentation.
+You are preparing high-density research for a professional presentation.
 
 TOPIC: {topic}
 TARGET: Create exactly {section_count} comprehensive section_notes.
@@ -591,47 +591,38 @@ VISUAL CONTEXT: {template_note}
 
 CORE REQUIREMENTS:
 
-1. FACTUAL DEPTH
-- Each section MUST contain 4-7 concrete, specific facts.
-- Include real names, dates, places, numbers, statistics, examples, causes, outcomes, or characteristics when relevant.
-- Avoid vague statements like "this is important", "widely known", or "this section explains".
-- Each fact should stand alone as a complete, meaningful sentence.
+1. INFORMATION DENSITY (CRITICAL)
+- Each section MUST contain 4-10 highly specific, detailed facts.
+- Facts must be substantial and descriptive. Avoid short, generic bullets.
+- Include real data: names, dates, specific statistics (%, $, units), historical events, technical mechanisms, or comparative metrics.
+- Every fact should provide deep insight into the topic, not just a high-level summary.
 
 2. CONTENT STRUCTURE
 - topic_title: clear, engaging title; max 120 characters.
-- scope_summary: one precise sentence summarizing the topic essence; 30-170 characters.
-- key_terms: 4-10 specific domain terms or concepts.
+- scope_summary: 1-2 precise sentences summarizing the topic's global significance; 50-450 characters.
+- key_terms: 5-12 specific domain terms or technical concepts.
 - section_notes[]: exactly {section_count} sections.
-- section_notes[].title: specific heading; 3-90 characters.
-- section_notes[].focus: what this section reveals; 12-180 characters.
-- section_notes[].facts[]: 4-7 concrete statements.
-- final_takeaways: 3-5 factual conclusions or insights.
+- section_notes[].title: specific, unique heading; 3-100 characters.
+- section_notes[].focus: 1-2 sentences explaining what this section proves or reveals; 30-280 characters.
+- section_notes[].facts[]: 4-10 detailed, fact-rich statements.
+- final_takeaways: 3-6 factual conclusions or strategic insights.
 
 3. WRITING STYLE
 - Write ONLY in {language_name}.
-- Use active voice and precise language.
-- Facts must be slide-ready: concise but complete, one sentence each.
-- Do not write paragraphs, nested lists, markdown, or presentation meta-language.
-- Include examples, comparisons, metrics, dates, or named entities where natural.
+- Use professional, analytical language.
+- Facts must be information-heavy. Instead of "The economy improved", use "GDP grew by 4.2% in 2023, primarily driven by a 15% increase in industrial exports to neighboring regions."
+- Do not use meta-language like "This section covers..." or "We will look at...".
 
-4. TABLE-READY CONTENT
-- If the topic involves comparisons, periods, categories, or metrics, make some facts table-friendly.
-- Table-friendly fact format: "Period: 14th century; Location: Samarkand; Development: trade expansion".
-- Keep these facts compact and consistent so a later step can build tables from them.
-
-5. QUALITY BAR
-- GOOD: "1404-yilda Samarqandda Bibixonim masjidi qurilishi yakuniga yetdi."
-- BAD: "Mavzu juda muhim va keng qamrovli hisoblanadi."
-- GOOD: "GDP grew 3.2% in Q4 2023, driven by technology sector expansion."
-- BAD: "The economy improved during this period."
+4. VARIETY
+- Ensure each section looks at a different dimension of the topic (e.g., Origins, Mechanism, Global Impact, Future Trends, Case Study).
+- If the topic allows, include data points that can be compared in a table.
 
 DOMAIN-SPECIFIC GUIDANCE:
 {domain_rules}
 
 REMEMBER:
-- Output ONLY valid JSON matching the requested fields.
-- Focus on topic content, not the presentation process.
-- Every fact must add real knowledge, not filler.
+- Output ONLY valid JSON.
+- Content must be original and deeply informative.
 """
 
 
@@ -647,80 +638,43 @@ REMEMBER:
         language_name = self._language_name(language_code)
         dossier_json = json.dumps(dossier.model_dump(mode='json'), ensure_ascii=False, indent=2)
         template_note = self._template_prompt_note(template)
-        example_bad_focus = {
-            'uz': 'Bu bo‘lim mavzuning muhim jihatlarini yoritadi.',
-            'ru': 'Этот раздел раскрывает важные аспекты темы.',
-            'en': 'This section explains important aspects of the topic.',
-        }[language_code if language_code in {'uz', 'ru', 'en'} else 'uz']
-        example_good_focus = {
-            'uz': 'Temuriylar davrida Samarqand ilm, savdo va me’morchilik markaziga aylandi.',
-            'ru': 'В эпоху Тимуридов Самарканд стал центром науки, торговли и архитектуры.',
-            'en': 'Under the Timurids, Samarkand became a center of scholarship, trade, and architecture.',
-        }[language_code if language_code in {'uz', 'ru', 'en'} else 'uz']
-        example_bad_fact = {
-            'uz': 'Mavzu juda muhim va keng qamrovli hisoblanadi.',
-            'ru': 'Тема является очень важной и широкой.',
-            'en': 'The topic is very important and broad.',
-        }[language_code if language_code in {'uz', 'ru', 'en'} else 'uz']
-        example_good_fact = {
-            'uz': '1404-yilda Samarqandda Bibixonim masjidi qurilishi yakuniga yetdi.',
-            'ru': 'В 1404 году в Самарканде было завершено строительство мечети Биби-Ханым.',
-            'en': 'In 1404, construction of the Bibi-Khanym Mosque in Samarkand reached completion.',
-        }[language_code if language_code in {'uz', 'ru', 'en'} else 'uz']
-        return f"""TASK: Transform research into a visual presentation plan
+        return f"""TASK: Visual Presentation Design in {language_name}
 Output: pure JSON only. No markdown, no preamble.
-Language: {language_name}
 
-CONTEXT:
-Topic: {topic}
-Sections needed: {section_count}
-Visual template: {template_note}
+TOPIC: {topic}
+SECTIONS: {section_count}
+TEMPLATE: {template_note}
 
 OBJECTIVE:
-Convert the research dossier into a factual, visual-ready plan. This plan directly drives slide creation, so every field must be polished, specific, and concise.
+Transform the high-density research dossier into a structured presentation plan. This is the FINAL step before slide generation.
 
-CRITICAL RULES:
+RULES:
 
-1. CONTENT FIDELITY
-- Use ONLY information supported by the research dossier.
-- sections array MUST have exactly {section_count} items.
-- Never mention slides, deck, audience, presenter, "this presentation", "overview", or thank-you language.
-- Never invent unsupported facts.
+1. INFORMATION PRESERVATION
+- DO NOT summarize the dossier into generic bullets. Maintain the depth, data, and specific details.
+- Each slide should be rich with information. If a section has 8 detailed facts in the dossier, use all of them in the plan.
+- presentation_title: 3-120 chars.
+- title_subtitle: 50-250 chars (detailed sub-title).
+- sections[].title: specific, info-rich; 3-100 chars.
+- sections[].focus: 30-300 chars (comprehensive focus statement).
+- sections[].facts[]: 3-10 info-rich statements. Each fact should be a substantial sentence (12-30 words).
 
-2. CONTENT TYPE SELECTION
-- content_type="facts": use for explanations, characteristics, examples, and insights. Use 4-6 short facts.
-- content_type="process": use ONLY for chronology, evolution, phases, steps, workflows, or clear logical order. Use 4-5 sequential steps.
-- content_type="table": use ONLY when the dossier contains comparisons, categories, dated records, entities with properties, or metrics. Use 0-2 table sections max.
-- For table sections, put compact row-like strings in facts[], for example: "Period: 14th century; Center: Samarkand; Feature: trade growth".
-- Do NOT output nested table JSON objects; the system will infer table visuals from facts[].
-- Prefer a varied mix when supported: facts, process, facts, table, facts is better than all facts.
+2. VISUAL VARIETY (CRITICAL)
+- mix content types based on the research content:
+  - "facts": default for descriptive content. Use for 5-9 facts.
+  - "process": use for timelines, evolution, or sequential steps. 3-8 steps.
+  - "table": use when comparing metrics, periods, or categories.
+- For "table" sections, the system creates a visual table. Use facts[] to provide the data in "Key: Value" or "Category; Metric; Description" format.
+- Avoid making all slides look the same. Use "table" for at least 25% of the slides if the data supports it.
 
-3. FIELD QUALITY
-- presentation_title: use the topic or dossier topic_title; engaging but professional; max 120 characters.
-- title_subtitle: one sentence from dossier scope_summary; max 180 characters.
-- agenda_items: 4-8 short topic sections, periods, or themes; never generic labels like Introduction, Overview, Conclusion.
-- sections[].title: specific, descriptive heading; max 90 characters.
-- sections[].focus: concrete statement of what the section reveals; max 180 characters.
-- sections[].facts[]: complete and specific statements; each max 170 characters.
-- summary_points: 3-5 factual conclusions; no gratitude, no meta-commentary.
+3. NO FILLER / NO META
+- No "Introduction", "Overview", or "Thank you" slides.
+- No generic focus statements like "This slide explains...".
+- Each word must contribute to the audience's understanding of {topic}.
 
-4. VISUAL OPTIMIZATION
-- Keep facts short enough for cards, tables, and two-column layouts.
-- Use numbers, dates, places, named examples, and measurable comparisons when supported.
-- Avoid paragraph-style facts, markdown, nested lists, repeated wording, and generic openings.
-- At least 4 words per fact; every fact should carry one clear idea.
-
-5. QUALITY CHECKS
-- Every focus and fact must be specific to THIS topic.
-- No repeated exact phrases across sections.
-- No generic starts: "Bu bo'lim", "This section", "Этот раздел".
-- Do not create a table unless the facts are genuinely structured.
-
-BAD VS GOOD EXAMPLES:
-- Bad focus: {example_bad_focus}
-- Good focus: {example_good_focus}
-- Bad fact: {example_bad_fact}
-- Good fact: {example_good_fact}
+4. QUALITY STANDARDS
+- Facts must be ready for display: high contrast in information, professional tone, and grammatically perfect in {language_name}.
+- Avoid repeating phrases across slides.
 
 RESEARCH DOSSIER:
 {dossier_json}
@@ -741,6 +695,7 @@ OUTPUT STRUCTURE:
   "summary_points": ["...", "..."]
 }}
 """
+
 
     @staticmethod
     def _domain_role(topic: str) -> str:
@@ -880,12 +835,12 @@ GENERAL CONTENT BEST PRACTICES:
         topic_title = self._fit_text(data.get('topic_title') or data.get('presentation_title') or fallback_topic, 120)
         scope_summary = self._fit_text(
             data.get('scope_summary') or data.get('title_subtitle') or str(pack['scope_template']).format(topic=topic_title),
-            420,
+            500,
         )
         if len(scope_summary) < 30:
-            scope_summary = self._fit_text(str(pack['scope_template']).format(topic=topic_title), 420)
+            scope_summary = self._fit_text(str(pack['scope_template']).format(topic=topic_title), 500)
 
-        key_terms = self._normalize_string_list(data.get('key_terms'), max_items=10, item_max_length=60)
+        key_terms = self._normalize_string_list(data.get('key_terms'), max_items=12, item_max_length=60)
         if len(key_terms) < 4:
             key_terms.extend(
                 self._fallback_key_terms(
@@ -901,22 +856,22 @@ GENERAL CONTENT BEST PRACTICES:
         for index, raw_section in enumerate(raw_sections[:12], start=1):
             if not isinstance(raw_section, dict):
                 continue
-            title = self._fit_text(raw_section.get('title') or f"{pack['section_label']} {index}", 90)
+            title = self._fit_text(raw_section.get('title') or f"{pack['section_label']} {index}", 100)
             focus = self._fit_text(
                 raw_section.get('focus') or str(pack['focus_template']).format(title=title, topic=topic_title),
-                180,
+                300,
             )
             if len(focus) < 12:
-                focus = self._fit_text(str(pack['focus_section_template']).format(title=title, topic=topic_title), 180)
+                focus = self._fit_text(str(pack['focus_section_template']).format(title=title, topic=topic_title), 300)
 
-            facts = self._normalize_string_list(raw_section.get('facts'), max_items=7, item_max_length=170)
+            facts = self._normalize_string_list(raw_section.get('facts'), max_items=10, item_max_length=200)
             facts = self._ensure_fact_count(facts, min_items=4, fallback_seed=f'{title}. {focus}', language_code=language_code)
-            section_notes.append({'title': title, 'focus': focus, 'facts': facts[:7]})
+            section_notes.append({'title': title, 'focus': focus, 'facts': facts[:10]})
 
         while len(section_notes) < 3:
             index = len(section_notes) + 1
-            title = self._fit_text(f"{topic_title}: {pack['section_label']} {index}", 90)
-            focus = self._fit_text(str(pack['focus_section_template']).format(title=title, topic=topic_title), 180)
+            title = self._fit_text(f"{topic_title}: {pack['section_label']} {index}", 100)
+            focus = self._fit_text(str(pack['focus_section_template']).format(title=title, topic=topic_title), 300)
             section_notes.append(
                 {
                     'title': title,
@@ -925,7 +880,7 @@ GENERAL CONTENT BEST PRACTICES:
                 }
             )
 
-        final_takeaways = self._normalize_string_list(data.get('final_takeaways'), max_items=5, item_max_length=170)
+        final_takeaways = self._normalize_string_list(data.get('final_takeaways'), max_items=6, item_max_length=200)
         if len(final_takeaways) < 3:
             final_takeaways.extend(
                 self._fallback_summary_points(
@@ -938,9 +893,9 @@ GENERAL CONTENT BEST PRACTICES:
         return {
             'topic_title': topic_title,
             'scope_summary': scope_summary,
-            'key_terms': key_terms[:10],
+            'key_terms': key_terms[:12],
             'section_notes': section_notes[:12],
-            'final_takeaways': final_takeaways[:5],
+            'final_takeaways': final_takeaways[:6],
         }
 
     def _normalize_plan_payload(self, data: dict[str, Any], *, language_code: str, topic: str) -> dict[str, Any]:
@@ -949,10 +904,10 @@ GENERAL CONTENT BEST PRACTICES:
         presentation_title = self._fit_text(data.get('presentation_title') or data.get('topic_title') or fallback_title, 120)
         title_subtitle = self._fit_text(
             data.get('title_subtitle') or data.get('scope_summary') or str(pack['scope_template']).format(topic=presentation_title),
-            180,
+            250,
         )
         if len(title_subtitle) < 10:
-            title_subtitle = self._fit_text(str(pack['scope_template']).format(topic=presentation_title), 180)
+            title_subtitle = self._fit_text(str(pack['scope_template']).format(topic=presentation_title), 250)
 
         agenda_items = self._normalize_string_list(data.get('agenda_items'), max_items=8, item_max_length=70)
 
@@ -966,15 +921,15 @@ GENERAL CONTENT BEST PRACTICES:
             content_type = str(raw_section.get('content_type') or 'facts').strip().lower()
             if content_type not in {'facts', 'process', 'table'}:
                 content_type = 'facts'
-            if content_type == 'table' and tables_seen >= 2:
+            if content_type == 'table' and tables_seen >= 3:
                 content_type = 'facts'
 
-            title = self._fit_text(raw_section.get('title') or f"{pack['section_label']} {index}", 90)
+            title = self._fit_text(raw_section.get('title') or f"{pack['section_label']} {index}", 100)
             focus = self._fit_text(
                 raw_section.get('focus') or str(pack['focus_template']).format(title=title, topic=presentation_title),
-                180,
+                300,
             )
-            facts = self._normalize_string_list(raw_section.get('facts'), max_items=6, item_max_length=160)
+            facts = self._normalize_string_list(raw_section.get('facts'), max_items=10, item_max_length=200)
 
             section_payload: dict[str, Any] = {
                 'content_type': content_type,
@@ -984,7 +939,7 @@ GENERAL CONTENT BEST PRACTICES:
             }
 
             if content_type == 'process':
-                section_payload['facts'] = self._ensure_fact_count(facts[:5], min_items=4, fallback_seed=f'{title}. {focus}', language_code=language_code)
+                section_payload['facts'] = self._ensure_fact_count(facts[:8], min_items=3, fallback_seed=f'{title}. {focus}', language_code=language_code)
             elif content_type == 'table':
                 normalized_table = self._normalize_table_candidate(
                     title=title,
@@ -995,13 +950,13 @@ GENERAL CONTENT BEST PRACTICES:
                 )
                 if normalized_table is None:
                     section_payload['content_type'] = 'facts'
-                    section_payload['facts'] = self._ensure_fact_count(facts, min_items=4, fallback_seed=f'{title}. {focus}', language_code=language_code)
+                    section_payload['facts'] = self._ensure_fact_count(facts, min_items=3, fallback_seed=f'{title}. {focus}', language_code=language_code)
                 else:
                     tables_seen += 1
-                    section_payload['facts'] = self._ensure_fact_count(facts[:2], min_items=2, fallback_seed=f'{title}. {focus}', language_code=language_code)
+                    section_payload['facts'] = self._ensure_fact_count(facts[:3], min_items=2, fallback_seed=f'{title}. {focus}', language_code=language_code)
                     section_payload['table'] = normalized_table.model_dump(mode='json')
             else:
-                section_payload['facts'] = self._ensure_fact_count(facts, min_items=4, fallback_seed=f'{title}. {focus}', language_code=language_code)
+                section_payload['facts'] = self._ensure_fact_count(facts, min_items=3, fallback_seed=f'{title}. {focus}', language_code=language_code)
 
             sections.append(section_payload)
 
@@ -1024,7 +979,7 @@ GENERAL CONTENT BEST PRACTICES:
                     **section,
                     'content_type': 'table',
                     'facts': self._ensure_fact_count(
-                        list(section.get('facts') or [])[:2],
+                        list(section.get('facts') or [])[:3],
                         min_items=2,
                         fallback_seed=f"{section.get('title', '')}. {section.get('focus', '')}",
                         language_code=language_code,
@@ -1046,7 +1001,7 @@ GENERAL CONTENT BEST PRACTICES:
                 )
             )
 
-        summary_points = self._normalize_string_list(data.get('summary_points'), max_items=5, item_max_length=170)
+        summary_points = self._normalize_string_list(data.get('summary_points'), max_items=6, item_max_length=200)
         if len(summary_points) < 3:
             summary_points.extend(
                 self._fallback_summary_points(
@@ -1061,7 +1016,7 @@ GENERAL CONTENT BEST PRACTICES:
             'title_subtitle': title_subtitle,
             'agenda_items': agenda_items[:8],
             'sections': sections[:12],
-            'summary_points': summary_points[:5],
+            'summary_points': summary_points[:6],
         }
 
     def _fit_text(self, value: Any, max_length: int) -> str:

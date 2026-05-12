@@ -1,0 +1,49 @@
+{
+  "id": "royal_boardroom",
+  "sort_order": 50,
+  "name": "Royal Boardroom",
+  "button_label": "💼 Royal",
+  "description": "Premium biznes uslubi: oq fon, chuqur indigo, oltin aksentlar va tartibli executive kartalar. Strategiya, investor pitch, boshqaruv va korporativ hisobotlar uchun.",
+  "preview_path": "previews/royal_boardroom.png",
+  "theme": {
+    "font_family": "Arial",
+    "background": "#f9fafb",
+    "cover_background": "#eef2ff",
+    "primary": "#312e81",
+    "secondary": "#b45309",
+    "accent": "#fde68a",
+    "text": "#111827",
+    "muted": "#4b5563",
+    "footer": "#6b7280",
+    "surface": "#ffffff",
+    "surface_alt": "#f5f3ff",
+    "border": "#c7d2fe",
+    "on_primary": "#ffffff",
+    "table_header_bg": "#312e81",
+    "table_header_text": "#ffffff",
+    "table_row_even": "#f5f3ff",
+    "table_row_odd": "#ffffff",
+    "process_colors": ["#e0e7ff", "#fde68a", "#dbeafe", "#dcfce7", "#fee2e2"]
+  },
+  "layout": {
+    "header_style": "top_band",
+    "cover_style": "dashboard",
+    "agenda_style": "grid",
+    "facts_style": "cards",
+    "process_style": "cards",
+    "summary_style": "grid",
+    "accent_style": "academic_grid"
+  },
+  "prompt_guidance": [
+    "Use executive-level wording with clear decisions, risks, outcomes, and measurable business impact.",
+    "Prefer concise section titles suitable for boardroom review.",
+    "Use tables for comparisons, market segments, financial metrics, or strategic options.",
+    "Avoid casual phrasing and keep every fact credible, specific, and decision-ready.",
+    "Highlight numbers, dates, stakeholders, and strategic tradeoffs when supported."
+  ],
+  "accessibility": {
+    "min_contrast_ratio": 8.0,
+    "font_size_min": 14,
+    "recommended_for": ["business", "strategy", "finance", "corporate"]
+  }
+}

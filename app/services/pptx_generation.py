@@ -646,27 +646,30 @@ class PptxGenerationService:
         color: RGBColor,
         space_after_pt: float,
         align=PP_ALIGN.LEFT,
-        min_size: int = 10,
+        min_size: int = 9,
         font_family: str = 'Aptos',
     ) -> None:
         frame.clear()
         frame.word_wrap = True
         frame.vertical_anchor = MSO_VERTICAL_ANCHOR.TOP
-        frame.margin_left = Inches(0.02)
-        frame.margin_right = Inches(0.02)
-        frame.margin_top = Inches(0.01)
-        frame.margin_bottom = Inches(0.01)
+        frame.margin_left = Inches(0.05)
+        frame.margin_right = Inches(0.05)
+        frame.margin_top = Inches(0.05)
+        frame.margin_bottom = Inches(0.05)
+        
         for idx, item in enumerate(items):
             p = frame.paragraphs[0] if idx == 0 else frame.add_paragraph()
             p.alignment = align
             p.text = f'• {self._normalize_text(item)}'
             p.level = 0
             p.space_after = Pt(space_after_pt)
+            p.line_spacing = 1.1  # Better readability for long text
             for run in p.runs:
                 run.font.size = Pt(font_size)
                 run.font.name = font_family
                 run.font.color.rgb = color
-        self._fit_frame(frame, max_size=int(round(font_size)), min_size=min_size, font_family=font_family)
+        
+        self._fit_frame(frame, max_size=font_size, min_size=min_size, font_family=font_family)
 
     def _set_cell_text(
         self,
@@ -830,13 +833,38 @@ class PptxGenerationService:
                 (0.92, 4.18, 5.15, 1.78),
                 (7.26, 4.18, 5.15, 1.78),
             ]
-        return [
-            (0.58, 2.02, 4.02, 1.62),
-            (4.66, 2.02, 4.02, 1.62),
-            (8.74, 2.02, 4.02, 1.62),
-            (2.62, 4.12, 4.02, 1.62),
-            (6.70, 4.12, 4.02, 1.62),
-        ]
+        if item_count == 5:
+            return [
+                (0.58, 2.02, 4.02, 1.62),
+                (4.66, 2.02, 4.02, 1.62),
+                (8.74, 2.02, 4.02, 1.62),
+                (2.62, 4.12, 4.02, 1.62),
+                (6.70, 4.12, 4.02, 1.62),
+            ]
+        if item_count == 6:
+            return [
+                (0.78, 2.12, 3.75, 1.68),
+                (4.78, 2.12, 3.75, 1.68),
+                (8.78, 2.12, 3.75, 1.68),
+                (0.78, 4.12, 3.75, 1.68),
+                (4.78, 4.12, 3.75, 1.68),
+                (8.78, 4.12, 3.75, 1.68),
+            ]
+        # For 7-8 items
+        width = 3.00
+        height = 1.60
+        gap_x = 0.15
+        gap_y = 0.20
+        coords = []
+        rows = 2
+        cols = (item_count + 1) // 2
+        start_x = (13.333 - (cols * width + (cols - 1) * gap_x)) / 2
+        start_y = 2.15
+        for i in range(item_count):
+            r = i // cols
+            c = i % cols
+            coords.append((start_x + c * (width + gap_x), start_y + r * (height + gap_y), width, height))
+        return coords
 
     @staticmethod
     def _agenda_layout(item_count: int) -> dict[str, Any]:
@@ -1180,7 +1208,7 @@ class PptxGenerationService:
             subtitle=section.focus,
         )
 
-        facts = [self._normalize_text(item) for item in section.facts[:6] if self._normalize_text(item)]
+        facts = [self._normalize_text(item) for item in section.facts[:10] if self._normalize_text(item)]
         if not facts:
             return
 
@@ -1528,3 +1556,4 @@ class PptxGenerationService:
             run.text = item
             self._style_run(run, pack, size=font_size, color_key='text', default_color=(30, 41, 59))
             self._fit_frame(frame, max_size=font_size, min_size=12.2, font_family=self._font_family(pack))
+

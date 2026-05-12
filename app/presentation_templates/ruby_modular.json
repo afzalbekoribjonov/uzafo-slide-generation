@@ -1,0 +1,49 @@
+{
+  "id": "ruby_modular",
+  "sort_order": 60,
+  "name": "Ruby Modular",
+  "button_label": "♦️ Ruby",
+  "description": "Dinamik modular uslub: ruby va indigo aksentlar, kuchli sarlavhalar va spotlight bloklar. Marketing, loyiha va kreativ brief uchun.",
+  "preview_path": "previews/ruby_modular.png",
+  "theme": {
+    "font_family": "Trebuchet MS",
+    "background": "#fff1f2",
+    "cover_background": "#ffe4e6",
+    "primary": "#be123c",
+    "secondary": "#4f46e5",
+    "accent": "#fecdd3",
+    "text": "#2a0f18",
+    "muted": "#70404d",
+    "footer": "#9f1239",
+    "surface": "#ffffff",
+    "surface_alt": "#ffe4e6",
+    "border": "#fda4af",
+    "on_primary": "#ffffff",
+    "table_header_bg": "#be123c",
+    "table_header_text": "#ffffff",
+    "table_row_even": "#fff1f2",
+    "table_row_odd": "#ffffff",
+    "process_colors": ["#fecdd3", "#c7d2fe", "#fde68a", "#bbf7d0", "#e9d5ff"]
+  },
+  "layout": {
+    "header_style": "corner_band",
+    "cover_style": "magazine",
+    "agenda_style": "tiles",
+    "facts_style": "spotlight",
+    "process_style": "cards",
+    "summary_style": "cards",
+    "accent_style": "editorial_corner"
+  },
+  "prompt_guidance": [
+    "Create energetic but factual section titles that work well in modular marketing-style blocks.",
+    "Use insight-driven facts with examples, audience segments, campaign mechanics, or project milestones.",
+    "Prefer spotlight-style explanations over dense paragraphs.",
+    "Use tables only when they clarify segments, channels, priorities, or before-after comparisons.",
+    "Keep wording vivid, compact, and grounded in concrete details."
+  ],
+  "accessibility": {
+    "min_contrast_ratio": 7.0,
+    "font_size_min": 14,
+    "recommended_for": ["marketing", "creative", "projects", "campaigns"]
+  }
+}

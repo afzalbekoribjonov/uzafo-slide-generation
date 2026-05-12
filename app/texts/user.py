@@ -100,7 +100,7 @@ def help_text() -> str:
         "🎞 <b>Bot nima qiladi?</b>\n"
         "• Mavzu bo‘yicha PowerPoint taqdimot yaratadi\n"
         "• 6 dan 12 tagacha slayd tanlash mumkin\n"
-        "• 4 xil dizayn ko‘rinishi bor\n"
+        "• 8 xil dizayn ko‘rinishi bor\n"
         "• Rang, shrift, jadval va matn joylashuvi avtomatik moslanadi\n\n"
         "🚀 <b>Qanday ishlataman?</b>\n"
         "1. <b>Slayd yaratish</b> tugmasini bosing\n"
@@ -218,7 +218,7 @@ def create_template_prompt_text() -> str:
 def create_template_preview_caption() -> str:
     return (
         "<b>🎨 Dizayn tanlash</b>\n\n"
-        "Rasmda 4 xil demo ko‘rinish bor. Kerakli uslubni pastdagi tugmalardan tanlang."
+        "Rasmda 8 xil demo ko‘rinish bor. Kerakli uslubni pastdagi tugmalardan tanlang."
     )
 
 

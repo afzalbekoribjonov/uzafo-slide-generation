@@ -109,7 +109,11 @@ def create_template_keyboard(templates: list[dict]) -> InlineKeyboardMarkup:
             callback_data=CreateFlowCallback(action='template', value=str(template['id'])),
         )
     builder.button(text='❌ Bekor qilish', callback_data=CreateFlowCallback(action='cancel', value='cancel'))
-    builder.adjust(2, 2, 1)
+    row_sizes = [2] * (len(templates) // 2)
+    if len(templates) % 2:
+        row_sizes.append(1)
+    row_sizes.append(1)
+    builder.adjust(*row_sizes)
     return builder.as_markup()
 
 

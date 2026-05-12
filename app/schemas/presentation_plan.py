@@ -51,16 +51,16 @@ class TopicSection(BaseModel):
     model_config = ConfigDict(extra='ignore', str_strip_whitespace=True)
 
     content_type: SectionContentType
-    title: str = Field(min_length=3, max_length=90)
-    focus: str = Field(min_length=10, max_length=180)
-    facts: list[str] = Field(default_factory=list, max_length=6)
+    title: str = Field(min_length=3, max_length=100)
+    focus: str = Field(min_length=10, max_length=300)
+    facts: list[str] = Field(default_factory=list, max_length=10)
     table: FactTable | None = None
 
     @field_validator('facts')
     @classmethod
     def clean_facts(cls, value: list[str]) -> list[str]:
         cleaned = [item.strip() for item in value if item and item.strip()]
-        return cleaned[:6]
+        return cleaned[:10]
 
     @model_validator(mode='after')
     def validate_payload(self) -> 'TopicSection':
@@ -70,12 +70,12 @@ class TopicSection(BaseModel):
             if len(self.facts) < 2:
                 raise ValueError('table turidagi section uchun kamida 2 ta izoh/fakt kerak.')
         elif self.content_type == 'process':
-            if len(self.facts) < 4:
-                raise ValueError('process turidagi section uchun kamida 4 ta bosqich kerak.')
-            self.facts = self.facts[:5]
+            if len(self.facts) < 3:
+                raise ValueError('process turidagi section uchun kamida 3 ta bosqich kerak.')
+            self.facts = self.facts[:8]
         else:
-            if len(self.facts) < 4:
-                raise ValueError('facts turidagi section uchun kamida 4 ta fakt kerak.')
+            if len(self.facts) < 3:
+                raise ValueError('facts turidagi section uchun kamida 3 ta fakt kerak.')
         return self
 
 
@@ -83,10 +83,10 @@ class PresentationPlan(BaseModel):
     model_config = ConfigDict(extra='ignore', str_strip_whitespace=True)
 
     presentation_title: str = Field(min_length=3, max_length=120)
-    title_subtitle: str = Field(min_length=10, max_length=180)
+    title_subtitle: str = Field(min_length=10, max_length=250)
     agenda_items: list[str] = Field(min_length=4, max_length=8)
     sections: list[TopicSection] = Field(min_length=3, max_length=12)
-    summary_points: list[str] = Field(min_length=3, max_length=5)
+    summary_points: list[str] = Field(min_length=3, max_length=6)
 
     @field_validator('agenda_items', 'summary_points')
     @classmethod
