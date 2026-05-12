@@ -218,6 +218,12 @@ async def create_template_handler(callback: CallbackQuery, callback_data: Create
     )
     await state.set_state(CreatePresentationStates.waiting_language)
 
+    # Delete the preview photo message to keep chat clean
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+
     await callback.message.answer(
         text=create_language_prompt_text(),
         reply_markup=create_language_keyboard(),

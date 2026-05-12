@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     gemini_max_retries: int = Field(default=3, alias='GEMINI_MAX_RETRIES')
     gemini_initial_backoff_seconds: int = Field(default=10, alias='GEMINI_INITIAL_BACKOFF_SECONDS')
 
+    template_preview_url: str = Field(
+        default='https://t.me/sh_suuz_images/25',
+        alias='TEMPLATE_PREVIEW_URL'
+    )
+
     app_mode: str = Field(default='polling', alias='APP_MODE')
     web_server_host: str = Field(default='0.0.0.0', alias='WEB_SERVER_HOST')
     web_server_port: int = Field(default=10000, validation_alias=AliasChoices('PORT', 'WEB_SERVER_PORT'))
