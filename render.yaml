@@ -1,9 +1,9 @@
 services:
   - type: web
     name: slide-generator-bot
-    env: python
-    buildCommand: apt-get update && apt-get install -y libreoffice && pip install -r requirements.txt
-    startCommand: python -m app.main
+    env: docker
+    dockerContext: .
+    dockerfilePath: Dockerfile
     healthCheckPath: /healthz
     envVars:
       - key: APP_MODE

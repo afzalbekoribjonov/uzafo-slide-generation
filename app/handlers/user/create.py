@@ -10,6 +10,7 @@ from app.keyboards.user import (
     create_confirm_keyboard,
     create_credit_missing_keyboard,
     create_language_keyboard,
+    create_pdf_choice_keyboard,
     create_slide_count_keyboard,
     create_template_keyboard,
     main_menu_keyboard,
@@ -27,6 +28,7 @@ from app.texts.user import (
     create_generation_failed_text,
     create_generation_blocked_text,
     create_language_prompt_text,
+    create_pdf_choice_prompt_text,
     create_presenter_prompt_text,
     create_queued_text,
     create_slide_count_prompt_text,
@@ -250,6 +252,31 @@ async def create_language_handler(callback: CallbackQuery, callback_data: Create
         return
 
     await state.update_data(language_code=language_code, language_name=language_name)
+    await state.set_state(CreatePresentationStates.waiting_pdf_choice)
+
+    try:
+        await _safe_edit_text(
+            callback.message,
+            text=create_pdf_choice_prompt_text(),
+            reply_markup=create_pdf_choice_keyboard(),
+        )
+    except TelegramBadRequest:
+        await callback.message.answer(
+            text=create_pdf_choice_prompt_text(),
+            reply_markup=create_pdf_choice_keyboard(),
+        )
+    await callback.answer()
+
+
+@router.callback_query(CreateFlowCallback.filter(F.action == 'pdf_choice'))
+async def create_pdf_choice_handler(callback: CallbackQuery, callback_data: CreateFlowCallback, state: FSMContext) -> None:
+    current_state = await state.get_state()
+    if current_state != CreatePresentationStates.waiting_pdf_choice.state:
+        await callback.answer()
+        return
+
+    wants_pdf = callback_data.value == 'yes'
+    await state.update_data(wants_pdf=wants_pdf)
     data = await state.get_data()
     await state.set_state(CreatePresentationStates.waiting_confirmation)
 

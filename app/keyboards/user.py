@@ -5,23 +5,6 @@ from app.callbacks.admin import AdminMenuCallback
 from app.callbacks.menu import CreateFlowCallback, MenuCallback, StatusCallback
 from app.callbacks.subscription import SubscriptionCallback
 
-
-
-from app.callbacks.pdf import PdfConvertCallback
-
-def pdf_offer_keyboard(generation_id: str, pptx_msg_id: int) -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-    builder.button(
-        text='✅ Ha',
-        callback_data=PdfConvertCallback(action='yes', generation_id=generation_id, pptx_msg_id=pptx_msg_id),
-    )
-    builder.button(
-        text='❌ Yo‘q',
-        callback_data=PdfConvertCallback(action='no', generation_id=generation_id, pptx_msg_id=pptx_msg_id),
-    )
-    builder.adjust(2)
-    return builder.as_markup()
-
 def main_menu_keyboard(*, is_admin: bool = False) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text='🎞 Slayd yaratish', callback_data=MenuCallback(action='create'))
@@ -140,6 +123,15 @@ def create_language_keyboard() -> InlineKeyboardMarkup:
     builder.button(text='🇺🇸 English', callback_data=CreateFlowCallback(action='language', value='en'))
     builder.button(text='❌ Bekor qilish', callback_data=CreateFlowCallback(action='cancel', value='cancel'))
     builder.adjust(1, 1, 1, 1)
+    return builder.as_markup()
+
+
+def create_pdf_choice_keyboard() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text='✅ Ha', callback_data=CreateFlowCallback(action='pdf_choice', value='yes'))
+    builder.button(text='❌ Yo‘q', callback_data=CreateFlowCallback(action='pdf_choice', value='no'))
+    builder.button(text='❌ Bekor qilish', callback_data=CreateFlowCallback(action='cancel', value='cancel'))
+    builder.adjust(2, 1)
     return builder.as_markup()
 
 

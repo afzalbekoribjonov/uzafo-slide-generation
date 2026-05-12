@@ -184,7 +184,7 @@ def create_credit_missing_text() -> str:
 
 def create_topic_prompt_text() -> str:
     return (
-        "<b>📝 1-bosqich / 5</b>\n\n"
+        "<b>📝 1-bosqich / 6</b>\n\n"
         "Taqdimot mavzusini yozing. Mavzu qanchalik aniq bo‘lsa, slaydlar shunchalik chiroyli va mazmunli chiqadi.\n\n"
         "Masalan: <i>Sun’iy intellekt yordamida shaxsiylashtirilgan ta’lim tizimi</i>"
     )
@@ -193,7 +193,7 @@ def create_topic_prompt_text() -> str:
 
 def create_presenter_prompt_text() -> str:
     return (
-        "<b>👤 2-bosqich / 5</b>\n\n"
+        "<b>👤 2-bosqich / 6</b>\n\n"
         "Endi taqdimotda ko‘rinadigan ismni yuboring.\n\n"
         "Masalan: <i>Ali Valiyev</i>"
     )
@@ -202,7 +202,7 @@ def create_presenter_prompt_text() -> str:
 
 def create_slide_count_prompt_text() -> str:
     return (
-        "<b>📑 3-bosqich / 5</b>\n\n"
+        "<b>📑 3-bosqich / 6</b>\n\n"
         "Nechta slayd kerakligini tanlang.\n\n"
         "📌 Tanlash mumkin: <b>6</b> dan <b>12</b> gacha."
     )
@@ -210,7 +210,7 @@ def create_slide_count_prompt_text() -> str:
 
 def create_template_prompt_text() -> str:
     return (
-        "<b>🎨 4-bosqich / 5</b>\n\n"
+        "<b>🎨 4-bosqich / 6</b>\n\n"
         "Taqdimot dizaynini tanlang. Har bir ko‘rinishda ranglar, shriftlar, jadvallar va matn joylashuvi boshqacha."
     )
 
@@ -225,10 +225,18 @@ def create_template_preview_caption() -> str:
 
 def create_language_prompt_text() -> str:
     return (
-        "<b>🌐 5-bosqich / 5</b>\n\n"
+        "<b>🌐 5-bosqich / 6</b>\n\n"
         "Taqdimot qaysi tilda tayyorlansin?"
     )
 
+
+def create_pdf_choice_prompt_text() -> str:
+    return (
+        "<b>📄 6-bosqich / 6</b>\n\n"
+        "Taqdimotni PDF shaklida ham yuboraymi?\n\n"
+        "✅ <b>Ha</b> — PPTX bilan birga PDF faylni ham olasiz.\n"
+        "❌ <b>Yo‘q</b> — Faqat PowerPoint (pptx) fayli yuboriladi."
+    )
 
 
 def create_confirmation_text(data: dict) -> str:
@@ -237,6 +245,7 @@ def create_confirmation_text(data: dict) -> str:
     slide_count = data.get('slide_count', '-')
     template_name = escape(data.get('template_name', '-'))
     language_name = escape(data.get('language_name', '-'))
+    wants_pdf = 'Ha' if data.get('wants_pdf') else 'Yo‘q'
 
     return (
         "<b>✅ Hammasi tayyormi?</b>\n\n"
@@ -244,7 +253,8 @@ def create_confirmation_text(data: dict) -> str:
         f"👤 Ism: <b>{presenter_name}</b>\n"
         f"📑 Slaydlar: <b>{slide_count}</b>\n"
         f"🎨 Dizayn: <b>{template_name}</b>\n"
-        f"🌐 Til: <b>{language_name}</b>\n\n"
+        f"🌐 Til: <b>{language_name}</b>\n"
+        f"📄 PDF: <b>{wants_pdf}</b>\n\n"
         "Ma’lumotlar to‘g‘ri bo‘lsa, <b>✅ Tasdiqlash</b> tugmasini bosing."
     )
 

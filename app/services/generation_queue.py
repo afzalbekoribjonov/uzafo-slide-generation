@@ -12,13 +12,14 @@ from aiogram.types import FSInputFile
 from app.repositories.generations import GenerationsRepository
 from app.repositories.users import UsersRepository
 from app.services.pptx_generation import PptxGenerationService
+from app.services.pdf_converter import PdfConverterService
 from app.texts.user import (
     create_generation_failed_text,
     create_generation_progress_text,
     create_generation_success_caption,
 )
 
-from app.keyboards.user import pdf_offer_keyboard
+# from app.keyboards.user import pdf_offer_keyboard
 
 logger = logging.getLogger(__name__)
 
@@ -177,11 +178,33 @@ class GenerationQueueService:
                 caption=create_generation_success_caption(payload, self.bot_username),
             )
             
-            offer_msg = await bot.send_message(
-                chat_id=telegram_id,
-                text="Tayyorlangan taqdimotni PDF shaklida ham yuborishimni istaysizmi ?",
-                reply_markup=pdf_offer_keyboard(str(generation_id), pptx_msg.message_id)
-            )
+            # PDF generation if requested in creation flow
+            if payload.get('wants_pdf'):
+                status_chat_id, status_message_id = await self._push_progress(
+                    bot=bot,
+                    generation_id=generation_id,
+                    fallback_chat_id=telegram_id,
+                    payload=payload,
+                    percent=98,
+                    stage_key='rendering',
+                    status_chat_id=status_chat_id,
+                    status_message_id=status_message_id,
+                )
+                pdf_path = await PdfConverterService.convert_to_pdf(file_path)
+                if pdf_path:
+                    try:
+                        await bot.send_document(
+                            chat_id=telegram_id,
+                            document=FSInputFile(pdf_path),
+                            caption="Tayyorlangan PDF shakli."
+                        )
+                    except Exception as e:
+                        logger.error(f"Error sending PDF: {e}")
+                    finally:
+                        try:
+                            Path(pdf_path).unlink()
+                        except Exception:
+                            pass
 
             await self.generations_repo.mark_done(generation_id, result_file_path=file_path)
             await self.users_repo.increment_successful_generation(telegram_id)
@@ -196,17 +219,8 @@ class GenerationQueueService:
                 status_message_id=status_message_id,
             )
 
-            # Schedule cleanup after 15 seconds
-            asyncio.create_task(
-                self._schedule_cleanup(
-                    bot=bot,
-                    chat_id=telegram_id,
-                    pptx_message_id=pptx_msg.message_id,
-                    offer_message_id=offer_msg.message_id,
-                    file_path=file_path,
-                    generation_id=generation_id
-                )
-            )
+            # Cleanup file after a short delay
+            asyncio.create_task(self._delayed_cleanup(file_path))
 
         except Exception as exc:
             logger.exception('Failed to process generation job %s', generation_id)
@@ -221,34 +235,10 @@ class GenerationQueueService:
             if file_path:
                 self._cleanup_file(file_path)
 
-    async def _schedule_cleanup(
-        self,
-        bot: Bot,
-        chat_id: int,
-        pptx_message_id: int,
-        offer_message_id: int,
-        file_path: str,
-        generation_id: Any
-    ) -> None:
-        """Waits 15 seconds and deletes the offer message and server file if not already handled."""
-        await asyncio.sleep(15)
-        
-        try:
-            # Check if user clicked 'Yes' (pdf_processing will be true)
-            job = await self.generations_repo.get_by_id(generation_id)
-            if job and job.get('pdf_processing'):
-                logger.info(f"Cleanup skipped for generation {generation_id} as PDF is being processed.")
-                return
-
-            # Delete PPTX file from server (Always cleanup server file)
-            self._cleanup_file(file_path)
-            
-            # Delete ONLY the offer message from Telegram
-            await bot.delete_message(chat_id=chat_id, message_id=offer_message_id)
-            # await bot.delete_message(chat_id=chat_id, message_id=pptx_message_id) # REMOVED: Do not delete PPTX message
-            logger.info(f"Scheduled cleanup completed for generation {generation_id}")
-        except Exception as e:
-            logger.debug(f"Scheduled cleanup for {generation_id} could not be fully completed: {e}")
+    async def _delayed_cleanup(self, file_path: str, delay: int = 30) -> None:
+        """Waits and deletes the server file."""
+        await asyncio.sleep(delay)
+        self._cleanup_file(file_path)
 
     async def _push_progress(
         self,

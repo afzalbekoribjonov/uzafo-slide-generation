@@ -7,4 +7,5 @@ class CreatePresentationStates(StatesGroup):
     waiting_slide_count = State()
     waiting_template = State()
     waiting_language = State()
+    waiting_pdf_choice = State()
     waiting_confirmation = State()
