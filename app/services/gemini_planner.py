@@ -1346,5 +1346,5 @@ GENERAL CONTENT BEST PRACTICES:
         base = self._fit_text(topic, 80) or str(pack['unknown_topic'])
         pool = [self._fit_text(template.format(topic=base), 170) for template in pack['summary_seed']]
         return pool[:needed]
-ed]
+
 
