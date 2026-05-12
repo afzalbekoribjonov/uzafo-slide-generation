@@ -95,16 +95,16 @@ class GeminiPresentationPlanner:
         self,
         *,
         api_key: str | None,
-        model_name: str = 'gemini-3.1-flash',
+        model_name: str = 'gemini-2.0-flash',
         max_retries: int = 3,
         initial_backoff_seconds: int = 10,
         fallback_models: list[str] | tuple[str, ...] | None = None,
     ) -> None:
         self.api_key = (api_key or '').strip()
-        self.model_name = model_name.strip() or 'gemini-3.1-flash'
+        self.model_name = model_name.strip() or 'gemini-2.0-flash'
         self.max_retries = max(1, int(max_retries))
         self.initial_backoff_seconds = max(1, int(initial_backoff_seconds or 10))
-        default_fallbacks = ('gemini-3.1-flash-lite', 'gemini-1.5-flash-latest')
+        default_fallbacks = ('gemini-2.5-flash', 'gemini-flash-latest')
         raw_fallbacks = fallback_models if fallback_models is not None else default_fallbacks
         self.fallback_models = [item.strip() for item in raw_fallbacks if item and item.strip()]
 
