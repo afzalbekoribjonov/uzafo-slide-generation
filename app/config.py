@@ -20,6 +20,7 @@ class Settings(BaseSettings):
 
 
 
+
     gemini_max_retries: int = Field(default=3, alias='GEMINI_MAX_RETRIES')
     gemini_initial_backoff_seconds: int = Field(default=10, alias='GEMINI_INITIAL_BACKOFF_SECONDS')
 
