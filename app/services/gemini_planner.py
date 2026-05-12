@@ -813,7 +813,7 @@ GENERAL CONTENT BEST PRACTICES:
             if normalized and normalized not in seen:
                 seen.add(normalized)
                 candidates.append(normalized)
-        return candidates or ['gemini-3.1-flash']
+        return candidates or ['gemini-2.5-flash']
 
     def _normalize_payload_for_model(
         self,
