@@ -17,6 +17,7 @@ from app.db.mongo import Mongo
 from app.handlers.admin.panel import router as admin_router
 from app.handlers.user.create import router as create_router
 from app.handlers.user.menu import router as menu_router
+from app.handlers.user.pdf import router as pdf_router
 from app.handlers.user.start import router as start_router
 from app.handlers.user.subscription import router as subscription_router
 from app.middlewares.database_resilience import DatabaseResilienceMiddleware
@@ -126,6 +127,7 @@ async def build_runtime(settings: Settings) -> dict:
     dp.include_router(subscription_router)
     dp.include_router(create_router)
     dp.include_router(menu_router)
+    dp.include_router(pdf_router)
 
     return {
         'settings': settings,

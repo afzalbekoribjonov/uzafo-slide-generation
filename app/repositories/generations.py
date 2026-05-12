@@ -134,6 +134,13 @@ class GenerationsRepository:
             },
         )
 
+    async def set_pdf_processing(self, generation_id: ObjectId | str, processing: bool = True) -> None:
+        object_id = generation_id if isinstance(generation_id, ObjectId) else ObjectId(generation_id)
+        await self.collection.update_one(
+            {'_id': object_id},
+            {'$set': {'pdf_processing': processing}}
+        )
+
     async def requeue_processing_jobs(self) -> int:
         result = await self.collection.update_many(
             {'status': 'processing'},

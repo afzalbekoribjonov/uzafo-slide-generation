@@ -7,6 +7,21 @@ from app.callbacks.subscription import SubscriptionCallback
 
 
 
+from app.callbacks.pdf import PdfConvertCallback
+
+def pdf_offer_keyboard(generation_id: str, pptx_msg_id: int) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='✅ Ha',
+        callback_data=PdfConvertCallback(action='yes', generation_id=generation_id, pptx_msg_id=pptx_msg_id),
+    )
+    builder.button(
+        text='❌ Yo‘q',
+        callback_data=PdfConvertCallback(action='no', generation_id=generation_id, pptx_msg_id=pptx_msg_id),
+    )
+    builder.adjust(2)
+    return builder.as_markup()
+
 def main_menu_keyboard(*, is_admin: bool = False) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text='🎞 Slayd yaratish', callback_data=MenuCallback(action='create'))

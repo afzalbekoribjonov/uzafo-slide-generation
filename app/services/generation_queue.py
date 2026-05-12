@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from pathlib import Path
+from typing import Any
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest
@@ -16,6 +17,8 @@ from app.texts.user import (
     create_generation_progress_text,
     create_generation_success_caption,
 )
+
+from app.keyboards.user import pdf_offer_keyboard
 
 logger = logging.getLogger(__name__)
 
@@ -168,11 +171,18 @@ class GenerationQueueService:
                 status_message_id=status_message_id,
             )
             document = FSInputFile(file_path)
-            await bot.send_document(
+            pptx_msg = await bot.send_document(
                 chat_id=telegram_id,
                 document=document,
                 caption=create_generation_success_caption(payload, self.bot_username),
             )
+            
+            offer_msg = await bot.send_message(
+                chat_id=telegram_id,
+                text="Tayyorlangan taqdimotni PDF shaklida ham yuborishimni istaysizmi ?",
+                reply_markup=pdf_offer_keyboard(str(generation_id), pptx_msg.message_id)
+            )
+
             await self.generations_repo.mark_done(generation_id, result_file_path=file_path)
             await self.users_repo.increment_successful_generation(telegram_id)
             await self._push_progress(
@@ -185,7 +195,19 @@ class GenerationQueueService:
                 status_chat_id=status_chat_id,
                 status_message_id=status_message_id,
             )
-            self._cleanup_file(file_path)
+
+            # Schedule cleanup after 15 seconds
+            asyncio.create_task(
+                self._schedule_cleanup(
+                    bot=bot,
+                    chat_id=telegram_id,
+                    pptx_message_id=pptx_msg.message_id,
+                    offer_message_id=offer_msg.message_id,
+                    file_path=file_path,
+                    generation_id=generation_id
+                )
+            )
+
         except Exception as exc:
             logger.exception('Failed to process generation job %s', generation_id)
             await self.generations_repo.mark_failed(generation_id, error=str(exc))
@@ -198,6 +220,35 @@ class GenerationQueueService:
             )
             if file_path:
                 self._cleanup_file(file_path)
+
+    async def _schedule_cleanup(
+        self,
+        bot: Bot,
+        chat_id: int,
+        pptx_message_id: int,
+        offer_message_id: int,
+        file_path: str,
+        generation_id: Any
+    ) -> None:
+        """Waits 15 seconds and deletes the messages and file if not already handled."""
+        await asyncio.sleep(15)
+        
+        try:
+            # Check if user clicked 'Yes' (pdf_processing will be true)
+            job = await self.generations_repo.get_by_id(generation_id)
+            if job and job.get('pdf_processing'):
+                logger.info(f"Cleanup skipped for generation {generation_id} as PDF is being processed.")
+                return
+
+            # Delete PPTX file from server
+            self._cleanup_file(file_path)
+            
+            # Delete messages from Telegram
+            await bot.delete_message(chat_id=chat_id, message_id=pptx_message_id)
+            await bot.delete_message(chat_id=chat_id, message_id=offer_message_id)
+            logger.info(f"Scheduled cleanup completed for generation {generation_id}")
+        except Exception as e:
+            logger.debug(f"Scheduled cleanup for {generation_id} could not be fully completed: {e}")
 
     async def _push_progress(
         self,
