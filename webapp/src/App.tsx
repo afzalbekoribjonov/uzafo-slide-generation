@@ -438,7 +438,7 @@ const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, on
       try {
         const data = await apiService.getStatus(jobId);
         setStatus({ progress: data.progress, step: data.step });
-        if (data.status === 'done') {
+        if (data.status === 'completed') {
             onDone();
         }
       } catch (err) {
