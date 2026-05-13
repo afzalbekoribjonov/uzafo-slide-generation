@@ -22,6 +22,7 @@ async def start_handler(
     user_service: UserService,
     referral_service: ReferralService,
     subscription_service: SubscriptionService,
+    webapp_url: str,
 ) -> None:
     inviter_id = parse_inviter_id(command.args if command else None)
 
@@ -60,7 +61,7 @@ async def start_handler(
             main_menu_text(user['full_name']),
             reply_markup=main_menu_keyboard(
                 is_admin=bool(user.get('is_admin')),
-                webapp_url=message.bot.dp.get('webapp_url')
+                webapp_url=webapp_url
             ),
         )
 
@@ -88,7 +89,7 @@ async def start_handler(
         main_menu_text(user['full_name']),
         reply_markup=main_menu_keyboard(
             is_admin=bool(user.get('is_admin')),
-            webapp_url=message.bot.dp.get('webapp_url')
+            webapp_url=webapp_url
         ),
     )
 

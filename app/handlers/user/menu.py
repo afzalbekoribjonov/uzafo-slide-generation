@@ -40,7 +40,7 @@ async def _safe_edit_text(message: Message, *, text: str, reply_markup=None) -> 
 
 
 @router.callback_query(MenuCallback.filter(F.action == 'main'))
-async def menu_main_handler(callback: CallbackQuery, users_repo: UsersRepository, state: FSMContext) -> None:
+async def menu_main_handler(callback: CallbackQuery, users_repo: UsersRepository, state: FSMContext, webapp_url: str) -> None:
     await state.clear()
     user = await users_repo.get_by_telegram_id(callback.from_user.id)
     await _safe_edit_text(
@@ -48,7 +48,7 @@ async def menu_main_handler(callback: CallbackQuery, users_repo: UsersRepository
         text=main_menu_text(user['full_name']),
         reply_markup=main_menu_keyboard(
             is_admin=bool(user.get('is_admin')),
-            webapp_url=callback.bot.dp.get('webapp_url')
+            webapp_url=webapp_url
         ),
     )
     await callback.answer()
