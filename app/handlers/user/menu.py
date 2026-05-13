@@ -46,7 +46,10 @@ async def menu_main_handler(callback: CallbackQuery, users_repo: UsersRepository
     await _safe_edit_text(
         callback.message,
         text=main_menu_text(user['full_name']),
-        reply_markup=main_menu_keyboard(is_admin=bool(user.get('is_admin'))),
+        reply_markup=main_menu_keyboard(
+            is_admin=bool(user.get('is_admin')),
+            webapp_url=callback.bot.dp.get('webapp_url')
+        ),
     )
     await callback.answer()
 

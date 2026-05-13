@@ -111,6 +111,7 @@ async def build_runtime(settings: Settings) -> dict:
     dp['admin_ids'] = admin_ids
     dp['bot_username'] = public_bot_username
     dp['support_contact'] = settings.support_contact
+    dp['webapp_url'] = settings.webhook_base_url
 
     db_resilience = DatabaseResilienceMiddleware()
     user_access = UserAccessMiddleware()

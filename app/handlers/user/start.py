@@ -57,9 +57,13 @@ async def start_handler(
 
         user = await user_service.get_user(message.from_user.id)
         await message.answer(
-            text=main_menu_text(user['full_name']),
-            reply_markup=main_menu_keyboard(is_admin=bool(user.get('is_admin'))),
+            main_menu_text(user['full_name']),
+            reply_markup=main_menu_keyboard(
+                is_admin=bool(user.get('is_admin')),
+                webapp_url=message.bot.dp.get('webapp_url')
+            ),
         )
+
         return
 
     await user_service.set_subscription_verified(message.from_user.id, True)
@@ -81,6 +85,10 @@ async def start_handler(
             pass
     user = await user_service.get_user(message.from_user.id)
     await message.answer(
-        text=main_menu_text(user['full_name']),
-        reply_markup=main_menu_keyboard(is_admin=bool(user.get('is_admin'))),
+        main_menu_text(user['full_name']),
+        reply_markup=main_menu_keyboard(
+            is_admin=bool(user.get('is_admin')),
+            webapp_url=message.bot.dp.get('webapp_url')
+        ),
     )
+

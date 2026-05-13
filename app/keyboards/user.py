@@ -1,22 +1,24 @@
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from app.callbacks.admin import AdminMenuCallback
 from app.callbacks.menu import CreateFlowCallback, MenuCallback, StatusCallback
 from app.callbacks.subscription import SubscriptionCallback
 
-def main_menu_keyboard(*, is_admin: bool = False) -> InlineKeyboardMarkup:
+def main_menu_keyboard(*, is_admin: bool = False, webapp_url: str | None = None) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text='🎞 Slayd yaratish', callback_data=MenuCallback(action='create'))
+    if webapp_url:
+        builder.button(text='🌐 Sayt orqali', web_app=WebAppInfo(url=webapp_url))
     builder.button(text='📊 Mening holatim', callback_data=MenuCallback(action='status'))
     builder.button(text='👥 Taklif qilish', callback_data=MenuCallback(action='invite'))
     builder.button(text='❓ Yordam', callback_data=MenuCallback(action='help'))
     builder.button(text='☎️ Aloqa', callback_data=MenuCallback(action='contact'))
     if is_admin:
         builder.button(text='🛡 Admin panel', callback_data=AdminMenuCallback(action='main'))
-        builder.adjust(1, 2, 2, 1)
+        builder.adjust(1, 1, 2, 2, 1)
     else:
-        builder.adjust(1, 2, 2)
+        builder.adjust(1, 1, 2, 2)
     return builder.as_markup()
 
 
