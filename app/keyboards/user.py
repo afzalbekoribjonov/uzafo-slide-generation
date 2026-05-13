@@ -16,9 +16,9 @@ def main_menu_keyboard(*, is_admin: bool = False, webapp_url: str | None = None)
     builder.button(text='☎️ Aloqa', callback_data=MenuCallback(action='contact'))
     if is_admin:
         builder.button(text='🛡 Admin panel', callback_data=AdminMenuCallback(action='main'))
-        builder.adjust(1, 1, 2, 2, 1)
+        builder.adjust(2, 2, 2, 1)
     else:
-        builder.adjust(1, 1, 2, 2)
+        builder.adjust(2, 2, 2)
     return builder.as_markup()
 
 
