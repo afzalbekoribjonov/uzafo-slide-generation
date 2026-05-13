@@ -1,109 +1,39 @@
-# Slide Bot Foundation
+# Slide Generator Bot
 
-Bu loyiha `aiogram 3` va `MongoDB` asosida qurilgan Telegram bot skeleti.
+Ushbu loyiha sun'iy intellekt (Gemini AI) yordamida professional PowerPoint (`.pptx`) va PDF taqdimotlar yaratish uchun mo'ljallangan Telegram bot va WebApp tizimidir.
 
-Hozirgi bosqichda quyidagilar tayyor:
-- `/start` va deeplink (`/start <inviter_id>`) ishlaydi
-- foydalanuvchi MongoDB ga saqlanadi
-- asosiy menyu inline keyboard bilan ishlaydi
-- `Holat, Taklif qilish` bo'limi ishlaydi
-- `Men taklif qilganlar` bo'limi ishlaydi
-- `Yordam, Aloqa` bo'limi ishlaydi
-- referral yozuvi (start bosqichida) tayyorlangan
-- keyingi bosqichlar uchun `service/repository` arxitekturasi tayyor
+## 🚀 Asosiy Imkoniyatlar
+- **Tezkor yaratish:** Mavzu, muallif va slaydlar sonini kiritib, 8 xil professional dizayndagi taqdimotni generatsiya qilish.
+- **Sun'iy Intellekt:** Gemini AI orqali mavzu bo'yicha strukturaviy reja va matnlarni avtomatik shakllantirish.
+- **WebApp Integratsiyasi:** Telegram Mini App (TMA) orqali qulay va vizual interfeysda boshqarish.
+- **Ko'p formatli yuklash:** Tayyor fayllarni `.pptx` va `.pdf` formatlarida olish imkoniyati.
+- **Referral Tizimi:** Do'stlarni taklif qilish orqali yangi generatsiya imkoniyatlarini (kredit) qo'lga kiritish.
+- **Real-time Status:** Slaydlar yaratilish jarayonini real vaqt rejimida kuzatib borish.
 
-## Pipenv bilan o'rnatish
+## 🛠 Texnologik stek
+### Backend
+- **Python 3.11**
+- **aiogram 3** (Telegram bot API)
+- **aiohttp** (WebApp va API uchun)
+- **MongoDB** (Foydalanuvchilar va generatsiyalar tarixi)
+- **python-pptx** (Slayd yaratish uchun)
+- **Google GenAI SDK** (AI integratsiyasi)
 
-### 1) Pipenv o'rnatish
-Agar sizda `pipenv` o'rnatilmagan bo'lsa:
+### Frontend (WebApp)
+- **React + TypeScript**
+- **Vite** (Build tool)
+- **Tailwind CSS** (Dizayn tizimi)
+- **Framer Motion** (Interaktiv animatsiyalar)
 
-```bash
-pip install pipenv
-```
+### Infrastruktura
+- **Docker** (Multi-stage build: Backend va Frontend yagona konteynerda)
+- **Render.com** (Deployment)
 
-### 2) Virtual muhit va kutubxonalarni o'rnatish
-Loyiha papkasida:
+## 🏗 Arxitektura
+Loyihada `Service/Repository` patterndan foydalanilgan. Backend va Frontend yagona serverda birlashtirilgan bo'lib, Python backend ham API so'rovlarini, ham statik WebApp fayllarini (Single Page Application) tarqatadi.
 
-```bash
-pipenv install
-```
+## 👨‍💻 Dasturchi
+**Afzalbek Oribjonov** ([uzafo.uz](https://uzafo.uz))
 
-### 3) `.env` fayl tayyorlash
-
-```bash
-cp .env.example .env
-```
-
-Windows uchun:
-
-```powershell
-copy .env.example .env
-```
-
-So'ng `.env` ichida token va MongoDB ma'lumotlarini to'ldiring.
-
-## Ishga tushirish
-
-### Variant 1
-```bash
-pipenv run python -m app.main
-```
-
-### Variant 2
-`Pipfile` ichidagi script orqali:
-
-```bash
-pipenv run start
-```
-
-### Variant 3
-Shell ichiga kirib ishga tushirish
-
-```bash
-pipenv shell
-python -m app.main
-```
-
-## Muhim fayllar
-- `app/main.py` — bot entrypoint
-- `app/handlers/user/start.py` — `/start` va deeplink logikasi
-- `app/handlers/user/menu.py` — inline menyular
-- `app/services/` — biznes logika
-- `app/repositories/` — MongoDB bilan ishlash
-- `app/keyboards/user.py` — inline tugmalar
-
-## Keyingi bosqichlar
-1. Majburiy obuna (bir nechta kanal)
-2. Admin panel va kanal boshqaruvi
-3. Slayd yaratish oqimi
-4. PPTX generation service
-
-
-## Render uchun webhook deploy
-
-Bu loyiha endi ikki rejimni qo‘llaydi:
-- `APP_MODE=polling` — lokal test uchun
-- `APP_MODE=webhook` — Render Web Service uchun
-
-### Tavsiya etilgan Render sozlamalari
-- **Build Command:** `pip install -r requirements.txt`
-- **Start Command:** `python -m app.main`
-- **Health Check Path:** `/healthz`
-
-### Render uchun kerakli env qiymatlar
-`.env` yoki Render Environment bo‘limiga quyidagilarni kiriting:
-
-```env
-APP_MODE=webhook
-WEBHOOK_BASE_URL=https://your-service-name.onrender.com
-WEBHOOK_PATH=/telegram/webhook
-WEBHOOK_SECRET=change_me_please
-```
-
-`WEBHOOK_BASE_URL` qiymati Render servisining tashqi HTTPS manzili bo‘lishi kerak.
-
-### Muhim eslatmalar
-- Webhook rejimida bot `PORT` yoki `WEB_SERVER_PORT` ga quloq soladi.
-- Bot ishga tushganda webhook avtomatik o‘rnatiladi.
-- `/healthz` endpoint Render health check uchun tayyor.
-- PPTX generation logikasi o‘zgartirilmagan.
+---
+*Loyiha taqdimotlar tayyorlash jarayonini avtomatlashtirish va vaqtni tejash uchun ishlab chiqilgan.*
