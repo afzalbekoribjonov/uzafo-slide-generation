@@ -395,8 +395,8 @@ const HowToView: React.FC<{ onBack: () => void }> = ({ onBack }) => (
       />
       <StepCard 
         number="03" 
-        title="Sun’iy intellekt" 
-        description="Gemini AI siz uchun mavzuni tahlil qiladi va professional reja tuzadi."
+        title="Avtomatik yaratish" 
+        description="Tizim kiritilgan ma'lumotlar asosida taqdimot strukturasi va mazmunini avtomatik tayyorlaydi."
       />
       <StepCard 
         number="04" 
