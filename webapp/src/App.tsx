@@ -431,13 +431,22 @@ const StepCard: React.FC<{ number: string, title: string, description: string }>
 );
 
 const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, onDone }) => {
-  const [status, setStatus] = useState({ progress: 0, step: 'pending' });
+  const [progress, setProgress] = useState(0);
+  const [logs, setLogs] = useState<string[]>([]);
+  const [currentStep, setCurrentStep] = useState<string>('');
 
   useEffect(() => {
     const fetchStatus = async () => {
       try {
         const data = await apiService.getStatus(jobId);
-        setStatus({ progress: data.progress, step: data.step });
+        setProgress(data.progress);
+        
+        const stepText = getStepText(data.step);
+        if (data.step !== currentStep) {
+            setCurrentStep(data.step);
+            setLogs(prev => [...prev, stepText]);
+        }
+
         if (data.status === 'completed') {
             onDone();
         }
@@ -447,9 +456,9 @@ const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, on
     };
 
     fetchStatus();
-    const interval = setInterval(fetchStatus, 5000); // 5 soniyada bir yangilash
+    const interval = setInterval(fetchStatus, 5000);
     return () => clearInterval(interval);
-  }, [jobId, onDone]);
+  }, [jobId, onDone, currentStep]);
 
   const getStepText = (step: string) => {
     switch(step) {
@@ -467,23 +476,27 @@ const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, on
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-8"
+      className="flex-1 flex flex-col p-8 space-y-8"
     >
-      <div className="relative w-24 h-24">
-          <motion.div 
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-              className="absolute inset-0 border-4 border-[#7c3aed] border-t-transparent rounded-full"
-          />
-          <div className="absolute inset-0 flex items-center justify-center font-bold">
-            {status.progress}%
-          </div>
+      <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Jarayon holati</h2>
+          <div className="text-2xl font-black text-primary">{progress}%</div>
       </div>
-      <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Taqdimot tayyorlanmoqda</h2>
-          <p className="text-white/60">{getStepText(status.step)}</p>
+      
+      <div className="flex-1 bg-[#171717] rounded-3xl p-6 font-mono text-sm space-y-3 overflow-y-auto border border-white/5">
+        {logs.map((log, i) => (
+            <div key={i} className="text-white/70">
+                <span className="text-primary mr-2">{'>'}</span> {log}
+            </div>
+        ))}
+        <motion.div 
+            animate={{ opacity: [0, 1, 0] }}
+            transition={{ repeat: Infinity, duration: 0.8 }}
+            className="text-primary inline-block"
+        >_</motion.div>
       </div>
-      <p className="text-white/40 text-sm max-w-[250px]">Jarayon yakunlangach, bot sizga faylni yuboradi. Siz sahifadan chiqishingiz mumkin.</p>
+
+      <p className="text-white/40 text-center text-sm">Jarayon yakunlangach, bot sizga faylni yuboradi. Siz sahifadan chiqishingiz mumkin.</p>
     </motion.div>
   );
 };
