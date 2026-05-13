@@ -465,8 +465,11 @@ const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, on
       case 'queued': return 'So‘rovingiz navbatga qo‘shildi';
       case 'research': return 'Ma’lumotlar yig‘ilmoqda...';
       case 'planning': return 'Reja tuzilmoqda...';
-      case 'rendering': return 'Taqdimot yig‘ilmoqda...';
-      case 'uploading': return 'Fayl tayyorlanmoqda...';
+      case 'rendering': return 'Taqdimot tayyorlanmoqda...';
+      case 'uploading': return 'Fayl yuborilmoqda...';
+      case 'generating_pdf': return 'PDF fayl tayyorlanmoqda...';
+      case 'sending_pdf': return 'PDF fayl yuborilmoqda...';
+      case 'done': return 'Barchasi tayyor! Taqdimot bot orqali yuborildi.';
       default: return 'Jarayon davom etmoqda...';
     }
   };
@@ -489,14 +492,25 @@ const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, on
                 <span className="text-primary mr-2">{'>'}</span> {log}
             </div>
         ))}
-        <motion.div 
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{ repeat: Infinity, duration: 0.8 }}
-            className="text-primary inline-block"
-        >_</motion.div>
+        {progress < 100 && (
+            <motion.div 
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ repeat: Infinity, duration: 0.8 }}
+                className="text-primary inline-block"
+            >_</motion.div>
+        )}
       </div>
 
-      <p className="text-white/40 text-center text-sm">Jarayon yakunlangach, bot sizga faylni yuboradi. Siz sahifadan chiqishingiz mumkin.</p>
+      {progress >= 100 ? (
+        <button 
+            onClick={() => window.location.href = 'https://t.me/uzafo_slide_bot'}
+            className="w-full py-4 bg-primary text-white rounded-2xl font-bold transition-all hover:bg-primary/90"
+        >
+            Botga qaytish
+        </button>
+      ) : (
+        <p className="text-white/40 text-center text-sm">Jarayon yakunlangach, bot sizga faylni yuboradi. Siz sahifadan chiqishingiz mumkin.</p>
+      )}
     </motion.div>
   );
 };
