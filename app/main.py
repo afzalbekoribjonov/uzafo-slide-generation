@@ -35,6 +35,7 @@ from app.services.pptx_generation import PptxGenerationService
 from app.services.referrals import ReferralService
 from app.services.subscriptions import SubscriptionService
 from app.services.users import UserService
+from app.api.router import cors_middleware, setup_api_routes, setup_static_routes
 from pymongo.errors import PyMongoError
 
 logger = logging.getLogger(__name__)
@@ -182,10 +183,11 @@ async def create_webhook_app() -> web.Application:
 
     dp.startup.register(on_startup)
 
-    app = web.Application()
+    app = web.Application(middlewares=[cors_middleware])
     app.update(runtime)
     app.cleanup_ctx.append(generation_worker_context)
-    app.router.add_get('/', healthcheck)
+    setup_api_routes(app)
+    setup_static_routes(app)
     app.router.add_get('/healthz', healthcheck)
 
     webhook_requests_handler = SimpleRequestHandler(

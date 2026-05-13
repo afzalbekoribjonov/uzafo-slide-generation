@@ -1,3 +1,12 @@
+# --- Stage 1: Build the React WebApp ---
+FROM node:20-slim AS frontend-builder
+WORKDIR /app/webapp
+COPY webapp/package*.json ./
+RUN npm install
+COPY webapp/ ./
+RUN npm run build
+
+# --- Stage 2: Final Production Image ---
 FROM python:3.11-slim
 
 # Install system dependencies for LibreOffice and high-quality fonts
@@ -22,11 +31,16 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy backend application code
 COPY . .
 
-# Ensure the app can run without root if needed, but standard is fine
-# Set environment variables
+# Copy built frontend from Stage 1
+COPY --from=frontend-builder /app/webapp/dist ./webapp/dist
+
+# Ensure the app can run without root if needed
 ENV PYTHONUNBUFFERED=1
+
+# Expose the port (Render uses PORT env var)
+EXPOSE 10000
 
 CMD ["python", "-m", "app.main"]
