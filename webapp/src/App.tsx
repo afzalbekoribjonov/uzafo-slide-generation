@@ -7,6 +7,7 @@ import { WizardView } from './components/WizardView';
 
 const App: React.FC = () => {
   const [view, setView] = useState<'home' | 'wizard' | 'status' | 'how-to' | 'credits'>('home');
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -275,14 +276,15 @@ const App: React.FC = () => {
             <WizardView 
               key="wizard"
               templates={templates} 
-              onComplete={() => {
+              onComplete={(jobId) => {
+                setCurrentJobId(jobId);
                 setView('status');
               }}
               onCancel={() => setView('home')}
             />
           )}
           {view === 'status' && (
-            <StatusView key="status" onDone={() => setView('home')} />
+            <StatusView key="status" jobId={currentJobId || ''} onDone={() => { setCurrentJobId(null); setView('home'); }} />
           )}
           {view === 'credits' && (
              <CreditsView 
@@ -428,35 +430,63 @@ const StepCard: React.FC<{ number: string, title: string, description: string }>
   </div>
 );
 
-const StatusView: React.FC<{ onDone: () => void }> = ({ onDone }) => (
-  <motion.div 
-    initial={{ opacity: 0, scale: 0.9 }}
-    animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.9 }}
-    className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-8"
-  >
-    <div className="relative w-24 h-24">
-        <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-            className="absolute inset-0 border-4 border-[#7c3aed] border-t-transparent rounded-full"
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-            <Rocket className="w-10 h-10 text-[#a78bfa]" />
-        </div>
-    </div>
-    <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Taqdimot tayyorlanmoqda</h2>
-        <p className="text-white/60">Jarayon yakunlangach, bot sizga faylni yuboradi. WebApp sahifasini yopishingiz mumkin.</p>
-    </div>
-    <button 
-        onClick={onDone}
-        className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl font-bold"
+const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, onDone }) => {
+  const [status, setStatus] = useState({ progress: 0, step: 'pending' });
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const data = await apiService.getStatus(jobId);
+        setStatus({ progress: data.progress, step: data.step });
+        if (data.status === 'done') {
+            onDone();
+        }
+      } catch (err) {
+        console.error('Status polling error', err);
+      }
+    };
+
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 5000); // 5 soniyada bir yangilash
+    return () => clearInterval(interval);
+  }, [jobId, onDone]);
+
+  const getStepText = (step: string) => {
+    switch(step) {
+      case 'queued': return 'So‘rovingiz navbatga qo‘shildi';
+      case 'research': return 'Ma’lumotlar yig‘ilmoqda...';
+      case 'planning': return 'Reja tuzilmoqda...';
+      case 'rendering': return 'Taqdimot yig‘ilmoqda...';
+      case 'uploading': return 'Fayl tayyorlanmoqda...';
+      default: return 'Jarayon davom etmoqda...';
+    }
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-8"
     >
-        Asosiy sahifaga qaytish
-    </button>
-  </motion.div>
-);
+      <div className="relative w-24 h-24">
+          <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+              className="absolute inset-0 border-4 border-[#7c3aed] border-t-transparent rounded-full"
+          />
+          <div className="absolute inset-0 flex items-center justify-center font-bold">
+            {status.progress}%
+          </div>
+      </div>
+      <div className="space-y-4">
+          <h2 className="text-2xl font-bold">Taqdimot tayyorlanmoqda</h2>
+          <p className="text-white/60">{getStepText(status.step)}</p>
+      </div>
+      <p className="text-white/40 text-sm max-w-[250px]">Jarayon yakunlangach, bot sizga faylni yuboradi. Siz sahifadan chiqishingiz mumkin.</p>
+    </motion.div>
+  );
+};
 
 const SidebarItem: React.FC<{ icon: React.ReactNode, label: string, onClick: () => void, active?: boolean }> = ({ icon, label, onClick, active }) => (
   <button 
