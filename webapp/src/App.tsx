@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, X, Rocket, Info, HelpCircle, MessageSquare, ChevronLeft, ShieldAlert, Award, UserPlus, Zap, Settings as SettingsIcon } from 'lucide-react';
+import { Menu, X, Rocket, HelpCircle, MessageSquare, ChevronLeft, ShieldAlert, Award, UserPlus, Zap } from 'lucide-react';
 import { apiService } from './services/api';
 import type { User, Template } from './types';
 import { WizardView } from './components/WizardView';
