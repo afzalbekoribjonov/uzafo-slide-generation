@@ -136,6 +136,15 @@ async def build_runtime(settings: Settings) -> dict:
         'mongo': mongo,
         'generation_queue_service': generation_queue_service,
         'bot_username': public_bot_username,
+        'users_repo': users_repo,
+        'referrals_repo': referrals_repo,
+        'channels_repo': channels_repo,
+        'generations_repo': generations_repo,
+        'user_service': user_service,
+        'referral_service': referral_service,
+        'generation_access_service': generation_access_service,
+        'subscription_service': subscription_service,
+        'admin_service': admin_service,
     }
 
 
