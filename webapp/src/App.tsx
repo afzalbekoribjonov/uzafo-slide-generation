@@ -432,21 +432,15 @@ const StepCard: React.FC<{ number: string, title: string, description: string }>
 
 const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, onDone }) => {
   const [progress, setProgress] = useState(0);
-  const [logs, setLogs] = useState<string[]>([]);
-  const [currentStep, setCurrentStep] = useState<string>('');
+  const [step, setStep] = useState<string>('queued');
 
   useEffect(() => {
     const fetchStatus = async () => {
       try {
         const data = await apiService.getStatus(jobId);
         setProgress(data.progress);
+        setStep(data.step);
         
-        const stepText = getStepText(data.step);
-        if (data.step !== currentStep) {
-            setCurrentStep(data.step);
-            setLogs(prev => [...prev, stepText]);
-        }
-
         if (data.status === 'completed') {
             onDone();
         }
@@ -456,23 +450,21 @@ const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, on
     };
 
     fetchStatus();
-    const interval = setInterval(fetchStatus, 5000);
+    const interval = setInterval(fetchStatus, 3000);
     return () => clearInterval(interval);
-  }, [jobId, onDone, currentStep]);
+  }, [jobId, onDone]);
 
-  const getStepText = (step: string) => {
-    switch(step) {
-      case 'queued': return 'So‘rovingiz navbatga qo‘shildi';
-      case 'research': return 'Ma’lumotlar yig‘ilmoqda...';
-      case 'planning': return 'Reja tuzilmoqda...';
-      case 'rendering': return 'Taqdimot tayyorlanmoqda...';
-      case 'uploading': return 'Fayl yuborilmoqda...';
-      case 'generating_pdf': return 'PDF fayl tayyorlanmoqda...';
-      case 'sending_pdf': return 'PDF fayl yuborilmoqda...';
-      case 'done': return 'Barchasi tayyor! Taqdimot bot orqali yuborildi.';
-      default: return 'Jarayon davom etmoqda...';
-    }
-  };
+  const steps = [
+    { id: 'queued', label: 'So‘rov qabul qilindi' },
+    { id: 'research', label: 'Ma’lumotlar yig‘ilmoqda' },
+    { id: 'planning', label: 'Reja tuzilmoqda' },
+    { id: 'rendering', label: 'Taqdimot yig‘ilmoqda' },
+    { id: 'uploading', label: 'Fayl yuborilmoqda' },
+    { id: 'generating_pdf', label: 'PDF tayyorlanmoqda' },
+    { id: 'done', label: 'Taqdimot tayyor' }
+  ];
+
+  const currentStepIndex = steps.findIndex(s => s.id === step);
 
   return (
     <motion.div 
@@ -481,35 +473,42 @@ const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, on
       exit={{ opacity: 0, scale: 0.9 }}
       className="flex-1 flex flex-col p-8 space-y-8"
     >
-      <div className="flex items-center justify-between">
+      <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold">Jarayon holati</h2>
-          <div className="text-2xl font-black text-primary">{progress}%</div>
+          <div className="text-5xl font-black text-primary">{progress}%</div>
       </div>
       
-      <div className="flex-1 bg-[#171717] rounded-3xl p-6 font-mono text-sm space-y-3 overflow-y-auto border border-white/5">
-        {logs.map((log, i) => (
-            <div key={i} className="text-white/70">
-                <span className="text-primary mr-2">{'>'}</span> {log}
+      {/* Progress Bar */}
+      <div className="h-3 w-full bg-[#171717] rounded-full overflow-hidden">
+        <motion.div 
+            className="h-full bg-primary"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.5 }}
+        />
+      </div>
+
+      {/* Steps List */}
+      <div className="flex-1 space-y-3">
+        {steps.map((s, i) => (
+            <div key={s.id} className={`p-4 rounded-2xl flex items-center space-x-4 transition-all ${i <= currentStepIndex ? 'bg-[#7c3aed]/10 border border-[#7c3aed]/20' : 'bg-[#171717] border border-transparent'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${i <= currentStepIndex ? 'bg-primary text-white' : 'bg-white/5 text-white/30'}`}>
+                    {i < currentStepIndex ? <Check size={16} /> : <span>{i + 1}</span>}
+                </div>
+                <span className={i <= currentStepIndex ? 'text-white font-medium' : 'text-white/30'}>{s.label}</span>
             </div>
         ))}
-        {progress < 100 && (
-            <motion.div 
-                animate={{ opacity: [0, 1, 0] }}
-                transition={{ repeat: Infinity, duration: 0.8 }}
-                className="text-primary inline-block"
-            >_</motion.div>
-        )}
       </div>
 
       {progress >= 100 ? (
         <button 
             onClick={() => window.location.href = 'https://t.me/uzafo_slide_bot'}
-            className="w-full py-4 bg-primary text-white rounded-2xl font-bold transition-all hover:bg-primary/90"
+            className="w-full py-4 bg-primary text-white rounded-2xl font-bold transition-all hover:bg-primary/90 shadow-lg shadow-primary/20"
         >
             Botga qaytish
         </button>
       ) : (
-        <p className="text-white/40 text-center text-sm">Jarayon yakunlangach, bot sizga faylni yuboradi. Siz sahifadan chiqishingiz mumkin.</p>
+        <p className="text-white/40 text-center text-sm">Jarayon yakunlangach, bot sizga faylni yuboradi.</p>
       )}
     </motion.div>
   );
