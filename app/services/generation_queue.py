@@ -252,6 +252,9 @@ class GenerationQueueService:
         status_chat_id: int | None,
         status_message_id: int | None,
     ) -> tuple[int, int]:
+        # Persist to database
+        await self.generations_repo.update_progress(generation_id, progress=percent, step=stage_key)
+        
         text = create_generation_progress_text(payload, percent, stage_key)
         if status_chat_id and status_message_id:
             try:

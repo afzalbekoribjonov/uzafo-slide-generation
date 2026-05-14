@@ -132,6 +132,19 @@ async def handle_status(request: web.Request) -> web.Response:
         'error': job.get('error_message')
     })
 
+async def handle_active_job(request: web.Request) -> web.Response:
+    user = await get_user_from_request(request)
+    if not user:
+        return web.json_response({'error': 'Unauthorized'}, status=401)
+    
+    queue_service: GenerationQueueService = request.app['generation_queue_service']
+    job, _ = await queue_service.describe_existing_job(user['telegram_id'])
+    
+    if not job:
+        return web.json_response({'job_id': None})
+    
+    return web.json_response({'job_id': str(job['_id'])})
+
 async def handle_template_preview(request: web.Request) -> web.Response:
     template_id = request.match_info.get('template_id')
     template = template_registry.get(template_id)

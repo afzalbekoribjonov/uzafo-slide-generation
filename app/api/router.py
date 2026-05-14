@@ -7,6 +7,7 @@ from app.api.handlers import (
     handle_init,
     handle_create,
     handle_status,
+    handle_active_job,
     handle_template_preview,
     handle_options
 )
@@ -16,6 +17,7 @@ def setup_api_routes(app: web.Application):
     app.router.add_post('/api/init', handle_init)
     app.router.add_post('/api/create', handle_create)
     app.router.add_get('/api/status/{job_id}', handle_status)
+    app.router.add_get('/api/job/active', handle_active_job)
     app.router.add_get('/api/templates/preview/{template_id}', handle_template_preview)
     
     # CORS Preflight

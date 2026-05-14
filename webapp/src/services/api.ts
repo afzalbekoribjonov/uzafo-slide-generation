@@ -29,5 +29,10 @@ export const apiService = {
   getStatus: async (jobId: string): Promise<JobStatus> => {
     const response = await api.get(`/api/status/${jobId}`);
     return response.data;
+  },
+  
+  getActiveJob: async (): Promise<{ job_id: string | null }> => {
+    const response = await api.get('/api/job/active');
+    return response.data;
   }
 };
