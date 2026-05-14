@@ -108,6 +108,18 @@ class GenerationsRepository:
             },
         )
 
+    async def update_progress(self, generation_id: ObjectId | str, *, progress: int, step: str) -> None:
+        object_id = generation_id if isinstance(generation_id, ObjectId) else ObjectId(generation_id)
+        await self.collection.update_one(
+            {'_id': object_id},
+            {
+                '$set': {
+                    'progress': progress,
+                    'step': step,
+                }
+            },
+        )
+
     async def mark_done(self, generation_id: ObjectId | str, *, result_file_path: str | None = None) -> None:
         object_id = generation_id if isinstance(generation_id, ObjectId) else ObjectId(generation_id)
         await self.collection.update_one(
