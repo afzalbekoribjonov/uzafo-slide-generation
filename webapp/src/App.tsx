@@ -96,7 +96,7 @@ const ExternalBrowserView = () => (
         <ShieldAlert size={64} className="text-red-500 mb-6" />
         <h2 className="text-2xl font-bold mb-4">Kirish taqiqlangan</h2>
         <p className="text-white/60 mb-8">Ushbu xizmatdan faqat Telegram bot ichida foydalanish mumkin.</p>
-        <button onClick={() => window.open('https://t.me/uzafo_slide_bot', '_blank')} className="px-8 py-4 bg-primary rounded-2xl font-bold">Botga o‘tish</button>
+        <button onClick={() => window.open('https://t.me/slayd_pptxbot', '_blank')} className="px-8 py-4 bg-primary rounded-2xl font-bold">Botga o‘tish</button>
     </div>
 );
 
@@ -188,7 +188,7 @@ const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, on
                 <span>{s.label}</span>
             </div>
         ))}</div>
-        {progress >= 100 && <button onClick={() => window.location.href = 'https://t.me/uzafo_slide_bot'} className="w-full py-4 bg-primary rounded-2xl font-bold">Botga qaytish</button>}
+        {progress >= 100 && <button onClick={() => window.location.href = 'https://t.me/slayd_pptxbot'} className="w-full py-4 bg-primary rounded-2xl font-bold">Botga qaytish</button>}
     </div>
   );
 };
