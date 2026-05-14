@@ -124,11 +124,24 @@ const HomeView: React.FC<{ user: User | null, onStart: () => void }> = ({ user, 
 const CreditsView: React.FC<{ user: User | null, onBack: () => void }> = ({ user, onBack }) => (
   <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col p-6 overflow-y-auto pb-20">
     <div className="flex items-center space-x-3 mb-8"><button onClick={onBack} className="p-2 bg-white/5 rounded-full"><ChevronLeft className="w-6 h-6" /></button><h2 className="text-2xl font-bold">Imkoniyatlarim</h2></div>
-    <div className="bg-gradient-to-br from-[#7c3aed] to-[#5b21b6] p-6 rounded-3xl mb-6">
+    
+    <div className="bg-gradient-to-br from-[#7c3aed] to-[#5b21b6] p-6 rounded-3xl mb-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-4 opacity-10"><Award size={120} /></div>
         <p className="text-white/80">Mavjud imkoniyatlar</p>
         <h3 className="text-4xl font-black">{user?.available_generations || 0} ta</h3>
     </div>
-    <button onClick={() => window.open('https://t.me/uzafo', '_blank')} className="w-full py-4 bg-white/5 rounded-2xl font-bold">Admin bilan bog‘lanish</button>
+
+    <div className="space-y-4">
+        <div className="bg-[#171717] p-5 rounded-3xl flex items-start space-x-4">
+            <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400"><UserPlus size={24} /></div>
+            <div><h5 className="font-bold">Do‘stlarni taklif qiling</h5><p className="text-sm text-white/50">Har bir taklif uchun +1 ta imkoniyat.</p></div>
+        </div>
+        <div className="bg-[#171717] p-5 rounded-3xl flex items-start space-x-4">
+            <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-400"><Zap size={24} /></div>
+            <div><h5 className="font-bold">Maxsus paketlar</h5><p className="text-sm text-white/50">Admin bilan bog‘lanib paket oling.</p></div>
+        </div>
+    </div>
+    <button onClick={() => window.open('https://t.me/uzafo', '_blank')} className="w-full py-4 mt-6 bg-white/5 rounded-2xl font-bold">Admin bilan bog‘lanish</button>
   </motion.div>
 );
 
