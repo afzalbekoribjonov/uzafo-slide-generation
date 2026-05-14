@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, X, Rocket, HelpCircle, MessageSquare, ChevronLeft, ShieldAlert, Award, UserPlus, Zap, Check } from 'lucide-react';
+import { Menu, X, Rocket, HelpCircle, MessageSquare, ChevronLeft, Award, UserPlus, Zap, Check } from 'lucide-react';
 import { apiService } from './services/api';
 import type { User, Template } from './types';
 import { WizardView } from './components/WizardView';
@@ -12,8 +12,6 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isExternalBrowser, setIsExternalBrowser] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -34,14 +32,13 @@ const App: React.FC = () => {
                 setView('status');
             }
           } catch (apiErr: any) {
-            setError('Server bilan aloqa o‘rnatib bo‘lmadi.');
+            console.error('API Init failed:', apiErr);
           }
           setLoading(false);
         } else {
             setLoading(false);
         }
       } catch (err: any) {
-        setError('Kutilmagan xatolik yuz berdi.');
         setLoading(false);
       }
     };
@@ -73,24 +70,52 @@ const App: React.FC = () => {
   );
 };
 
+const HomeView: React.FC<{ user: User | null, onStart: () => void }> = ({ user, onStart }) => (
+  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="flex-1 flex flex-col items-center justify-center p-8 space-y-12">
+    <div className="w-32 h-32 bg-gradient-to-br from-[#a78bfa] to-[#5b21b6] rounded-3xl flex items-center justify-center shadow-[0_0_50px_rgba(124,58,237,0.3)]">
+        <Rocket className="w-16 h-16 text-white" />
+    </div>
+    <div className="text-center space-y-4">
+      <h2 className="text-3xl font-bold">Taqdimot tayyorlashni hoziroq boshlang</h2>
+    </div>
+    <button onClick={onStart} className="px-12 py-5 bg-[#7c3aed] rounded-2xl font-bold text-xl">Boshlash</button>
+  </motion.div>
+);
+
+const CreditsView: React.FC<{ user: User | null, onBack: () => void }> = ({ user, onBack }) => (
+  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col p-6 overflow-y-auto pb-20">
+    <div className="flex items-center space-x-3 mb-8"><button onClick={onBack} className="p-2 bg-white/5 rounded-full"><ChevronLeft className="w-6 h-6" /></button><h2 className="text-2xl font-bold">Imkoniyatlarim</h2></div>
+    <div className="bg-gradient-to-br from-[#7c3aed] to-[#5b21b6] p-6 rounded-3xl mb-6">
+        <p className="text-white/80">Mavjud imkoniyatlar</p>
+        <h3 className="text-4xl font-black">{user?.available_generations || 0} ta</h3>
+    </div>
+    <button onClick={() => window.open('https://t.me/uzafo', '_blank')} className="w-full py-4 bg-white/5 rounded-2xl font-bold">Admin bilan bog‘lanish</button>
+  </motion.div>
+);
+
+const HowToView: React.FC<{ onBack: () => void }> = ({ onBack }) => (
+  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 flex flex-col p-6 overflow-y-auto pb-20">
+    <div className="flex items-center space-x-3 mb-8"><button onClick={onBack} className="p-2 bg-white/5 rounded-full"><ChevronLeft className="w-6 h-6" /></button><h2 className="text-2xl font-bold">Qo‘llanma</h2></div>
+    <div className="space-y-4">
+      {[ {n: '01', t: 'Mavzu va Muallif', d: 'Taqdimot mavzusi va muallif ismini kiriting.' }, {n: '02', t: 'Dizayn', d: '8 ta dizayndan birini tanlang.' }, {n: '03', t: 'Yaratish', d: 'Tizim avtomatik tayyorlaydi.' }, {n: '04', t: 'Fayl', d: 'Tayyor fayllar botga keladi.' }].map(s => (
+        <div key={s.n} className="bg-[#171717] p-5 rounded-3xl"><h5 className="font-bold">{s.t}</h5><p className="text-sm text-white/50">{s.d}</p></div>
+      ))}
+    </div>
+  </motion.div>
+);
+
 const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, onDone }) => {
   const [progress, setProgress] = useState(0);
   const [step, setStep] = useState<string>('queued');
-
   useEffect(() => {
-    const fetchStatus = async () => {
-      try {
-        const data = await apiService.getStatus(jobId);
-        setProgress(data.progress);
-        setStep(data.step);
-        if (data.status === 'completed') onDone();
-      } catch (err) { console.error(err); }
+    const fetch = async () => {
+        try { const d = await apiService.getStatus(jobId); setProgress(d.progress); setStep(d.step); if (d.status === 'completed') onDone(); } catch(e) {}
     };
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 3000);
+    fetch();
+    const interval = setInterval(fetch, 3000);
     return () => clearInterval(interval);
   }, [jobId, onDone]);
-
+  
   const steps = [
     { id: 'queued', label: 'So‘rov qabul qilindi' },
     { id: 'research', label: 'Ma’lumotlar yig‘ilmoqda' },
@@ -100,32 +125,20 @@ const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, on
     { id: 'generating_pdf', label: 'PDF tayyorlanmoqda' },
     { id: 'done', label: 'Taqdimot tayyor' }
   ];
-  const currentStepIndex = steps.findIndex(s => s.id === step);
-
+  const idx = steps.findIndex(s => s.id === step);
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col p-8 space-y-8">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Jarayon holati</h2>
-        <div className="text-5xl font-black text-primary">{progress}%</div>
-      </div>
-      <div className="h-3 w-full bg-[#171717] rounded-full overflow-hidden">
-        <motion.div className="h-full bg-primary" animate={{ width: `${progress}%` }} />
-      </div>
-      <div className="flex-1 space-y-3">
-        {steps.map((s, i) => (
-            <div key={s.id} className={`p-3 rounded-2xl flex items-center space-x-4 transition-all ${i <= currentStepIndex ? 'bg-[#7c3aed]/10 border border-[#7c3aed]/20' : 'bg-[#171717] border border-transparent'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${i <= currentStepIndex ? 'bg-primary text-white' : 'bg-white/5 text-white/30'}`}>{i < currentStepIndex ? <Check size={16} /> : <span>{i + 1}</span>}</div>
-                <span className={`text-sm ${i <= currentStepIndex ? 'text-white' : 'text-white/30'}`}>{s.label}</span>
+    <div className="flex-1 flex flex-col p-8 space-y-8">
+        <div className="text-center"><div className="text-5xl font-black text-primary">{progress}%</div></div>
+        <div className="h-3 w-full bg-[#171717] rounded-full overflow-hidden"><motion.div className="h-full bg-primary" animate={{ width: `${progress}%` }} /></div>
+        <div className="flex-1 space-y-3">{steps.map((s, i) => (
+            <div key={s.id} className={`p-3 rounded-2xl flex items-center space-x-4 ${i <= idx ? 'bg-[#7c3aed]/10' : 'bg-[#171717]'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${i <= idx ? 'bg-primary' : 'bg-white/5'}`}>{i < idx ? <Check size={16}/> : i+1}</div>
+                <span>{s.label}</span>
             </div>
-        ))}
-      </div>
-      {progress >= 100 && (
-        <button onClick={() => window.location.href = 'https://t.me/uzafo_slide_bot'} className="w-full py-4 bg-primary text-white rounded-2xl font-bold transition-all hover:bg-primary/90">Botga qaytish</button>
-      )}
-    </motion.div>
+        ))}</div>
+        {progress >= 100 && <button onClick={() => window.location.href = 'https://t.me/uzafo_slide_bot'} className="w-full py-4 bg-primary rounded-2xl font-bold">Botga qaytish</button>}
+    </div>
   );
 };
-
-// ... (other components like CreditsView, HowToView, HomeView remain as defined before)
 
 export default App;
