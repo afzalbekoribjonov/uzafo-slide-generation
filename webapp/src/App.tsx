@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, Rocket, ChevronLeft, Check } from 'lucide-react';
+import { Menu, X, Rocket, HelpCircle, MessageSquare, ChevronLeft, ShieldAlert, Award, UserPlus, Zap, Check } from 'lucide-react';
 import { apiService } from './services/api';
 import type { User, Template } from './types';
 import { WizardView } from './components/WizardView';
@@ -12,6 +12,8 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isExternalBrowser, setIsExternalBrowser] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -20,25 +22,25 @@ const App: React.FC = () => {
         if (tg?.initData && tg.initData !== "") {
           tg.ready();
           tg.expand();
-          
           try {
             const data = await apiService.init();
             setUser(data.user);
             setTemplates(data.templates);
-            
             const activeJob = await apiService.getActiveJob();
             if (activeJob && activeJob.job_id) {
                 setCurrentJobId(activeJob.job_id);
                 setView('status');
             }
           } catch (apiErr: any) {
-            console.error('API Init failed:', apiErr);
+            setError('Server bilan aloqa o‘rnatib bo‘lmadi.');
           }
           setLoading(false);
         } else {
+            setIsExternalBrowser(true);
             setLoading(false);
         }
       } catch (err: any) {
+        setError('Kutilmagan xatolik yuz berdi.');
         setLoading(false);
       }
     };
@@ -46,6 +48,8 @@ const App: React.FC = () => {
   }, []);
 
   if (loading) return null;
+  if (isExternalBrowser) return <ExternalBrowserView />;
+  if (error) return <ErrorView error={error} />;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans overflow-hidden relative flex flex-col">
@@ -54,6 +58,25 @@ const App: React.FC = () => {
         <h1 className="text-xl font-bold bg-gradient-to-r from-[#a78bfa] to-[#7c3aed] bg-clip-text text-transparent">Slide Generator</h1>
         <div className="w-10" />
       </header>
+
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSidebarOpen(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
+            <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} className="fixed top-0 left-0 bottom-0 w-4/5 max-w-sm bg-[#171717] z-50 border-r border-white/10 p-6 flex flex-col">
+              <div className="flex items-center justify-between mb-8">
+                <span className="text-xl font-bold text-[#a78bfa]">Menyu</span>
+                <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-white/5 rounded-full"><X className="w-6 h-6" /></button>
+              </div>
+              <nav className="flex-1 space-y-4">
+                <SidebarItem icon={<Rocket className="w-5 h-5" />} label="Imkoniyatlarim" onClick={() => { setView('credits'); setSidebarOpen(false); }} active={view === 'credits'} />
+                <SidebarItem icon={<HelpCircle className="w-5 h-5" />} label="Qo‘llanma" onClick={() => { setView('how-to'); setSidebarOpen(false); }} active={view === 'how-to'} />
+                <SidebarItem icon={<MessageSquare className="w-5 h-5" />} label="Savol yoki taklif?" onClick={() => { window.open('https://uzafo.site/en/discussions/free-slide-generator', '_blank'); setSidebarOpen(false); }} />
+              </nav>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <main className="pt-16 flex-1 flex flex-col relative">
         <AnimatePresence mode="wait">
@@ -68,6 +91,23 @@ const App: React.FC = () => {
   );
 };
 
+const ExternalBrowserView = () => (
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-[#0a0a0a] text-white">
+        <ShieldAlert size={64} className="text-red-500 mb-6" />
+        <h2 className="text-2xl font-bold mb-4">Kirish taqiqlangan</h2>
+        <p className="text-white/60 mb-8">Ushbu xizmatdan faqat Telegram bot ichida foydalanish mumkin.</p>
+        <button onClick={() => window.open('https://t.me/uzafo_slide_bot', '_blank')} className="px-8 py-4 bg-primary rounded-2xl font-bold">Botga o‘tish</button>
+    </div>
+);
+
+const ErrorView = ({ error }: { error: string }) => (
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-[#0a0a0a] text-white">
+        <X size={64} className="text-red-500 mb-6" />
+        <p className="text-white/60 mb-8">{error}</p>
+        <button onClick={() => window.location.reload()} className="px-8 py-4 bg-primary rounded-2xl font-bold">Qayta urinish</button>
+    </div>
+);
+
 const HomeView: React.FC<{ user: User | null, onStart: () => void }> = ({ user, onStart }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="flex-1 flex flex-col items-center justify-center p-8 space-y-12">
     <div className="w-32 h-32 bg-gradient-to-br from-[#a78bfa] to-[#5b21b6] rounded-3xl flex items-center justify-center shadow-[0_0_50px_rgba(124,58,237,0.3)]">
@@ -77,10 +117,7 @@ const HomeView: React.FC<{ user: User | null, onStart: () => void }> = ({ user, 
       <h2 className="text-3xl font-bold">Taqdimot tayyorlashni hoziroq boshlang</h2>
     </div>
     <button onClick={onStart} className="px-12 py-5 bg-[#7c3aed] rounded-2xl font-bold text-xl">Boshlash</button>
-    <div className="flex items-center space-x-2 text-sm text-white/40">
-      <span>Imkoniyatlaringiz:</span>
-      <span className="text-[#a78bfa] font-bold">{user?.available_generations || 0} ta</span>
-    </div>
+    <div className="text-sm text-white/40">Imkoniyatlaringiz: <span className="text-[#a78bfa] font-bold">{user?.available_generations || 0} ta</span></div>
   </motion.div>
 );
 
@@ -142,5 +179,9 @@ const StatusView: React.FC<{ jobId: string, onDone: () => void }> = ({ jobId, on
     </div>
   );
 };
+
+const SidebarItem: React.FC<{ icon: React.ReactNode, label: string, onClick: () => void, active?: boolean }> = ({ icon, label, onClick, active }) => (
+    <button onClick={onClick} className={`w-full flex items-center space-x-4 p-4 rounded-xl ${active ? 'bg-[#7c3aed]/20 text-[#a78bfa]' : 'hover:bg-white/5'}`}>{icon}<span className="font-medium">{label}</span></button>
+);
 
 export default App;
