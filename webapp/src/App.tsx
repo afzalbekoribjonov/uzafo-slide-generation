@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, X, Rocket, HelpCircle, MessageSquare, ChevronLeft, Award, UserPlus, Zap, Check } from 'lucide-react';
+import { Menu, Rocket, ChevronLeft, Check } from 'lucide-react';
 import { apiService } from './services/api';
 import type { User, Template } from './types';
 import { WizardView } from './components/WizardView';
@@ -45,14 +45,12 @@ const App: React.FC = () => {
     init();
   }, []);
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-
   if (loading) return null;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans overflow-hidden relative flex flex-col">
       <header className="fixed top-0 left-0 right-0 h-16 flex items-center justify-between px-6 bg-[#0a0a0a]/80 backdrop-blur-md z-40 border-b border-white/5">
-        <button onClick={toggleSidebar} className="p-2 hover:bg-white/5 rounded-full transition-colors"><Menu className="w-6 h-6" /></button>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-white/5 rounded-full transition-colors"><Menu className="w-6 h-6" /></button>
         <h1 className="text-xl font-bold bg-gradient-to-r from-[#a78bfa] to-[#7c3aed] bg-clip-text text-transparent">Slide Generator</h1>
         <div className="w-10" />
       </header>
@@ -79,6 +77,10 @@ const HomeView: React.FC<{ user: User | null, onStart: () => void }> = ({ user, 
       <h2 className="text-3xl font-bold">Taqdimot tayyorlashni hoziroq boshlang</h2>
     </div>
     <button onClick={onStart} className="px-12 py-5 bg-[#7c3aed] rounded-2xl font-bold text-xl">Boshlash</button>
+    <div className="flex items-center space-x-2 text-sm text-white/40">
+      <span>Imkoniyatlaringiz:</span>
+      <span className="text-[#a78bfa] font-bold">{user?.available_generations || 0} ta</span>
+    </div>
   </motion.div>
 );
 
