@@ -9,10 +9,15 @@ RUN npm run build
 # --- Stage 2: Final Production Image ---
 FROM python:3.11-slim
 
-# Install system dependencies for LibreOffice and high-quality fonts
+# Install system dependencies for LibreOffice and high-quality fonts.
+# fonts-crosextra-carlito is metric-compatible with Calibri and fonts-crosextra-caladea
+# with Cambria; fontconfig aliases them automatically so the optional PDF export
+# (rendered server-side by LibreOffice) matches what clients see in the .pptx.
 RUN apt-get update && apt-get install -y \
     libreoffice \
     fonts-liberation \
+    fonts-crosextra-carlito \
+    fonts-crosextra-caladea \
     fonts-dejavu \
     fonts-freefont-ttf \
     fonts-noto \

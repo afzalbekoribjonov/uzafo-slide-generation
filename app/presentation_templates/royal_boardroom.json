@@ -7,6 +7,7 @@
   "preview_path": "previews/royal_boardroom.png",
   "theme": {
     "font_family": "Arial",
+    "heading_font": "Cambria",
     "background": "#f9fafb",
     "cover_background": "#eef2ff",
     "primary": "#312e81",

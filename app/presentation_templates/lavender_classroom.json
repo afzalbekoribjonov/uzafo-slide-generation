@@ -6,7 +6,8 @@
   "description": "Ta'limiy va iliq uslub: lavender fon, sariq aksentlar, yirik o'qiladigan kartalar va bosqichma-bosqich tushuntirishlar. Dars, seminar va o'quv taqdimotlari uchun.",
   "preview_path": "previews/lavender_classroom.png",
   "theme": {
-    "font_family": "Verdana",
+    "font_family": "Calibri",
+    "heading_font": "Calibri",
     "background": "#fbf7ff",
     "cover_background": "#f3e8ff",
     "primary": "#7c3aed",

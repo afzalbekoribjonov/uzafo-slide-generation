@@ -6,7 +6,8 @@
   "description": "Editorial/jurnal uslubi: iliq coral va teal ranglar, katta ta'sirli sarlavhalar, kreativ asimmetrik matn bloklari. Lifestyle, marketing va ijodiy taqdimotlar uchun.",
   "preview_path": "previews/coral_magazine.png",
   "theme": {
-    "font_family": "Trebuchet MS",
+    "font_family": "Calibri",
+    "heading_font": "Cambria",
     "background": "#fffaf5",
     "cover_background": "#fff7ed",
     "primary": "#c2410c",

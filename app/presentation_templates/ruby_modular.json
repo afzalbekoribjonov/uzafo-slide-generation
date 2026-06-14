@@ -6,7 +6,8 @@
   "description": "Dinamik modular uslub: ruby va indigo aksentlar, kuchli sarlavhalar va spotlight bloklar. Marketing, loyiha va kreativ brief uchun.",
   "preview_path": "previews/ruby_modular.png",
   "theme": {
-    "font_family": "Trebuchet MS",
+    "font_family": "Calibri",
+    "heading_font": "Cambria",
     "background": "#fff1f2",
     "cover_background": "#ffe4e6",
     "primary": "#be123c",

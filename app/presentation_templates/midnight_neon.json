@@ -6,7 +6,8 @@
   "description": "Premium qora uslub: zamonaviy tungi fon, yorqin neon aksentlar, dashboard tarzida panellar va yuqori kontrastli jadvallar. Tech, startup va kreativ taqdimotlar uchun.",
   "preview_path": "previews/midnight_neon.png",
   "theme": {
-    "font_family": "Segoe UI",
+    "font_family": "Arial",
+    "heading_font": "Arial",
     "background": "#0a0e1a",
     "cover_background": "#0f172a",
     "primary": "#06b6d4",

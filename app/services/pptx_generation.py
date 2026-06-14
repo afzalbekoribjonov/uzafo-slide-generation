@@ -6,9 +6,12 @@ from pathlib import Path
 from typing import Any
 
 from pptx import Presentation
+from pptx.chart.data import CategoryChartData
 from pptx.dml.color import RGBColor
+from pptx.enum.chart import XL_CHART_TYPE, XL_LABEL_POSITION, XL_LEGEND_POSITION
 from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
 from pptx.enum.text import MSO_VERTICAL_ANCHOR, PP_ALIGN
+from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
 from app.schemas.presentation_plan import PresentationPlan, TopicSection
@@ -49,7 +52,8 @@ class PptxGenerationService:
         prs = Presentation()
         prs.slide_width = Inches(13.333)
         prs.slide_height = Inches(7.5)
-        total_slides = 3 + len(plan.sections)
+        # title + agenda + sections + summary + closing
+        total_slides = 4 + len(plan.sections)
 
         self._add_title_slide(
             prs,
@@ -72,7 +76,7 @@ class PptxGenerationService:
         )
 
         current_page = 3
-        for section in plan.sections:
+        for section_index, section in enumerate(plan.sections):
             if section.content_type == 'table' and section.table is not None:
                 self._add_table_slide(
                     prs,
@@ -81,6 +85,7 @@ class PptxGenerationService:
                     page_number=current_page,
                     total_slides=total_slides,
                     pack=pack,
+                    section_index=section_index,
                 )
             elif section.content_type == 'process':
                 self._add_process_slide(
@@ -90,6 +95,7 @@ class PptxGenerationService:
                     page_number=current_page,
                     total_slides=total_slides,
                     pack=pack,
+                    section_index=section_index,
                 )
             else:
                 self._add_facts_slide(
@@ -99,6 +105,7 @@ class PptxGenerationService:
                     page_number=current_page,
                     total_slides=total_slides,
                     pack=pack,
+                    section_index=section_index,
                 )
             current_page += 1
 
@@ -106,6 +113,15 @@ class PptxGenerationService:
             prs,
             title=str(pack['summary']),
             summary_points=plan.summary_points,
+            presenter_name=presenter_name,
+            page_number=total_slides - 1,
+            total_slides=total_slides,
+            pack=pack,
+        )
+
+        self._add_closing_slide(
+            prs,
+            presentation_title=plan.presentation_title,
             presenter_name=presenter_name,
             page_number=total_slides,
             total_slides=total_slides,
@@ -146,6 +162,9 @@ class PptxGenerationService:
                 'summary': 'Итоговые выводы',
                 'key_focus': 'Ключевые темы',
                 'cover_points': ['Истоки', 'Развитие', 'Ключевые факты', 'Значение'],
+                'thanks_title': 'Спасибо за внимание!',
+                'thanks_subtitle': 'Есть вопросы? С удовольствием отвечу и обсужу детали.',
+                'thanks_tag': 'Завершение',
             }
         if language_code == 'en':
             return {
@@ -156,6 +175,9 @@ class PptxGenerationService:
                 'summary': 'Final conclusions',
                 'key_focus': 'Key themes',
                 'cover_points': ['Origins', 'Development', 'Key facts', 'Significance'],
+                'thanks_title': 'Thank you for your attention!',
+                'thanks_subtitle': 'Questions are welcome — happy to discuss the details.',
+                'thanks_tag': 'The end',
             }
         return {
             'language_code': 'uz',
@@ -165,6 +187,9 @@ class PptxGenerationService:
             'summary': 'Yakuniy xulosalar',
             'key_focus': 'Asosiy yo‘nalishlar',
             'cover_points': ['Boshlanish', 'Rivojlanish', 'Muhim faktlar', 'Ahamiyati'],
+            'thanks_title': 'E’tiboringiz uchun rahmat!',
+            'thanks_subtitle': 'Savollaringiz bo‘lsa, javob berishdan mamnun bo‘laman.',
+            'thanks_tag': 'Yakun',
         }
 
     @staticmethod
@@ -191,7 +216,11 @@ class PptxGenerationService:
         return RGBColor(*self._rgb_tuple(pack, key, default))
 
     def _font_family(self, pack: dict) -> str:
-        return self._theme_value(pack, 'font_family', 'Aptos')
+        return self._theme_value(pack, 'font_family', 'Calibri')
+
+    def _heading_font(self, pack: dict) -> str:
+        # Falls back to the body font when a template defines no dedicated heading face.
+        return self._theme_value(pack, 'heading_font', self._font_family(pack))
 
     def _layout_value(self, pack: dict, key: str, default: str) -> str:
         template = pack.get('_template') or {}
@@ -200,7 +229,7 @@ class PptxGenerationService:
             return str(layout.get(key) or default)
         return default
 
-    def _process_color_list(self, pack: dict) -> list[RGBColor]:
+    def _process_color_tuples(self, pack: dict) -> list[tuple[int, int, int]]:
         template = pack.get('_template') or {}
         theme = template.get('theme') if isinstance(template, dict) else {}
         raw_colors = theme.get('process_colors') if isinstance(theme, dict) else None
@@ -208,9 +237,96 @@ class PptxGenerationService:
             raw_colors = ['#dbeafe', '#e0e7ff', '#dcfce7', '#fef3c7', '#fee2e2']
         defaults = [(219, 234, 254), (224, 231, 255), (220, 252, 231), (254, 243, 199), (254, 226, 226)]
         return [
-            RGBColor(*self._hex_to_tuple(str(color), defaults[index % len(defaults)]))
+            self._hex_to_tuple(str(color), defaults[index % len(defaults)])
             for index, color in enumerate(raw_colors[:6])
         ]
+
+    def _process_color_list(self, pack: dict) -> list[RGBColor]:
+        return [RGBColor(*color) for color in self._process_color_tuples(pack)]
+
+    def _section_accent_tuple(self, pack: dict, index: int) -> tuple[int, int, int]:
+        colors = self._process_color_tuples(pack)
+        return colors[index % len(colors)] if colors else (191, 219, 254)
+
+    @staticmethod
+    def _relative_luminance(rgb: tuple[int, int, int]) -> float:
+        def channel(value: int) -> float:
+            c = value / 255.0
+            return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+        r, g, b = rgb
+        return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+
+    def _contrast_ratio(self, a: tuple[int, int, int], b: tuple[int, int, int]) -> float:
+        la, lb = self._relative_luminance(a), self._relative_luminance(b)
+        high, low = max(la, lb), min(la, lb)
+        return (high + 0.05) / (low + 0.05)
+
+    def _visible_accent(self, pack: dict, accent_rgb: tuple[int, int, int]) -> tuple[int, int, int]:
+        # For thin accent bars the colour must read against the background. On dark
+        # templates the pastel section colours wash out, so fall back to the brand tones.
+        background = self._rgb_tuple(pack, 'background', (248, 250, 252))
+        candidates = (
+            accent_rgb,
+            self._rgb_tuple(pack, 'secondary', (96, 165, 250)),
+            self._rgb_tuple(pack, 'primary', (30, 64, 175)),
+        )
+        for candidate in candidates:
+            if self._contrast_ratio(candidate, background) >= 1.6:
+                return candidate
+        return accent_rgb
+
+    # Icons are drawn from PowerPoint preset geometries (not an icon font) so they
+    # render identically in PowerPoint, Google Slides, mobile and the PDF export.
+    ICON_PRESETS = {
+        'idea': MSO_AUTO_SHAPE_TYPE.SUN,
+        'gear': MSO_AUTO_SHAPE_TYPE.GEAR_6,
+        'flow': MSO_AUTO_SHAPE_TYPE.CIRCULAR_ARROW,
+        'star': MSO_AUTO_SHAPE_TYPE.STAR_5_POINT,
+        'doc': MSO_AUTO_SHAPE_TYPE.FLOWCHART_DOCUMENT,
+        'pie': MSO_AUTO_SHAPE_TYPE.PIE,
+        'donut': MSO_AUTO_SHAPE_TYPE.DONUT,
+        'cube': MSO_AUTO_SHAPE_TYPE.CUBE,
+        'hex': MSO_AUTO_SHAPE_TYPE.HEXAGON,
+        'pentagon': MSO_AUTO_SHAPE_TYPE.PENTAGON,
+        'diamond': MSO_AUTO_SHAPE_TYPE.DIAMOND,
+        'plaque': MSO_AUTO_SHAPE_TYPE.PLAQUE,
+        'bolt': MSO_AUTO_SHAPE_TYPE.LIGHTNING_BOLT,
+        'chevron': MSO_AUTO_SHAPE_TYPE.CHEVRON,
+        'arrow': MSO_AUTO_SHAPE_TYPE.RIGHT_ARROW,
+        'plus': MSO_AUTO_SHAPE_TYPE.MATH_PLUS,
+        'heart': MSO_AUTO_SHAPE_TYPE.HEART,
+        'cloud': MSO_AUTO_SHAPE_TYPE.CLOUD,
+    }
+
+    _ICON_RULES = (
+        (('tarix', 'history', 'davr', 'asr', 'dynasty', 'otmish', 'qadim', 'meros', 'heritage'), 'plaque'),
+        (('iqtisod', 'economy', 'savdo', 'moliya', 'bozor', 'business', 'market', 'daromad', 'narx', 'budjet'), 'pie'),
+        (('texnologiya', 'technology', 'innovatsiya', 'innovation', 'raqamli', 'digital', 'dastur', 'tizim', 'system', 'kompyuter'), 'gear'),
+        (('talim', 'education', 'oqit', 'maktab', 'oquv', 'pedagog', 'learning', 'teaching', 'dars'), 'idea'),
+        (('fan', 'science', 'biolog', 'fizika', 'kimyo', 'tadqiqot', 'research', 'tajriba', 'kashfiyot'), 'bolt'),
+        (('jarayon', 'process', 'bosqich', 'rivojlanish', 'development', 'evolution', 'ketma', 'sequence'), 'flow'),
+        (('natija', 'xulosa', 'result', 'outcome', 'yutuq', 'ahamiyat', 'significance', 'impact', 'samara'), 'star'),
+        (('omil', 'factor', 'sabab', 'cause', 'asos', 'principle', 'tushuncha', 'concept', 'tamoyil'), 'diamond'),
+        (('kelajak', 'future', 'reja', 'plan', 'strategiya', 'strategy', 'maqsad', 'goal', 'istiqbol'), 'arrow'),
+        (('madaniyat', 'culture', 'sanat', 'art', 'adabiyot', 'literature', 'meʼmor', 'memor'), 'heart'),
+        (('tabiat', 'nature', 'ekolog', 'environment', 'iqlim', 'climate', 'suv', 'energiya', 'energy'), 'cloud'),
+    )
+
+    @classmethod
+    def _icon_for_text(cls, text: str, *, fallback_index: int = 0) -> str:
+        lowered = re.sub(r"['ʻʼ`’]", '', str(text or '').lower())
+        for keys, icon in cls._ICON_RULES:
+            if any(key in lowered for key in keys):
+                return icon
+        cycle = ['diamond', 'hex', 'star', 'pentagon', 'cube', 'donut']
+        return cycle[fallback_index % len(cycle)]
+
+    def _draw_icon(self, slide, name: str, *, left: float, top: float, size: float, color: tuple[int, int, int]) -> None:
+        shape_type = self.ICON_PRESETS.get(name, MSO_AUTO_SHAPE_TYPE.DIAMOND)
+        shape = slide.shapes.add_shape(shape_type, Inches(left), Inches(top), Inches(size), Inches(size))
+        shape.fill.solid()
+        shape.fill.fore_color.rgb = RGBColor(*color)
+        shape.line.fill.background()
 
     def _motif_rect(self, slide, pack: dict, *, left: float, top: float, width: float, height: float, color_key: str, default: tuple[int, int, int]) -> None:
         shape = slide.shapes.add_shape(
@@ -288,11 +404,13 @@ class PptxGenerationService:
         color_key: str = 'text',
         default_color: tuple[int, int, int] = (15, 23, 42),
         bold: bool = False,
+        font_name: str | None = None,
+        color_rgb: tuple[int, int, int] | None = None,
     ) -> None:
         run.font.size = Pt(size)
         run.font.bold = bold
-        run.font.name = self._font_family(pack)
-        run.font.color.rgb = self._rgb(pack, color_key, default_color)
+        run.font.name = font_name or self._font_family(pack)
+        run.font.color.rgb = RGBColor(*color_rgb) if color_rgb is not None else self._rgb(pack, color_key, default_color)
 
     def _build_fallback_plan(self, *, topic: str, slide_count: int, pack: dict) -> PresentationPlan:
         language_code = str(pack.get('language_code', 'uz'))
@@ -514,20 +632,111 @@ class PptxGenerationService:
 
 
     @staticmethod
-    def _fit_frame(text_frame, *, max_size: int | float, min_size: int | float = 10, bold: bool = False, font_family: str = 'Aptos') -> None:
-        text_frame.word_wrap = True
+    def _emu_to_inches(value: Any) -> float | None:
         try:
-            text_frame.fit_text(max_size=max_size, font_family=font_family, bold=bold)
-        except Exception:
-            pass
+            return float(value) / 914400.0
+        except (TypeError, ValueError):
+            return None
+
+    def _frame_inner_size(
+        self,
+        text_frame,
+        avail_width: float | None,
+        avail_height: float | None,
+    ) -> tuple[float, float]:
+        width = avail_width
+        height = avail_height
+        shape = getattr(text_frame, '_parent', None)
+        if width is None and shape is not None:
+            width = self._emu_to_inches(getattr(shape, 'width', None))
+        if height is None and shape is not None:
+            height = self._emu_to_inches(getattr(shape, 'height', None))
+        margin_l = self._emu_to_inches(text_frame.margin_left) or 0.0
+        margin_r = self._emu_to_inches(text_frame.margin_right) or 0.0
+        margin_t = self._emu_to_inches(text_frame.margin_top) or 0.0
+        margin_b = self._emu_to_inches(text_frame.margin_bottom) or 0.0
+        inner_w = (width - margin_l - margin_r) if width else 0.0
+        inner_h = (height - margin_t - margin_b) if height else 0.0
+        return max(inner_w, 0.0), max(inner_h, 0.0)
+
+    # _estimate_lines is tuned optimistically (it assumes more characters per line
+    # than a real proportional font such as Aptos renders), so we inflate the
+    # estimated block height by this factor when deciding whether text fits.
+    _FIT_SAFETY = 1.08
+
+    def _text_block_height(
+        self,
+        paragraphs: list[tuple[str, float, float, float]],
+        inner_w: float,
+        *,
+        scale: float,
+        min_size: float,
+    ) -> float:
+        total = 0.0
+        for text, design_size, space_after, line_spacing in paragraphs:
+            font_size = max(min_size, design_size * scale)
+            lines = self._estimate_lines(text, inner_w, font_size)
+            line_height = (font_size * 1.2 * max(line_spacing, 1.0)) / 72.0
+            total += (lines * line_height) + (space_after / 72.0)
+        return total * self._FIT_SAFETY
+
+    def _fit_frame(
+        self,
+        text_frame,
+        *,
+        max_size: int | float,
+        min_size: int | float = 10,
+        bold: bool = False,
+        font_family: str = 'Calibri',
+        avail_width: float | None = None,
+        avail_height: float | None = None,
+    ) -> None:
+        # Deterministic, font-independent shrink-to-fit. python-pptx's fit_text
+        # relies on locally installed font metrics (e.g. Aptos), which are absent
+        # both in the dev font registry and on the production server, so it would
+        # silently fail and let text overflow its shape. We size text ourselves
+        # and scale every run by a shared factor so size hierarchy is preserved.
+        text_frame.word_wrap = True
+        max_size = float(max_size)
+        min_size = min(float(min_size), max_size)
+
+        inner_w, inner_h = self._frame_inner_size(text_frame, avail_width, avail_height)
+
+        def design_size_of(paragraph) -> float:
+            run_sizes = [run.font.size.pt for run in paragraph.runs if run.font.size is not None]
+            base = max(run_sizes) if run_sizes else max_size
+            return min(base, max_size)
+
+        paragraphs: list[tuple[str, float, float, float]] = []
+        for paragraph in text_frame.paragraphs:
+            text = ''.join(run.text for run in paragraph.runs) or (paragraph.text or '')
+            space_after = paragraph.space_after.pt if paragraph.space_after is not None else 0.0
+            raw_spacing = paragraph.line_spacing
+            line_spacing = float(raw_spacing) if isinstance(raw_spacing, (int, float)) else 1.0
+            paragraphs.append((text, design_size_of(paragraph), float(space_after), line_spacing))
+
+        scale = 1.0
+        has_text = any(text.strip() for text, _, _, _ in paragraphs)
+        if inner_w > 0 and inner_h > 0 and has_text:
+            if self._text_block_height(paragraphs, inner_w, scale=1.0, min_size=min_size) > inner_h:
+                scale = 0.0
+                candidate = 1.0
+                while candidate > 0.05:
+                    if self._text_block_height(paragraphs, inner_w, scale=candidate, min_size=min_size) <= inner_h:
+                        scale = candidate
+                        break
+                    candidate -= 0.02
+
         for paragraph in text_frame.paragraphs:
             for run in paragraph.runs:
+                original = run.font.size.pt if run.font.size is not None else max_size
+                original = min(original, max_size)
+                if scale <= 0:
+                    new_size = min_size
+                else:
+                    new_size = max(min_size, original * scale)
                 run.font.name = font_family
-                current = run.font.size.pt if run.font.size else float(max_size)
-                if current < float(min_size):
-                    run.font.size = Pt(float(min_size))
-                elif current > float(max_size):
-                    run.font.size = Pt(float(max_size))
+                run.font.size = Pt(round(new_size, 1))
 
     @staticmethod
     def _content_bounds(has_subtitle: bool) -> tuple[float, float]:
@@ -638,7 +847,7 @@ class PptxGenerationService:
         space_after_pt: float,
         align=PP_ALIGN.LEFT,
         min_size: int = 9,
-        font_family: str = 'Aptos',
+        font_family: str = 'Calibri',
     ) -> None:
         frame.clear()
         frame.word_wrap = True
@@ -671,13 +880,16 @@ class PptxGenerationService:
         bold: bool = False,
         color: tuple[int, int, int] = (31, 41, 55),
         min_size: float = 9.5,
-        font_family: str = 'Aptos',
+        font_family: str = 'Calibri',
+        avail_width: float | None = None,
+        avail_height: float | None = None,
     ) -> None:
         cell.text = self._normalize_text(text)
         frame = cell.text_frame
         frame.word_wrap = True
-        frame.margin_left = Inches(0.03)
-        frame.margin_right = Inches(0.03)
+        frame.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
+        frame.margin_left = Inches(0.06)
+        frame.margin_right = Inches(0.06)
         frame.margin_top = Inches(0.03)
         frame.margin_bottom = Inches(0.03)
         for p in frame.paragraphs:
@@ -686,19 +898,36 @@ class PptxGenerationService:
                 run.font.bold = bold
                 run.font.name = font_family
                 run.font.color.rgb = RGBColor(*color)
-        self._fit_frame(frame, max_size=font_size, min_size=min_size, bold=bold, font_family=font_family)
+        self._fit_frame(
+            frame,
+            max_size=font_size,
+            min_size=min_size,
+            bold=bold,
+            font_family=font_family,
+            avail_width=avail_width,
+            avail_height=avail_height,
+        )
 
 
-    @staticmethod
-    def _facts_variant(items: list[str]) -> str:
+    def _facts_variant(self, items: list[str], *, rotation_index: int = 0) -> str:
+        # Rotate the layout per content slide so consecutive fact slides never look
+        # identical, while only picking a style the content actually fits into.
         if not items:
             return 'bullets'
+        count = len(items)
         max_len = max(len(item) for item in items)
-        avg_len = sum(len(item) for item in items) / max(1, len(items))
-        if len(items) in {3, 4} and max_len <= 95 and avg_len <= 78:
-            return 'cards'
-        if len(items) in {3, 4} and avg_len <= 118:
-            return 'spotlight'
+        avg_len = sum(len(item) for item in items) / max(1, count)
+        feasible = {'bullets'}
+        if 2 <= count <= 4 and max_len <= 95 and avg_len <= 82:
+            feasible.add('cards')
+        if 3 <= count <= 4 and avg_len <= 120:
+            feasible.add('spotlight')
+        order = ['cards', 'spotlight', 'bullets']
+        start = rotation_index % len(order)
+        for offset in range(len(order)):
+            candidate = order[(start + offset) % len(order)]
+            if candidate in feasible:
+                return candidate
         return 'bullets'
 
     @staticmethod
@@ -723,9 +952,10 @@ class PptxGenerationService:
             ]
         return []
 
-    def _render_fact_cards(self, slide, *, items: list[str], pack: dict) -> None:
+    def _render_fact_cards(self, slide, *, items: list[str], pack: dict, accent: tuple[int, int, int] | None = None) -> None:
         coords = self._fact_card_coords(len(items))
         colors = self._process_color_list(pack)
+        stripe_color = RGBColor(*accent) if accent is not None else None
         font_size = 14.4 if max((len(item) for item in items), default=0) <= 72 else 13.2
         for index, item in enumerate(items):
             x, y, w, h = coords[index]
@@ -736,7 +966,7 @@ class PptxGenerationService:
 
             stripe = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(0.18))
             stripe.fill.solid()
-            stripe.fill.fore_color.rgb = colors[index % len(colors)]
+            stripe.fill.fore_color.rgb = stripe_color if stripe_color is not None else colors[index % len(colors)]
             stripe.line.fill.background()
 
             badge = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.OVAL, Inches(x + 0.18), Inches(y + 0.26), Inches(0.46), Inches(0.46))
@@ -766,12 +996,12 @@ class PptxGenerationService:
             self._style_run(run, pack, size=font_size, color_key='text', default_color=(30, 41, 59))
             self._fit_frame(frame, max_size=font_size, min_size=10.8, font_family=self._font_family(pack))
 
-    def _render_focus_spotlight(self, slide, *, items: list[str], pack: dict) -> None:
+    def _render_focus_spotlight(self, slide, *, items: list[str], pack: dict, accent: tuple[int, int, int] | None = None) -> None:
         highlight = items[0] if items else ''
         remaining_items = items[1:] if len(items) > 1 else items
         left = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(0.92), Inches(2.18), Inches(4.12), Inches(3.98))
         left.fill.solid()
-        left.fill.fore_color.rgb = self._rgb(pack, 'surface_alt', (239, 246, 255))
+        left.fill.fore_color.rgb = RGBColor(*accent) if accent is not None else self._rgb(pack, 'surface_alt', (239, 246, 255))
         left.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
 
         frame = left.text_frame
@@ -784,7 +1014,7 @@ class PptxGenerationService:
         header.alignment = PP_ALIGN.LEFT
         run = header.add_run()
         run.text = '01'
-        self._style_run(run, pack, size=13.2, color_key='primary', default_color=(30, 64, 175), bold=True)
+        self._style_run(run, pack, size=13.2, color_key='primary', default_color=(30, 64, 175), bold=True, font_name=self._heading_font(pack))
 
         focus_p = frame.add_paragraph()
         focus_p.alignment = PP_ALIGN.LEFT
@@ -878,8 +1108,13 @@ class PptxGenerationService:
         pack: dict,
         subtitle: str | None = None,
         background_rgb: tuple[int, int, int] | None = None,
+        accent_rgb: tuple[int, int, int] | None = None,
+        section_number: int | None = None,
     ):
         header_style = self._layout_value(pack, 'header_style', 'top_band')
+        heading_font = self._heading_font(pack)
+        accent_color = RGBColor(*accent_rgb) if accent_rgb is not None else None
+        bar_color = RGBColor(*self._visible_accent(pack, accent_rgb)) if accent_rgb is not None else None
         slide = prs.slides.add_slide(prs.slide_layouts[6])
         background = slide.background.fill
         background.solid()
@@ -888,9 +1123,25 @@ class PptxGenerationService:
 
         title_x = 0.96
         title_y = 0.80
-        title_w = 11.10
+        title_w = 9.40 if section_number is not None else 11.10
         subtitle_y = 1.48
         footer_y = 6.84
+
+        # Large, faint chapter number in the top-right — gives each content slide
+        # its own identity and a sense of progression through the deck.
+        if section_number is not None:
+            watermark = slide.shapes.add_textbox(Inches(10.55), Inches(0.50), Inches(2.0), Inches(1.34))
+            wm_frame = watermark.text_frame
+            wm_frame.clear()
+            wm_frame.word_wrap = False
+            wm_p = wm_frame.paragraphs[0]
+            wm_p.alignment = PP_ALIGN.RIGHT
+            wm_run = wm_p.add_run()
+            wm_run.text = f'{section_number:02d}'
+            wm_run.font.size = Pt(66)
+            wm_run.font.bold = True
+            wm_run.font.name = heading_font
+            wm_run.font.color.rgb = accent_color if accent_color is not None else self._rgb(pack, 'accent', (186, 230, 253))
 
         if header_style == 'left_rail':
             rail = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0), Inches(0), Inches(0.52), Inches(7.5))
@@ -899,7 +1150,7 @@ class PptxGenerationService:
             rail.line.fill.background()
             marker = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0.52), Inches(0.76), Inches(0.08), Inches(1.42 if subtitle else 0.92))
             marker.fill.solid()
-            marker.fill.fore_color.rgb = self._rgb(pack, 'secondary', (20, 184, 166))
+            marker.fill.fore_color.rgb = bar_color if bar_color is not None else self._rgb(pack, 'secondary', (20, 184, 166))
             marker.line.fill.background()
             title_x = 0.92
             title_y = 0.74
@@ -911,7 +1162,7 @@ class PptxGenerationService:
             corner.line.fill.background()
             accent = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0.76), Inches(0.72), Inches(1.24), Inches(0.08))
             accent.fill.solid()
-            accent.fill.fore_color.rgb = self._rgb(pack, 'secondary', (15, 118, 110))
+            accent.fill.fore_color.rgb = bar_color if bar_color is not None else self._rgb(pack, 'secondary', (15, 118, 110))
             accent.line.fill.background()
             title_y = 0.84
             subtitle_y = 1.52
@@ -930,7 +1181,7 @@ class PptxGenerationService:
                 Inches(1.22 if subtitle else 0.82),
             )
             accent.fill.solid()
-            accent.fill.fore_color.rgb = self._rgb(pack, 'secondary', (96, 165, 250))
+            accent.fill.fore_color.rgb = bar_color if bar_color is not None else self._rgb(pack, 'secondary', (96, 165, 250))
             accent.line.fill.background()
 
         if title:
@@ -943,8 +1194,8 @@ class PptxGenerationService:
             p = title_frame.paragraphs[0]
             run = p.add_run()
             run.text = self._normalize_text(title)
-            self._style_run(run, pack, size=25, color_key='text', default_color=(15, 23, 42), bold=True)
-            self._fit_frame(title_frame, max_size=25, min_size=18, bold=True, font_family=self._font_family(pack))
+            self._style_run(run, pack, size=25, color_key='text', default_color=(15, 23, 42), bold=True, font_name=heading_font)
+            self._fit_frame(title_frame, max_size=25, min_size=18, bold=True, font_family=heading_font)
 
         if subtitle:
             subtitle_box = slide.shapes.add_textbox(Inches(title_x), Inches(subtitle_y), Inches(11.25), Inches(0.68))
@@ -1106,17 +1357,18 @@ class PptxGenerationService:
                 shape.fill.fore_color.rgb = self._rgb(pack, 'surface', (255, 255, 255))
                 shape.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
 
-                badge = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.OVAL, Inches(x + 0.16), Inches(y + 0.16), Inches(0.38), Inches(0.38))
+                badge = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.OVAL, Inches(x + 0.16), Inches(y + 0.16), Inches(0.42), Inches(0.42))
                 badge.fill.solid()
                 badge.fill.fore_color.rgb = self._rgb(pack, 'primary', (30, 64, 175))
                 badge.line.fill.background()
-                badge_frame = badge.text_frame
-                badge_frame.clear()
-                badge_frame.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
-                badge_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
-                badge_run = badge_frame.paragraphs[0].add_run()
-                badge_run.text = str(index)
-                self._style_run(badge_run, pack, size=10.5, color_key='on_primary', default_color=(255, 255, 255), bold=True)
+                self._draw_icon(
+                    slide,
+                    self._icon_for_text(item, fallback_index=index - 1),
+                    left=x + 0.16 + 0.115,
+                    top=y + 0.16 + 0.115,
+                    size=0.19,
+                    color=self._rgb_tuple(pack, 'on_primary', (255, 255, 255)),
+                )
 
                 text_box = slide.shapes.add_textbox(Inches(x + 0.24), Inches(y + 0.56), Inches(w - 0.48), Inches(h - 0.68))
                 frame = text_box.text_frame
@@ -1149,16 +1401,28 @@ class PptxGenerationService:
                 note_left = 6.82
                 note_width = 5.34
 
-            shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(layout['col_width']), Inches(layout['item_height']))
+            item_h = layout['item_height']
+            shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(layout['col_width']), Inches(item_h))
             shape.fill.solid()
             shape.fill.fore_color.rgb = self._rgb(pack, 'surface', (255, 255, 255))
             shape.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
+
+            icon_size = min(0.30, item_h - 0.18)
+            self._draw_icon(
+                slide,
+                self._icon_for_text(item, fallback_index=index - 1),
+                left=x + 0.16,
+                top=y + (item_h - icon_size) / 2,
+                size=icon_size,
+                color=self._rgb_tuple(pack, 'primary', (30, 64, 175)),
+            )
+
             frame = shape.text_frame
             frame.clear()
             frame.word_wrap = True
             frame.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
-            frame.margin_left = Inches(0.12)
-            frame.margin_right = Inches(0.12)
+            frame.margin_left = Inches(0.16 + icon_size + 0.14)
+            frame.margin_right = Inches(0.10)
             run = frame.paragraphs[0].add_run()
             run.text = f'{index}. {item}'
             self._style_run(run, pack, size=body_font, color_key='text', default_color=(15, 23, 42))
@@ -1189,7 +1453,8 @@ class PptxGenerationService:
         self._fit_frame(note_frame, max_size=15, min_size=10.5, font_family=self._font_family(pack))
 
 
-    def _add_facts_slide(self, prs: Presentation, *, section: TopicSection, presenter_name: str, page_number: int, total_slides: int, pack: dict) -> None:
+    def _add_facts_slide(self, prs: Presentation, *, section: TopicSection, presenter_name: str, page_number: int, total_slides: int, pack: dict, section_index: int = 0) -> None:
+        accent = self._section_accent_tuple(pack, section_index)
         slide = self._base_slide(
             prs,
             title=section.title,
@@ -1197,19 +1462,21 @@ class PptxGenerationService:
             page_number=page_number,
             total_slides=total_slides,
             pack=pack,
+            accent_rgb=accent,
+            section_number=section_index + 1,
         )
 
         facts = [self._normalize_text(item) for item in section.facts[:10] if self._normalize_text(item)]
         if not facts:
             return
 
-        preferred_variant = self._layout_value(pack, 'facts_style', 'auto')
-        variant = self._facts_variant(facts) if preferred_variant == 'auto' else preferred_variant
+        # Rotate layouts across the deck so fact slides feel distinct from one another.
+        variant = self._facts_variant(facts, rotation_index=section_index)
         if variant == 'cards':
-            self._render_fact_cards(slide, items=facts[:4], pack=pack)
+            self._render_fact_cards(slide, items=facts[:4], pack=pack, accent=accent)
             return
         if variant == 'spotlight':
-            self._render_focus_spotlight(slide, items=facts[:4], pack=pack)
+            self._render_focus_spotlight(slide, items=facts[:4], pack=pack, accent=accent)
             return
 
         content_top, content_bottom = self._content_bounds(False)
@@ -1223,10 +1490,10 @@ class PptxGenerationService:
         panel.fill.fore_color.rgb = self._rgb(pack, 'surface', (255, 255, 255))
         panel.line.color.rgb = self._rgb(pack, 'border', (203, 213, 225))
 
-        accent = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(panel_left + 0.18), Inches(panel_top + 0.22), Inches(0.10), Inches(panel_height - 0.44))
-        accent.fill.solid()
-        accent.fill.fore_color.rgb = self._rgb(pack, 'accent', (191, 219, 254))
-        accent.line.fill.background()
+        accent_bar = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(panel_left + 0.18), Inches(panel_top + 0.22), Inches(0.10), Inches(panel_height - 0.44))
+        accent_bar.fill.solid()
+        accent_bar.fill.fore_color.rgb = RGBColor(*self._visible_accent(pack, accent))
+        accent_bar.line.fill.background()
 
         layout = self._select_facts_layout(facts, panel_height=panel_height - 0.48)
         if layout['columns'] == 1:
@@ -1253,7 +1520,7 @@ class PptxGenerationService:
         divider.fill.fore_color.rgb = self._rgb(pack, 'border', (226, 232, 240))
         divider.line.fill.background()
 
-    def _add_process_slide(self, prs: Presentation, *, section: TopicSection, presenter_name: str, page_number: int, total_slides: int, pack: dict) -> None:
+    def _add_process_slide(self, prs: Presentation, *, section: TopicSection, presenter_name: str, page_number: int, total_slides: int, pack: dict, section_index: int = 0) -> None:
         slide = self._base_slide(
             prs,
             title=section.title,
@@ -1261,6 +1528,8 @@ class PptxGenerationService:
             page_number=page_number,
             total_slides=total_slides,
             pack=pack,
+            accent_rgb=self._section_accent_tuple(pack, section_index),
+            section_number=section_index + 1,
         )
 
         items = [self._normalize_text(item) for item in section.facts[:5] if self._normalize_text(item)]
@@ -1345,7 +1614,199 @@ class PptxGenerationService:
             arrow.line.fill.background()
 
 
-    def _add_table_slide(self, prs: Presentation, *, section: TopicSection, presenter_name: str, page_number: int, total_slides: int, pack: dict) -> None:
+    @staticmethod
+    def _parse_number(text: str) -> float | None:
+        cleaned = str(text or '').strip()
+        if not cleaned:
+            return None
+        match = re.search(r'[-+]?\d[\d\s.,]*\d|\d', cleaned)
+        if not match:
+            return None
+        token = match.group(0).replace(' ', '').replace(' ', '')
+        if ',' in token and '.' in token:
+            token = token.replace(',', '')
+        elif ',' in token:
+            token = token.replace('.', '').replace(',', '.') if re.search(r',\d{1,2}$', token) else token.replace(',', '')
+        try:
+            return float(token)
+        except ValueError:
+            return None
+
+    def _build_chart_spec(self, table) -> dict | None:
+        columns = [self._normalize_text(col) for col in table.columns]
+        rows = table.rows
+        if len(columns) < 2 or not (2 <= len(rows) <= 6):
+            return None
+        categories = [self._normalize_text(row[0]) for row in rows if row]
+        if len(categories) != len(rows) or any(not cat for cat in categories):
+            return None
+        series: list[tuple[str, list[float]]] = []
+        for col_idx in range(1, len(columns)):
+            values = [self._parse_number(row[col_idx]) if col_idx < len(row) else None for row in rows]
+            if all(value is not None for value in values):
+                series.append((columns[col_idx], [float(value) for value in values]))  # type: ignore[arg-type]
+            if len(series) >= 3:
+                break
+        if not series:
+            return None
+        return {
+            'categories': categories,
+            'series': series,
+            'horizontal': any(len(cat) > 14 for cat in categories),
+        }
+
+    @staticmethod
+    def _apply_solid_fill(sp_pr, rgb: tuple[int, int, int]) -> None:
+        hex_value = '%02X%02X%02X' % rgb
+        for tag in ('a:noFill', 'a:solidFill', 'a:gradFill', 'a:blipFill', 'a:pattFill', 'a:grpFill'):
+            for element in sp_pr.findall(qn(tag)):
+                sp_pr.remove(element)
+        solid_fill = sp_pr.makeelement(qn('a:solidFill'), {})
+        srgb = solid_fill.makeelement(qn('a:srgbClr'), {'val': hex_value})
+        solid_fill.append(srgb)
+        sp_pr.insert(0, solid_fill)
+
+    def _style_chart_surface(self, chart, pack: dict) -> None:
+        # Charts sit directly on the slide, so paint a surface + readable text colour
+        # explicitly; otherwise dark templates get black axis labels on a dark slide.
+        surface = self._rgb_tuple(pack, 'surface', (255, 255, 255))
+        border = self._rgb_tuple(pack, 'border', (203, 213, 225))
+        try:
+            chart_space = chart._chartSpace
+            sp_pr = chart_space.find(qn('c:spPr'))
+            if sp_pr is None:
+                sp_pr = chart_space.makeelement(qn('c:spPr'), {})
+                tx_pr = chart_space.find(qn('c:txPr'))
+                if tx_pr is not None:
+                    tx_pr.addprevious(sp_pr)
+                else:
+                    chart_space.append(sp_pr)
+            self._apply_solid_fill(sp_pr, surface)
+            ln = sp_pr.makeelement(qn('a:ln'), {})
+            ln_fill = ln.makeelement(qn('a:solidFill'), {})
+            ln_fill.append(ln.makeelement(qn('a:srgbClr'), {'val': '%02X%02X%02X' % border}))
+            ln.append(ln_fill)
+            sp_pr.append(ln)
+        except Exception:
+            pass
+
+    def _render_chart(self, slide, *, spec: dict, section: TopicSection, pack: dict) -> None:
+        content_top, content_bottom = self._content_bounds(False)
+        area_height = content_bottom - content_top
+        body_font = self._font_family(pack)
+        side_facts = [self._normalize_text(fact) for fact in section.facts[:3] if self._normalize_text(fact)]
+        has_note = bool(side_facts)
+
+        chart_width = 9.05 if has_note else 11.70
+        note_left = 10.06
+        note_width = 2.34
+
+        chart_data = CategoryChartData()
+        chart_data.categories = spec['categories']
+        for name, values in spec['series']:
+            chart_data.add_series(name, values)
+
+        chart_type = XL_CHART_TYPE.BAR_CLUSTERED if spec['horizontal'] else XL_CHART_TYPE.COLUMN_CLUSTERED
+        graphic_frame = slide.shapes.add_chart(
+            chart_type, Inches(0.82), Inches(content_top), Inches(chart_width), Inches(area_height), chart_data,
+        )
+        chart = graphic_frame.chart
+        chart.font.name = body_font
+        chart.font.size = Pt(11)
+        chart.font.color.rgb = self._rgb(pack, 'text', (15, 23, 42))
+        chart.has_title = False
+        self._style_chart_surface(chart, pack)
+
+        multi = len(spec['series']) > 1
+        if multi:
+            chart.has_legend = True
+            chart.legend.position = XL_LEGEND_POSITION.BOTTOM
+            chart.legend.include_in_layout = False
+            chart.legend.font.size = Pt(10)
+        else:
+            chart.has_legend = False
+
+        series_palette = [
+            self._rgb_tuple(pack, 'primary', (30, 64, 175)),
+            self._rgb_tuple(pack, 'secondary', (96, 165, 250)),
+            self._rgb_tuple(pack, 'accent', (191, 219, 254)),
+        ]
+        plot = chart.plots[0]
+        plot.gap_width = 70
+        for index, series in enumerate(plot.series):
+            series.format.fill.solid()
+            series.format.fill.fore_color.rgb = RGBColor(*series_palette[index % len(series_palette)])
+            series.format.line.fill.background()
+
+        if not multi:
+            plot.has_data_labels = True
+            data_labels = plot.data_labels
+            data_labels.number_format = '0.#'
+            data_labels.number_format_is_linked = False
+            data_labels.font.size = Pt(10)
+            data_labels.font.name = body_font
+            data_labels.font.bold = True
+            data_labels.font.color.rgb = self._rgb(pack, 'text', (15, 23, 42))
+            try:
+                data_labels.position = XL_LABEL_POSITION.OUTSIDE_END
+            except Exception:
+                pass
+
+        for axis in (chart.category_axis, chart.value_axis):
+            try:
+                axis.tick_labels.font.size = Pt(10)
+                axis.tick_labels.font.name = body_font
+                axis.tick_labels.font.color.rgb = self._rgb(pack, 'text', (15, 23, 42))
+                axis.format.line.color.rgb = self._rgb(pack, 'border', (203, 213, 225))
+            except Exception:
+                pass
+        try:
+            chart.value_axis.has_major_gridlines = True
+            chart.value_axis.major_gridlines.format.line.color.rgb = self._rgb(pack, 'border', (226, 232, 240))
+            chart.category_axis.has_major_gridlines = False
+        except Exception:
+            pass
+
+        if not has_note:
+            return
+
+        note = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(note_left), Inches(content_top), Inches(note_width), Inches(area_height))
+        note.fill.solid()
+        note.fill.fore_color.rgb = self._rgb(pack, 'surface_alt', (239, 246, 255))
+        note.line.color.rgb = self._rgb(pack, 'border', (191, 219, 254))
+        note_body = slide.shapes.add_textbox(Inches(note_left + 0.16), Inches(content_top + 0.18), Inches(note_width - 0.32), Inches(area_height - 0.34))
+        note_frame = note_body.text_frame
+        note_frame.clear()
+        note_frame.word_wrap = True
+        for index, fact in enumerate(side_facts):
+            p = note_frame.paragraphs[0] if index == 0 else note_frame.add_paragraph()
+            p.text = f'• {fact}'
+            p.space_after = Pt(6)
+            for run in p.runs:
+                self._style_run(run, pack, size=11, color_key='text', default_color=(31, 41, 55))
+        self._fit_frame(note_frame, max_size=11, min_size=9.0, font_family=body_font, avail_width=note_width - 0.32, avail_height=area_height - 0.34)
+
+    def _add_table_slide(self, prs: Presentation, *, section: TopicSection, presenter_name: str, page_number: int, total_slides: int, pack: dict, section_index: int = 0) -> None:
+        assert section.table is not None
+        accent = self._section_accent_tuple(pack, section_index)
+
+        # When the table is really numeric comparison data, a chart communicates it
+        # far better than a grid of numbers.
+        chart_spec = self._build_chart_spec(section.table)
+        if chart_spec is not None:
+            slide = self._base_slide(
+                prs,
+                title=section.title,
+                presenter_name=presenter_name,
+                page_number=page_number,
+                total_slides=total_slides,
+                pack=pack,
+                accent_rgb=accent,
+                section_number=section_index + 1,
+            )
+            self._render_chart(slide, spec=chart_spec, section=section, pack=pack)
+            return
+
         slide = self._base_slide(
             prs,
             title=section.title,
@@ -1353,8 +1814,9 @@ class PptxGenerationService:
             page_number=page_number,
             total_slides=total_slides,
             pack=pack,
+            accent_rgb=accent,
+            section_number=section_index + 1,
         )
-        assert section.table is not None
 
         content_top, content_bottom = self._content_bounds(False)
         area_height = content_bottom - content_top
@@ -1388,10 +1850,14 @@ class PptxGenerationService:
         weights = [col_weight(i) for i in range(cols)]
         total_weight = sum(weights) or cols
         min_width = 2.15 if cols == 2 else 1.35
+        col_widths = [max(min_width, round(table_width * (weights[idx] / total_weight), 2)) for idx in range(cols)]
+        # Rescale so the columns never extend past the allotted table width.
+        width_sum = sum(col_widths)
+        if width_sum > table_width:
+            scale = table_width / width_sum
+            col_widths = [round(width * scale, 2) for width in col_widths]
         for idx in range(cols):
-            ratio = weights[idx] / total_weight
-            width = max(min_width, round(table_width * ratio, 2))
-            table.columns[idx].width = Inches(width)
+            table.columns[idx].width = Inches(col_widths[idx])
 
         header_height = 0.56 if cols <= 3 else 0.54
         body_height = max(0.62 if rows <= 4 else 0.54, (area_height - header_height) / max(1, rows - 1))
@@ -1420,6 +1886,8 @@ class PptxGenerationService:
                 color=self._rgb_tuple(pack, 'table_header_text', (30, 64, 175)),
                 min_size=max(10.0, header_font - 1.2),
                 font_family=self._font_family(pack),
+                avail_width=col_widths[col_idx],
+                avail_height=header_height,
             )
 
         for row_idx, row in enumerate(section.table.rows, start=1):
@@ -1435,6 +1903,8 @@ class PptxGenerationService:
                     color=self._rgb_tuple(pack, 'text', (31, 41, 55)),
                     min_size=body_min,
                     font_family=self._font_family(pack),
+                    avail_width=col_widths[col_idx],
+                    avail_height=body_height,
                 )
 
         if not use_side_note:
@@ -1503,6 +1973,7 @@ class PptxGenerationService:
         font_size = 15.2 if max_len <= 75 else 14.0 if max_len <= 110 else 12.8
         summary_style = self._layout_value(pack, 'summary_style', 'cards')
 
+        icon_color = self._rgb_tuple(pack, 'primary', (30, 64, 175))
         for idx, item in enumerate(items):
             x, y, w, h = coords[idx]
             shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
@@ -1515,17 +1986,128 @@ class PptxGenerationService:
             stripe.fill.fore_color.rgb = self._rgb(pack, 'primary' if summary_style == 'grid' else 'accent', (219, 234, 254))
             stripe.line.fill.background()
 
-            frame = shape.text_frame
+            self._draw_icon(slide, self._icon_for_text(item, fallback_index=idx), left=x + 0.24, top=y + 0.34, size=0.50, color=icon_color)
+
+            text_box = slide.shapes.add_textbox(Inches(x + 0.22), Inches(y + 1.02), Inches(w - 0.44), Inches(h - 1.18))
+            frame = text_box.text_frame
             frame.clear()
             frame.word_wrap = True
-            frame.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
-            frame.margin_left = Inches(0.16)
-            frame.margin_right = Inches(0.16)
-            frame.margin_top = Inches(0.10)
-            frame.margin_bottom = Inches(0.10)
+            frame.vertical_anchor = MSO_VERTICAL_ANCHOR.TOP
+            frame.margin_left = Inches(0.04)
+            frame.margin_right = Inches(0.04)
             p = frame.paragraphs[0]
-            p.alignment = PP_ALIGN.CENTER
+            p.alignment = PP_ALIGN.LEFT
+            p.line_spacing = 1.08
             run = p.add_run()
             run.text = item
             self._style_run(run, pack, size=font_size, color_key='text', default_color=(30, 41, 59))
-            self._fit_frame(frame, max_size=font_size, min_size=12.2, font_family=self._font_family(pack))
+            self._fit_frame(frame, max_size=font_size, min_size=11.0, font_family=self._font_family(pack), avail_width=w - 0.44, avail_height=h - 1.18)
+
+    def _add_closing_slide(
+        self,
+        prs: Presentation,
+        *,
+        presentation_title: str,
+        presenter_name: str,
+        page_number: int,
+        total_slides: int,
+        pack: dict,
+    ) -> None:
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        background = slide.background.fill
+        background.solid()
+        background.fore_color.rgb = RGBColor(*self._rgb_tuple(pack, 'cover_background', (239, 246, 255)))
+        self._draw_background_motif(slide, pack)
+        font_family = self._font_family(pack)
+
+        panel_w, panel_h = 10.6, 3.18
+        panel_x = (13.333 - panel_w) / 2
+        panel_y = 2.18
+        panel = slide.shapes.add_shape(
+            MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE,
+            Inches(panel_x), Inches(panel_y), Inches(panel_w), Inches(panel_h),
+        )
+        panel.fill.solid()
+        panel.fill.fore_color.rgb = self._rgb(pack, 'primary', (30, 64, 175))
+        panel.line.fill.background()
+
+        stripe = slide.shapes.add_shape(
+            MSO_AUTO_SHAPE_TYPE.RECTANGLE,
+            Inches(panel_x), Inches(panel_y), Inches(panel_w), Inches(0.16),
+        )
+        stripe.fill.solid()
+        stripe.fill.fore_color.rgb = self._rgb(pack, 'secondary', (96, 165, 250))
+        stripe.line.fill.background()
+
+        # Decorative accents flanking the banner.
+        for offset, color_key, default in ((-0.52, 'secondary', (96, 165, 250)), (panel_w + 0.18, 'accent', (191, 219, 254))):
+            dot = slide.shapes.add_shape(
+                MSO_AUTO_SHAPE_TYPE.OVAL,
+                Inches(panel_x + offset), Inches(panel_y + panel_h / 2 - 0.17), Inches(0.34), Inches(0.34),
+            )
+            dot.fill.solid()
+            dot.fill.fore_color.rgb = self._rgb(pack, color_key, default)
+            dot.line.fill.background()
+
+        tag_box = slide.shapes.add_textbox(Inches(panel_x), Inches(panel_y + 0.40), Inches(panel_w), Inches(0.40))
+        tag_frame = tag_box.text_frame
+        tag_frame.clear()
+        tag_frame.word_wrap = True
+        tag_p = tag_frame.paragraphs[0]
+        tag_p.alignment = PP_ALIGN.CENTER
+        tag_run = tag_p.add_run()
+        tag_run.text = str(pack['thanks_tag']).upper()
+        self._style_run(tag_run, pack, size=13, color_key='accent', default_color=(191, 219, 254), bold=True)
+        self._fit_frame(tag_frame, max_size=13, min_size=9, bold=True, font_family=font_family)
+
+        title_box = slide.shapes.add_textbox(Inches(panel_x + 0.4), Inches(panel_y + 0.92), Inches(panel_w - 0.8), Inches(1.36))
+        title_frame = title_box.text_frame
+        title_frame.clear()
+        title_frame.word_wrap = True
+        title_frame.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
+        title_p = title_frame.paragraphs[0]
+        title_p.alignment = PP_ALIGN.CENTER
+        title_run = title_p.add_run()
+        title_run.text = self._normalize_text(str(pack['thanks_title']))
+        self._style_run(title_run, pack, size=40, color_key='on_primary', default_color=(255, 255, 255), bold=True)
+        self._fit_frame(title_frame, max_size=40, min_size=24, bold=True, font_family=font_family)
+
+        underline = slide.shapes.add_shape(
+            MSO_AUTO_SHAPE_TYPE.RECTANGLE,
+            Inches(panel_x + panel_w / 2 - 0.85), Inches(panel_y + panel_h - 0.52), Inches(1.70), Inches(0.06),
+        )
+        underline.fill.solid()
+        underline.fill.fore_color.rgb = self._rgb(pack, 'secondary', (96, 165, 250))
+        underline.line.fill.background()
+
+        subtitle_box = slide.shapes.add_textbox(Inches(panel_x + 0.4), Inches(panel_y + panel_h + 0.26), Inches(panel_w - 0.8), Inches(0.80))
+        subtitle_frame = subtitle_box.text_frame
+        subtitle_frame.clear()
+        subtitle_frame.word_wrap = True
+        subtitle_p = subtitle_frame.paragraphs[0]
+        subtitle_p.alignment = PP_ALIGN.CENTER
+        subtitle_run = subtitle_p.add_run()
+        subtitle_run.text = self._normalize_text(str(pack['thanks_subtitle']))
+        self._style_run(subtitle_run, pack, size=15, color_key='muted', default_color=(71, 85, 105))
+        self._fit_frame(subtitle_frame, max_size=15, min_size=11, font_family=font_family)
+
+        # Footer (kept consistent with the rest of the deck).
+        footer_line = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0.72), Inches(6.84), Inches(11.86), Inches(0.02))
+        footer_line.fill.solid()
+        footer_line.fill.fore_color.rgb = self._rgb(pack, 'border', (203, 213, 225))
+        footer_line.line.fill.background()
+
+        author_box = slide.shapes.add_textbox(Inches(0.76), Inches(6.90), Inches(5.8), Inches(0.26))
+        author_frame = author_box.text_frame
+        author_frame.clear()
+        author_run = author_frame.paragraphs[0].add_run()
+        author_run.text = f"{pack['prepared_by']}: {self._normalize_text(presenter_name, max_chars=40)}"
+        self._style_run(author_run, pack, size=10, color_key='footer', default_color=(100, 116, 139))
+
+        page_box = slide.shapes.add_textbox(Inches(11.45), Inches(6.90), Inches(1.05), Inches(0.26))
+        page_frame = page_box.text_frame
+        page_frame.clear()
+        page_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT
+        page_run = page_frame.paragraphs[0].add_run()
+        page_run.text = f'{page_number}/{total_slides}'
+        self._style_run(page_run, pack, size=10, color_key='footer', default_color=(100, 116, 139))
