@@ -361,72 +361,80 @@ class PptxGenerationService:
         shape.fill.fore_color.rgb = RGBColor(*color)
         shape.line.fill.background()
 
-    def _motif_rect(self, slide, pack: dict, *, left: float, top: float, width: float, height: float, color_key: str, default: tuple[int, int, int]) -> None:
-        shape = slide.shapes.add_shape(
-            MSO_AUTO_SHAPE_TYPE.RECTANGLE,
-            Inches(left),
-            Inches(top),
-            Inches(width),
-            Inches(height),
-        )
+    def _apply_alpha(self, shape, alpha_pct: float) -> None:
+        # python-pptx has no public transparency API; add an <a:alpha> child to the
+        # fill colour so big decorative shapes can sit softly behind content.
+        try:
+            sp_pr = shape._element.spPr
+            solid_fill = sp_pr.find(qn('a:solidFill'))
+            if solid_fill is None:
+                return
+            srgb = solid_fill.find(qn('a:srgbClr'))
+            if srgb is None:
+                return
+            for existing in srgb.findall(qn('a:alpha')):
+                srgb.remove(existing)
+            value = int(max(0.0, min(100.0, alpha_pct)) * 1000)
+            srgb.append(srgb.makeelement(qn('a:alpha'), {'val': str(value)}))
+        except Exception:
+            pass
+
+    def _soft_oval(self, slide, pack: dict, *, left: float, top: float, size: float, color_key: str, default: tuple[int, int, int], alpha: float) -> None:
+        shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.OVAL, Inches(left), Inches(top), Inches(size), Inches(size))
         shape.fill.solid()
         shape.fill.fore_color.rgb = self._rgb(pack, color_key, default)
         shape.line.fill.background()
+        self._apply_alpha(shape, alpha)
 
-    def _draw_background_motif(self, slide, pack: dict) -> None:
+    def _soft_rect(self, slide, pack: dict, *, left: float, top: float, width: float, height: float, color_key: str, default: tuple[int, int, int], alpha: float, rotation: float = 0.0) -> None:
+        shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(left), Inches(top), Inches(width), Inches(height))
+        shape.fill.solid()
+        shape.fill.fore_color.rgb = self._rgb(pack, color_key, default)
+        shape.line.fill.background()
+        if rotation:
+            shape.rotation = rotation
+        self._apply_alpha(shape, alpha)
+
+    def _draw_background_motif(self, slide, pack: dict, *, bold: bool = False) -> None:
+        # Soft, corner-anchored decoration. Kept in the margins and behind content
+        # via low alpha so it enriches the page without hurting readability.
         style = self._layout_value(pack, 'accent_style', 'academic_grid')
+        k = 1.5 if bold else 1.0
+
+        def a(value: float) -> float:
+            return min(value * k, 100.0)
+
         if style == 'neon_lines':
-            for index, y in enumerate((5.72, 5.94, 6.16)):
-                self._motif_rect(
-                    slide,
-                    pack,
-                    left=9.00 + (index * 0.42),
-                    top=y,
-                    width=3.04 - (index * 0.36),
-                    height=0.035,
-                    color_key='primary' if index != 1 else 'secondary',
-                    default=(6, 182, 212),
-                )
-            for index, x in enumerate((11.88, 12.14, 12.40)):
-                self._motif_rect(
-                    slide,
-                    pack,
-                    left=x,
-                    top=1.10 + (index * 0.30),
-                    width=0.035,
-                    height=1.44,
-                    color_key='border',
-                    default=(71, 85, 105),
-                )
+            # Diagonal glow strokes (a wide faint stroke behind a thin bright one).
+            for (lx, ly), rot in (((9.7, 0.1), -32), ((9.2, 5.6), -32)):
+                self._soft_rect(slide, pack, left=lx, top=ly, width=4.2, height=0.16, color_key='primary', default=(6, 182, 212), alpha=a(16), rotation=rot)
+                self._soft_rect(slide, pack, left=lx, top=ly + 0.06, width=4.2, height=0.045, color_key='secondary', default=(34, 211, 238), alpha=a(70), rotation=rot)
+            self._soft_oval(slide, pack, left=11.9, top=5.45, size=0.95, color_key='secondary', default=(34, 211, 238), alpha=a(16))
+            self._soft_oval(slide, pack, left=12.18, top=5.73, size=0.40, color_key='secondary', default=(34, 211, 238), alpha=a(85))
             return
 
         if style == 'analytic_grid':
-            for x in (1.14, 3.34, 5.54, 7.74, 9.94, 12.14):
-                self._motif_rect(slide, pack, left=x, top=1.66, width=0.012, height=4.86, color_key='border', default=(153, 246, 228))
-            for y in (2.30, 3.22, 4.14, 5.06, 5.98):
-                self._motif_rect(slide, pack, left=0.92, top=y, width=11.44, height=0.012, color_key='border', default=(153, 246, 228))
-            self._motif_rect(slide, pack, left=10.86, top=0.78, width=1.56, height=0.08, color_key='secondary', default=(20, 184, 166))
+            # A neat measurement grid tucked into the top-right corner + a soft bloom.
+            for gx in (10.95, 11.55, 12.15, 12.75):
+                self._soft_rect(slide, pack, left=gx, top=0.0, width=0.014, height=2.25, color_key='border', default=(153, 246, 228), alpha=a(38))
+            for gy in (0.50, 1.12, 1.74):
+                self._soft_rect(slide, pack, left=10.75, top=gy, width=2.30, height=0.014, color_key='border', default=(153, 246, 228), alpha=a(38))
+            self._soft_rect(slide, pack, left=10.78, top=0.30, width=1.72, height=0.09, color_key='secondary', default=(20, 184, 166), alpha=a(80))
+            self._soft_oval(slide, pack, left=-1.0, top=5.7, size=2.5, color_key='accent', default=(153, 246, 228), alpha=a(13))
             return
 
         if style == 'editorial_corner':
-            self._motif_rect(slide, pack, left=0.00, top=6.28, width=2.84, height=0.34, color_key='accent', default=(254, 215, 170))
-            self._motif_rect(slide, pack, left=2.26, top=6.58, width=1.42, height=0.10, color_key='secondary', default=(13, 148, 136))
-            self._motif_rect(slide, pack, left=11.58, top=1.26, width=0.54, height=3.84, color_key='surface_alt', default=(255, 237, 213))
+            # Bold magazine blocks bleeding off opposite corners.
+            self._soft_rect(slide, pack, left=-1.2, top=5.25, width=3.9, height=2.7, color_key='accent', default=(254, 215, 170), alpha=a(24))
+            self._soft_rect(slide, pack, left=0.0, top=6.66, width=2.7, height=0.13, color_key='secondary', default=(13, 148, 136), alpha=a(85))
+            self._soft_rect(slide, pack, left=11.52, top=-0.4, width=2.3, height=3.5, color_key='surface_alt', default=(255, 237, 213), alpha=a(34))
+            self._soft_rect(slide, pack, left=11.42, top=-0.4, width=0.10, height=3.5, color_key='accent', default=(254, 215, 170), alpha=a(85))
             return
 
-        for index, y in enumerate((1.02, 1.24, 1.46)):
-            self._motif_rect(
-                slide,
-                pack,
-                left=9.34 + (index * 0.34),
-                top=y,
-                width=2.82 - (index * 0.30),
-                height=0.045,
-                color_key='border',
-                default=(125, 211, 252),
-            )
-        self._motif_rect(slide, pack, left=11.88, top=5.86, width=0.46, height=0.46, color_key='accent', default=(186, 230, 253))
-        self._motif_rect(slide, pack, left=12.46, top=5.50, width=0.22, height=0.82, color_key='secondary', default=(14, 165, 233))
+        # academic_grid (default): layered soft blooms.
+        self._soft_oval(slide, pack, left=10.3, top=-1.55, size=4.9, color_key='accent', default=(186, 230, 253), alpha=a(14))
+        self._soft_oval(slide, pack, left=11.3, top=-0.6, size=3.0, color_key='secondary', default=(96, 165, 250), alpha=a(10))
+        self._soft_oval(slide, pack, left=-1.15, top=5.65, size=2.7, color_key='accent', default=(186, 230, 253), alpha=a(12))
 
     def _style_run(
         self,
@@ -1143,6 +1151,7 @@ class PptxGenerationService:
         background_rgb: tuple[int, int, int] | None = None,
         accent_rgb: tuple[int, int, int] | None = None,
         section_number: int | None = None,
+        motif_bold: bool = False,
     ):
         header_style = self._layout_value(pack, 'header_style', 'top_band')
         heading_font = self._heading_font(pack)
@@ -1152,7 +1161,7 @@ class PptxGenerationService:
         background = slide.background.fill
         background.solid()
         background.fore_color.rgb = RGBColor(*(background_rgb or self._rgb_tuple(pack, 'background', (248, 250, 252))))
-        self._draw_background_motif(slide, pack)
+        self._draw_background_motif(slide, pack, bold=motif_bold)
 
         title_x = 0.96
         title_y = 0.80
@@ -1284,6 +1293,7 @@ class PptxGenerationService:
             total_slides=total_slides,
             pack=pack,
             background_rgb=self._rgb_tuple(pack, 'cover_background', (239, 246, 255)),
+            motif_bold=True,
         )
 
         cover_style = self._layout_value(pack, 'cover_style', 'split_card')
@@ -1317,8 +1327,17 @@ class PptxGenerationService:
             p.alignment = PP_ALIGN.CENTER
         run = p.add_run()
         run.text = self._normalize_text(presentation_title)
-        self._style_run(run, pack, size=28, color_key='text', default_color=(15, 23, 42), bold=True)
-        self._fit_frame(frame, max_size=28, min_size=20, bold=True, font_family=self._font_family(pack))
+        self._style_run(run, pack, size=30, color_key='text', default_color=(15, 23, 42), bold=True, font_name=self._heading_font(pack))
+        self._fit_frame(frame, max_size=30, min_size=20, bold=True, font_family=self._heading_font(pack))
+
+        # Accent rule between the title and the subtitle.
+        rule_width = 1.8
+        rule_left = (title_coords[0] + title_coords[2] / 2 - rule_width / 2) if cover_style == 'center_focus' else title_coords[0] + 0.04
+        rule_top = subtitle_coords[1] - 0.24
+        accent_rule = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(rule_left), Inches(rule_top), Inches(rule_width), Inches(0.08))
+        accent_rule.fill.solid()
+        accent_rule.fill.fore_color.rgb = RGBColor(*self._visible_accent(pack, self._rgb_tuple(pack, 'secondary', (14, 165, 233))))
+        accent_rule.line.fill.background()
 
         subtitle_box = slide.shapes.add_textbox(Inches(subtitle_coords[0]), Inches(subtitle_coords[1]), Inches(subtitle_coords[2]), Inches(subtitle_coords[3]))
         subtitle_frame = subtitle_box.text_frame
@@ -2053,7 +2072,7 @@ class PptxGenerationService:
         background = slide.background.fill
         background.solid()
         background.fore_color.rgb = RGBColor(*self._rgb_tuple(pack, 'cover_background', (239, 246, 255)))
-        self._draw_background_motif(slide, pack)
+        self._draw_background_motif(slide, pack, bold=True)
         heading_font = self._heading_font(pack)
         body_font = self._font_family(pack)
         primary = self._rgb(pack, 'primary', (30, 64, 175))
@@ -2157,7 +2176,7 @@ class PptxGenerationService:
         background = slide.background.fill
         background.solid()
         background.fore_color.rgb = RGBColor(*self._rgb_tuple(pack, 'cover_background', (239, 246, 255)))
-        self._draw_background_motif(slide, pack)
+        self._draw_background_motif(slide, pack, bold=True)
         font_family = self._font_family(pack)
 
         panel_w, panel_h = 10.6, 3.18
