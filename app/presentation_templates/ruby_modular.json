@@ -27,7 +27,7 @@
     "process_colors": ["#fecdd3", "#c7d2fe", "#fde68a", "#bbf7d0", "#e9d5ff"]
   },
   "layout": {
-    "header_style": "corner_band",
+    "header_style": "hero_block",
     "cover_style": "magazine",
     "agenda_style": "tiles",
     "facts_style": "spotlight",

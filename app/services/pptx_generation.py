@@ -379,6 +379,24 @@ class PptxGenerationService:
         except Exception:
             pass
 
+    def _apply_run_alpha(self, run, alpha_pct: float) -> None:
+        try:
+            rpr = run._r.find(qn('a:rPr'))
+            if rpr is None:
+                return
+            solid_fill = rpr.find(qn('a:solidFill'))
+            if solid_fill is None:
+                return
+            srgb = solid_fill.find(qn('a:srgbClr'))
+            if srgb is None:
+                return
+            for existing in srgb.findall(qn('a:alpha')):
+                srgb.remove(existing)
+            value = int(max(0.0, min(100.0, alpha_pct)) * 1000)
+            srgb.append(srgb.makeelement(qn('a:alpha'), {'val': str(value)}))
+        except Exception:
+            pass
+
     def _soft_oval(self, slide, pack: dict, *, left: float, top: float, size: float, color_key: str, default: tuple[int, int, int], alpha: float) -> None:
         shape = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.OVAL, Inches(left), Inches(top), Inches(size), Inches(size))
         shape.fill.solid()
@@ -1157,6 +1175,7 @@ class PptxGenerationService:
         heading_font = self._heading_font(pack)
         accent_color = RGBColor(*accent_rgb) if accent_rgb is not None else None
         bar_color = RGBColor(*self._visible_accent(pack, accent_rgb)) if accent_rgb is not None else None
+        hero = header_style == 'hero_block' and bool(title)
         slide = prs.slides.add_slide(prs.slide_layouts[6])
         background = slide.background.fill
         background.solid()
@@ -1168,6 +1187,9 @@ class PptxGenerationService:
         title_w = 9.40 if section_number is not None else 11.10
         subtitle_y = 1.48
         footer_y = 6.84
+        title_color_key = 'text'
+        title_color_default = (15, 23, 42)
+        title_size = 25.0
 
         # Large, faint chapter number in the top-right — gives each content slide
         # its own identity and a sense of progression through the deck.
@@ -1183,9 +1205,34 @@ class PptxGenerationService:
             wm_run.font.size = Pt(66)
             wm_run.font.bold = True
             wm_run.font.name = heading_font
-            wm_run.font.color.rgb = accent_color if accent_color is not None else self._rgb(pack, 'accent', (186, 230, 253))
+            if hero:
+                wm_run.font.color.rgb = self._rgb(pack, 'on_primary', (255, 255, 255))
+                self._apply_run_alpha(wm_run, 26)
+            else:
+                wm_run.font.color.rgb = accent_color if accent_color is not None else self._rgb(pack, 'accent', (186, 230, 253))
 
-        if header_style == 'left_rail':
+        if header_style == 'hero_block':
+            # Bold full-width masthead; content area below is unchanged.
+            if title:
+                block = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0), Inches(0), Inches(13.333), Inches(1.66))
+                block.fill.solid()
+                block.fill.fore_color.rgb = self._rgb(pack, 'primary', (49, 46, 129))
+                block.line.fill.background()
+                accent_strip = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0), Inches(1.66), Inches(13.333), Inches(0.07))
+                accent_strip.fill.solid()
+                accent_strip.fill.fore_color.rgb = bar_color if bar_color is not None else self._rgb(pack, 'secondary', (96, 165, 250))
+                accent_strip.line.fill.background()
+                title_x, title_y, title_size = 0.96, 0.50, 26.0
+                title_color_key, title_color_default = 'on_primary', (255, 255, 255)
+        elif header_style == 'minimal':
+            # No band — airy editorial header with a short accent rule under the title.
+            title_y, title_size = 0.78, 27.0
+            if title:
+                underline = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE, Inches(title_x + 0.02), Inches(1.46), Inches(1.7), Inches(0.07))
+                underline.fill.solid()
+                underline.fill.fore_color.rgb = bar_color if bar_color is not None else self._rgb(pack, 'secondary', (96, 165, 250))
+                underline.line.fill.background()
+        elif header_style == 'left_rail':
             rail = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0), Inches(0), Inches(0.52), Inches(7.5))
             rail.fill.solid()
             rail.fill.fore_color.rgb = self._rgb(pack, 'primary', (4, 120, 87))
@@ -1236,8 +1283,8 @@ class PptxGenerationService:
             p = title_frame.paragraphs[0]
             run = p.add_run()
             run.text = self._normalize_text(title)
-            self._style_run(run, pack, size=25, color_key='text', default_color=(15, 23, 42), bold=True, font_name=heading_font)
-            self._fit_frame(title_frame, max_size=25, min_size=18, bold=True, font_family=heading_font)
+            self._style_run(run, pack, size=title_size, color_key=title_color_key, default_color=title_color_default, bold=True, font_name=heading_font)
+            self._fit_frame(title_frame, max_size=title_size, min_size=18, bold=True, font_family=heading_font)
 
         if subtitle:
             subtitle_box = slide.shapes.add_textbox(Inches(title_x), Inches(subtitle_y), Inches(11.25), Inches(0.68))
