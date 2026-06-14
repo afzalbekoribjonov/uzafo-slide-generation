@@ -52,8 +52,9 @@ class PptxGenerationService:
         prs = Presentation()
         prs.slide_width = Inches(13.333)
         prs.slide_height = Inches(7.5)
-        # title + agenda + sections + summary + closing
-        total_slides = 4 + len(plan.sections)
+        chapters = self._chapter_groups(len(plan.sections))
+        # title + agenda + chapter dividers + sections + summary + closing
+        total_slides = 4 + len(plan.sections) + len(chapters)
 
         self._add_title_slide(
             prs,
@@ -76,38 +77,53 @@ class PptxGenerationService:
         )
 
         current_page = 3
-        for section_index, section in enumerate(plan.sections):
-            if section.content_type == 'table' and section.table is not None:
-                self._add_table_slide(
-                    prs,
-                    section=section,
-                    presenter_name=presenter_name,
-                    page_number=current_page,
-                    total_slides=total_slides,
-                    pack=pack,
-                    section_index=section_index,
-                )
-            elif section.content_type == 'process':
-                self._add_process_slide(
-                    prs,
-                    section=section,
-                    presenter_name=presenter_name,
-                    page_number=current_page,
-                    total_slides=total_slides,
-                    pack=pack,
-                    section_index=section_index,
-                )
-            else:
-                self._add_facts_slide(
-                    prs,
-                    section=section,
-                    presenter_name=presenter_name,
-                    page_number=current_page,
-                    total_slides=total_slides,
-                    pack=pack,
-                    section_index=section_index,
-                )
+        for chapter_index, section_indices in enumerate(chapters):
+            self._add_divider_slide(
+                prs,
+                chapter_number=chapter_index + 1,
+                total_chapters=len(chapters),
+                section_titles=[plan.sections[idx].title for idx in section_indices],
+                presenter_name=presenter_name,
+                page_number=current_page,
+                total_slides=total_slides,
+                pack=pack,
+                accent_rgb=self._section_accent_tuple(pack, chapter_index),
+            )
             current_page += 1
+
+            for section_index in section_indices:
+                section = plan.sections[section_index]
+                if section.content_type == 'table' and section.table is not None:
+                    self._add_table_slide(
+                        prs,
+                        section=section,
+                        presenter_name=presenter_name,
+                        page_number=current_page,
+                        total_slides=total_slides,
+                        pack=pack,
+                        section_index=section_index,
+                    )
+                elif section.content_type == 'process':
+                    self._add_process_slide(
+                        prs,
+                        section=section,
+                        presenter_name=presenter_name,
+                        page_number=current_page,
+                        total_slides=total_slides,
+                        pack=pack,
+                        section_index=section_index,
+                    )
+                else:
+                    self._add_facts_slide(
+                        prs,
+                        section=section,
+                        presenter_name=presenter_name,
+                        page_number=current_page,
+                        total_slides=total_slides,
+                        pack=pack,
+                        section_index=section_index,
+                    )
+                current_page += 1
 
         self._add_summary_slide(
             prs,
@@ -165,6 +181,7 @@ class PptxGenerationService:
                 'thanks_title': 'Спасибо за внимание!',
                 'thanks_subtitle': 'Есть вопросы? С удовольствием отвечу и обсужу детали.',
                 'thanks_tag': 'Завершение',
+                'chapter_word': 'ЧАСТЬ',
             }
         if language_code == 'en':
             return {
@@ -178,6 +195,7 @@ class PptxGenerationService:
                 'thanks_title': 'Thank you for your attention!',
                 'thanks_subtitle': 'Questions are welcome — happy to discuss the details.',
                 'thanks_tag': 'The end',
+                'chapter_word': 'PART',
             }
         return {
             'language_code': 'uz',
@@ -190,6 +208,7 @@ class PptxGenerationService:
             'thanks_title': 'E’tiboringiz uchun rahmat!',
             'thanks_subtitle': 'Savollaringiz bo‘lsa, javob berishdan mamnun bo‘laman.',
             'thanks_tag': 'Yakun',
+            'chapter_word': 'QISM',
         }
 
     @staticmethod
@@ -247,6 +266,20 @@ class PptxGenerationService:
     def _section_accent_tuple(self, pack: dict, index: int) -> tuple[int, int, int]:
         colors = self._process_color_tuples(pack)
         return colors[index % len(colors)] if colors else (191, 219, 254)
+
+    @staticmethod
+    def _chapter_groups(section_count: int) -> list[list[int]]:
+        # Group the flat section list into a few chapters so we add 2-4 divider
+        # slides regardless of deck length, instead of one before every section.
+        if section_count <= 0:
+            return []
+        size = 1 if section_count <= 4 else 2 if section_count <= 8 else 3
+        groups: list[list[int]] = []
+        index = 0
+        while index < section_count:
+            groups.append(list(range(index, min(index + size, section_count))))
+            index += size
+        return groups
 
     @staticmethod
     def _relative_luminance(rgb: tuple[int, int, int]) -> float:
@@ -2003,6 +2036,113 @@ class PptxGenerationService:
             self._style_run(run, pack, size=font_size, color_key='text', default_color=(30, 41, 59))
             self._fit_frame(frame, max_size=font_size, min_size=11.0, font_family=self._font_family(pack), avail_width=w - 0.44, avail_height=h - 1.18)
 
+    def _add_divider_slide(
+        self,
+        prs: Presentation,
+        *,
+        chapter_number: int,
+        total_chapters: int,
+        section_titles: list[str],
+        presenter_name: str,
+        page_number: int,
+        total_slides: int,
+        pack: dict,
+        accent_rgb: tuple[int, int, int],
+    ) -> None:
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        background = slide.background.fill
+        background.solid()
+        background.fore_color.rgb = RGBColor(*self._rgb_tuple(pack, 'cover_background', (239, 246, 255)))
+        self._draw_background_motif(slide, pack)
+        heading_font = self._heading_font(pack)
+        body_font = self._font_family(pack)
+        primary = self._rgb(pack, 'primary', (30, 64, 175))
+        bar_accent = self._visible_accent(pack, accent_rgb)
+
+        # Oversized chapter number on the left.
+        number_box = slide.shapes.add_textbox(Inches(0.85), Inches(1.30), Inches(4.30), Inches(3.70))
+        number_frame = number_box.text_frame
+        number_frame.clear()
+        number_frame.word_wrap = False
+        number_frame.vertical_anchor = MSO_VERTICAL_ANCHOR.MIDDLE
+        number_p = number_frame.paragraphs[0]
+        number_p.alignment = PP_ALIGN.LEFT
+        number_run = number_p.add_run()
+        number_run.text = f'{chapter_number:02d}'
+        number_run.font.size = Pt(170)
+        number_run.font.bold = True
+        number_run.font.name = heading_font
+        number_run.font.color.rgb = primary
+
+        rule = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(5.32), Inches(1.66), Inches(0.05), Inches(3.30))
+        rule.fill.solid()
+        rule.fill.fore_color.rgb = RGBColor(*bar_accent)
+        rule.line.fill.background()
+
+        kicker_box = slide.shapes.add_textbox(Inches(5.66), Inches(1.74), Inches(6.84), Inches(0.50))
+        kicker_frame = kicker_box.text_frame
+        kicker_frame.clear()
+        kicker_run = kicker_frame.paragraphs[0].add_run()
+        kicker_run.text = f"{pack['chapter_word']} {chapter_number} / {total_chapters}"
+        self._style_run(kicker_run, pack, size=15, color_key='primary', default_color=(30, 64, 175), bold=True, font_name=heading_font)
+        self._fit_frame(kicker_frame, max_size=15, min_size=10, bold=True, font_family=heading_font)
+
+        titles = [self._normalize_text(title) for title in section_titles if self._normalize_text(title)]
+        title_size = 32.0 if len(titles) <= 1 else 25.0 if len(titles) == 2 else 21.0
+        titles_box = slide.shapes.add_textbox(Inches(5.62), Inches(2.36), Inches(6.92), Inches(3.36))
+        titles_frame = titles_box.text_frame
+        titles_frame.clear()
+        titles_frame.word_wrap = True
+        titles_frame.vertical_anchor = MSO_VERTICAL_ANCHOR.TOP
+        for index, title in enumerate(titles):
+            paragraph = titles_frame.paragraphs[0] if index == 0 else titles_frame.add_paragraph()
+            paragraph.alignment = PP_ALIGN.LEFT
+            paragraph.space_after = Pt(10)
+            paragraph.line_spacing = 1.05
+            run = paragraph.add_run()
+            run.text = title
+            self._style_run(run, pack, size=title_size, color_key='text', default_color=(15, 23, 42), bold=True, font_name=heading_font)
+        self._fit_frame(titles_frame, max_size=title_size, min_size=15, bold=True, font_family=heading_font, avail_width=6.92, avail_height=3.36)
+
+        # Progress indicator: one segment per chapter, current one highlighted.
+        seg_total_w = 6.84
+        seg_gap = 0.12
+        seg_w = (seg_total_w - seg_gap * (total_chapters - 1)) / max(1, total_chapters)
+        for index in range(total_chapters):
+            segment = slide.shapes.add_shape(
+                MSO_AUTO_SHAPE_TYPE.ROUNDED_RECTANGLE,
+                Inches(5.66 + index * (seg_w + seg_gap)), Inches(6.06), Inches(seg_w), Inches(0.12),
+            )
+            segment.fill.solid()
+            if index == chapter_number - 1:
+                segment.fill.fore_color.rgb = primary
+            else:
+                segment.fill.fore_color.rgb = self._rgb(pack, 'border', (203, 213, 225))
+            segment.line.fill.background()
+
+        self._add_frame_footer(slide, presenter_name=presenter_name, page_number=page_number, total_slides=total_slides, pack=pack)
+
+    def _add_frame_footer(self, slide, *, presenter_name: str, page_number: int, total_slides: int, pack: dict) -> None:
+        footer_line = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0.72), Inches(6.84), Inches(11.86), Inches(0.02))
+        footer_line.fill.solid()
+        footer_line.fill.fore_color.rgb = self._rgb(pack, 'border', (203, 213, 225))
+        footer_line.line.fill.background()
+
+        author_box = slide.shapes.add_textbox(Inches(0.76), Inches(6.90), Inches(5.8), Inches(0.26))
+        author_frame = author_box.text_frame
+        author_frame.clear()
+        author_run = author_frame.paragraphs[0].add_run()
+        author_run.text = f"{pack['prepared_by']}: {self._normalize_text(presenter_name, max_chars=40)}"
+        self._style_run(author_run, pack, size=10, color_key='footer', default_color=(100, 116, 139))
+
+        page_box = slide.shapes.add_textbox(Inches(11.45), Inches(6.90), Inches(1.05), Inches(0.26))
+        page_frame = page_box.text_frame
+        page_frame.clear()
+        page_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT
+        page_run = page_frame.paragraphs[0].add_run()
+        page_run.text = f'{page_number}/{total_slides}'
+        self._style_run(page_run, pack, size=10, color_key='footer', default_color=(100, 116, 139))
+
     def _add_closing_slide(
         self,
         prs: Presentation,
@@ -2092,22 +2232,4 @@ class PptxGenerationService:
         self._fit_frame(subtitle_frame, max_size=15, min_size=11, font_family=font_family)
 
         # Footer (kept consistent with the rest of the deck).
-        footer_line = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.RECTANGLE, Inches(0.72), Inches(6.84), Inches(11.86), Inches(0.02))
-        footer_line.fill.solid()
-        footer_line.fill.fore_color.rgb = self._rgb(pack, 'border', (203, 213, 225))
-        footer_line.line.fill.background()
-
-        author_box = slide.shapes.add_textbox(Inches(0.76), Inches(6.90), Inches(5.8), Inches(0.26))
-        author_frame = author_box.text_frame
-        author_frame.clear()
-        author_run = author_frame.paragraphs[0].add_run()
-        author_run.text = f"{pack['prepared_by']}: {self._normalize_text(presenter_name, max_chars=40)}"
-        self._style_run(author_run, pack, size=10, color_key='footer', default_color=(100, 116, 139))
-
-        page_box = slide.shapes.add_textbox(Inches(11.45), Inches(6.90), Inches(1.05), Inches(0.26))
-        page_frame = page_box.text_frame
-        page_frame.clear()
-        page_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT
-        page_run = page_frame.paragraphs[0].add_run()
-        page_run.text = f'{page_number}/{total_slides}'
-        self._style_run(page_run, pack, size=10, color_key='footer', default_color=(100, 116, 139))
+        self._add_frame_footer(slide, presenter_name=presenter_name, page_number=page_number, total_slides=total_slides, pack=pack)
